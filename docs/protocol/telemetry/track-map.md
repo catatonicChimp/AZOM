@@ -62,20 +62,48 @@ same unit — one window, one scale:
 X = 0x480000 + S·(x − cx)        Z = 0x800000 + 16·S·(z − cz)
 ```
 
-`S = 2^20 · 0.95 / E` reproduces PitHouse's fitted S within 0.5 % on all three
-tracks, with `E` the track's larger dimension from AC's map.ini,
-`(max(WIDTH,HEIGHT) − 2·MARGIN)·SCALE_FACTOR`: 552.0 / 493.2 / 1196.4 vs measured
-551.7 / 492.7 / 1201.95 (Imola / Spa / Zandvoort). The window does not auto-fit
-(on hardware a mismatched scale/centre drew nothing); fields are clamped.
+**`S = 10^6 / E`**, with `E` the larger dimension of the track's outline bounds
+(below): `S·E` = 999,900 / 999,875 / 1,000,246 on Imola / Spa / Zandvoort. The
+window does not auto-fit (on hardware a mismatched scale/centre drew nothing);
+fields are clamped.
+
+### Wheel outlines (`.mztrack`)
+
+`patch/TrackName` = `<game>/<name>`; the wheel loads
+`/home/moza/resource/maps/<game>/<name>.mztrack` from its firmware (its display
+log prints `setCurTrack` / `loading …` or `not exist …`). PitHouse keeps the same
+set in `bin/GameConfigs/TrackData/<game>/` for the dashboard builder: folders
+`ac`, `acc`, `f1`, `iracing`, `lemans`; JSON, XOR-0x5A obfuscated
+(`tools/mztrack_compare.py` decodes). Each file has `x/y/z_min/max` and
+`sectors[].data` points `[x, y, z]` scaled 0..10000 per axis (`transform` 0.0001).
+
+- **World-coordinate games** (AC, ACC, LMU, F1): bounds are world metres —
+  mztrack x/y = world X/Z, z = elevation — the raw extent of the line.
+- **iRacing**: normalised (`x_min=y_min=0`, larger axis 1, z 0) — the shape of
+  SimHub's lap-relative map with **Z negated** (Daytona 2011 road: 0.2 % mean
+  error; Road Atlanta 1.8 %). World-coordinate outlines run +Z, so iRacing's Z
+  field is sent inverted.
+
+The names/bounds are embedded as `Data/TrackOutlines.json`
+(`tools/gen_track_outlines.py`). `TrackOutlines.Find` matches SimHub's
+`TrackId+TrackConfig`, `TrackId`, then `TrackName` on lowercase letters/digits
+(AC `ks_nordschleife-nordschleife` → `ks_nordschleifenordschleife`; ACC TrackId
+`nurburgring_24h`, whose TrackName is "24H Nürburgring"). Keys are sent in the
+file's case (`nurburgring combinedShortB`); whether the firmware's copies share
+that case is unconfirmed.
 
 ### Transform source by game
 
 - **AC** — `TrackMapTransform.ResolveMapIni` (track's map.ini).
-- **Everything else** — `TrackMapTransform.FromBounds`: the 1 %-trimmed bounding
-  box of SimHub's recorded map (`PersistantTrackerPlugin.GetMap()`), centred, at
-  90 % fill. Refit whenever SimHub swaps the map record. Y (u16) gets a smaller
-  scale when the elevation range would overflow it (Bathurst: 191 m) — a clamped
-  0 there collides with the empty-slot marker. Live fields clamp to ≥ 1 for the same reason.
+- **Outline with world bounds** (ACC, LMU, F1, AC without map.ini) —
+  `FromBounds` on the outline's bounds, centred.
+- **Otherwise** (iRacing, untabled tracks) — `FromBounds` on SimHub's recorded
+  map (`PersistantTrackerPlugin.GetMap()`), refit whenever SimHub swaps the
+  record. Lap-relative maps: raw min/max, Z inverted; world maps: 1 %-trimmed
+  (pit-lane tails).
+- Y (u16) gets a smaller scale when the elevation range would overflow it
+  (Bathurst: 191 m) — a clamped 0 there collides with the empty-slot marker. Live
+  fields clamp to ≥ 1 for the same reason.
 - **No map yet** — fixed `Fallback()` (SCALE_FACTOR 1.2 at world origin). Large
   tracks clamp; `tools/trackmap_replay_sim.py` measures it on a replay (iRacing
   Road Atlanta: 28 % of positions clamped).

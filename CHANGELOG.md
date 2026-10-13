@@ -23,8 +23,11 @@ All notable changes to the AZOM plugin are documented here.
   wheel put its catalog on instead of reusing the previous wheel's, and restarts when the wheel closes
   the session a tier definition was sent on.
 
-- **Track-map dots line up in iRacing and other non-AC games.** The map is fitted to SimHub's
-  recorded track instead of a fixed scale that clipped larger tracks.
+- **Track-map dots line up in iRacing and other non-AC games.** The map is fitted to the wheel's own
+  track outline (or SimHub's recorded track), and iRacing is no longer mirrored.
+
+- **The wheel shows the right track map for ACC, LMU, F1 and AC layouts.** The track key now matches
+  the wheel's map names instead of SimHub's display name.
 
 - **Changing an mBooster pedal's role swaps it with the pedal that had that role.** Two pedals
   no longer end up on the same role.

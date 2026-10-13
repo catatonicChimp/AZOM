@@ -111,7 +111,7 @@ error. Verified against the FSR2 "1 LD - Marco" dashboard, which reads exactly t
 | Channel | Widget reads | Correct SimHub source |
 |---------|--------------|-----------------------|
 | `patch/DisplayTrackName` | track name (`value!=null ? value : "Track Name"`) | `DataCorePlugin.GameData.TrackName` — there is **no** `GameData.DisplayTrackName` property |
-| `patch/TrackName` | (internal, `is_visible:false`) | `DataCorePlugin.GameData.TrackName` |
+| `patch/TrackName` | (internal, `is_visible:false`) | `@internal/TrackName`: `<game>/<outline name>` matched from TrackId/TrackConfig/TrackName (see [track-map.md](track-map.md#wheel-outlines-mztrack)) |
 | `patch/GameName` | layout switch (`== "ACC"`, `== "AC"`, …) | computed `@internal/GameName` (see below) — there is **no** `GameData.GameName` property |
 | `patch/OpponentCount` | car count (`value + 1`) | `DataCorePlugin.GameData.OpponentsCount` |
 | `v1/gameData/CurrentCarCount` | car-count color threshold only | `DataCorePlugin.GameData.OpponentsCount` |

@@ -58,33 +58,36 @@ namespace MozaPlugin.Telemetry.Frames
         // The wheel normalises X by its low 20 bits (centre 0x480000, PitHouse's top
         // nibble is always 4) and Z by the full 24 bits, so one scale S puts both
         // axes on the same footing: X = 0x480000 + S·dx, Z = 2^23 + 16·S·dz. PitHouse
-        // sizes S so the track spans ~95 % of the window (S = 0.95·2^20 / extent on
-        // Imola/Spa/Zandvoort); we leave more room since the bounds are trimmed.
-        private const double FieldX = 1048576.0;   // 2^20, normalised X span
+        // spans the outline's larger dimension E with 10^6 counts: S·E = 999,900 /
+        // 999,875 / 1,000,246 on Imola / Spa / Zandvoort (E from the .mztrack bounds).
+        private const double TrackCounts = 1000000.0;
         private const double FieldY = 65536.0;     // 2^16, Y field span
+        private const double FillY = 0.9;
         private const int BoundsCenterX = 0x480000;
         private const int BoundsCenterZ = 0x800000;
-        private const double BoundsFill = 0.9;
 
-        /// <summary>Fit the track's map-space bounding box (SimHub's recorded map) into
-        /// the wheel's window, centred. For games without an AC map.ini.</summary>
+        /// <summary>Fit a track bounding box (the wheel outline's, else SimHub's recorded
+        /// map) into the wheel's window, centred. For tracks without an AC map.ini.
+        /// <paramref name="invertZ"/>: SimHub's lap-relative (iRacing) maps run Z
+        /// opposite to the outline.</summary>
         public static TrackMapTransform FromBounds(double minX, double maxX, double minY, double maxY,
-            double minZ, double maxZ)
+            double minZ, double maxZ, bool invertZ, string source)
         {
             double ext = Math.Max(maxX - minX, maxZ - minZ);
-            double s = BoundsFill * FieldX / ext;
+            double s = TrackCounts / ext;
+            double sz = invertZ ? -16.0 * s : 16.0 * s;
             // Elevation shares S unless the track's height range overflows the 16-bit
             // field (Bathurst: 191 m × 442/m), which would clamp the low end to 0.
-            double sy = maxY - minY > 0.0 ? Math.Min(s, BoundsFill * FieldY / (maxY - minY)) : s;
+            double sy = maxY - minY > 0.0 ? Math.Min(s, FillY * FieldY / (maxY - minY)) : s;
             return new TrackMapTransform
             {
                 ScaleX = (float)s,
-                ScaleZ = (float)(16.0 * s),
+                ScaleZ = (float)sz,
                 ScaleY = (float)sy,
                 CenterX = (int)Math.Round(BoundsCenterX - s * (minX + maxX) / 2.0),
-                CenterZ = (int)Math.Round(BoundsCenterZ - 16.0 * s * (minZ + maxZ) / 2.0),
+                CenterZ = (int)Math.Round(BoundsCenterZ - sz * (minZ + maxZ) / 2.0),
                 CenterY = (int)Math.Round(CenterYConst - sy * (minY + maxY) / 2.0),
-                Source = $"bounds:{(int)(maxX - minX)}x{(int)(maxZ - minZ)}m",
+                Source = $"{source}:{(int)(maxX - minX)}x{(int)(maxZ - minZ)}m{(invertZ ? ",-Z" : "")}",
             };
         }
 

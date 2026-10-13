@@ -38,16 +38,17 @@ namespace MozaPlugin.Telemetry.Dashboard
             return ToMoza.TryGetValue(simHubGameName!, out var moza) ? moza : simHubGameName!;
         }
 
-        // MOZA track-map identifier "<gameprefix>/<track>" for patch/TrackName —
-        // the key the wheel uses to load the track's map background. Confirmed
-        // from AC captures: "ac/imola", "ac/spa". The prefix is the lowercased
-        // MOZA short code from the same ToMoza dictionary used by Resolve
-        // (AC → "ac", ACC → "acc"); only AC is capture-verified. Unknown games
-        // fall through to the bare track name (no worse than before the prefix).
-        internal static string TrackPath(string? simHubGameName, string? trackName)
+        // MOZA track-map identifier "<game>/<track>" for patch/TrackName — the
+        // wheel loads /home/moza/resource/maps/<key>.mztrack (AC captures:
+        // "ac/imola"; the wheel logs "not exist" for an unknown key). A known
+        // outline gives the exact key; otherwise the lowercased game prefix +
+        // SimHub's track name, which is right only when the names coincide.
+        internal static string TrackPath(string? simHubGameName, string? trackId, string? trackConfig, string? trackName)
         {
+            var outline = Frames.TrackOutlines.Find(simHubGameName, trackId, trackConfig, trackName);
+            if (outline != null) return outline.Path;
             if (string.IsNullOrEmpty(trackName)) return "";
-            string prefix = Resolve(simHubGameName).ToLowerInvariant();
+            string prefix = Frames.TrackOutlines.GameFolder(simHubGameName) ?? Resolve(simHubGameName).ToLowerInvariant();
             return prefix.Length == 0 ? trackName! : prefix + "/" + trackName;
         }
     }

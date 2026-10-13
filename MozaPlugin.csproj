@@ -130,6 +130,8 @@
       <ManifestResourceName>MozaPlugin.Resources.Strings.qps-ploc</ManifestResourceName>
     </EmbeddedResource>
     <EmbeddedResource Include="Data\Telemetry.json" LogicalName="MozaPlugin.Data.Telemetry.json" />
+    <!-- Wheel track-map outline names + bounds (tools/gen_track_outlines.py). -->
+    <EmbeddedResource Include="Data\TrackOutlines.json" LogicalName="MozaPlugin.Data.TrackOutlines.json" />
     <!-- SimHub .djson import tables (UI/DjsonImport). Data, not code: extending
          property or font coverage is an edit here, never a recompile of the mapper. -->
     <EmbeddedResource Include="Data\DjsonPropertyMap.json" LogicalName="MozaPlugin.Data.DjsonPropertyMap.json" />

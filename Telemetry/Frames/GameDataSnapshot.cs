@@ -66,6 +66,11 @@ namespace MozaPlugin.Telemetry.Frames
         // for tracks without an AC map.ini. Invalid until SimHub has a map.
         public bool MapBoundsValid;
         public double MapMinX, MapMaxX, MapMinY, MapMaxY, MapMinZ, MapMaxZ;
+        // The recorded map is SimHub's lap-relative integration (iRacing), not world space.
+        public bool MapLapRelative;
+
+        // The wheel's outline for this track, when MOZA has one (TrackOutlines).
+        public TrackOutline? Outline;
 
         // Per-car position RELATIVE to the player (already rotated into the
         // player's frame by SimHub), for the radar (patch/ri*) channels. Each
@@ -134,6 +139,7 @@ namespace MozaPlugin.Telemetry.Frames
                 {
                     var fresh = default(GameDataSnapshot);
                     fresh.TrackFolderName = ResolveTrackFolder(data);
+                    fresh.Outline = ResolveOutline(data);
                     PopulateCarLocations(data, ref fresh);
                     s_carPosCache = fresh;
                     s_carPosSource = data;
@@ -143,6 +149,8 @@ namespace MozaPlugin.Telemetry.Frames
                 snap.MapMinX = s_carPosCache.MapMinX; snap.MapMaxX = s_carPosCache.MapMaxX;
                 snap.MapMinY = s_carPosCache.MapMinY; snap.MapMaxY = s_carPosCache.MapMaxY;
                 snap.MapMinZ = s_carPosCache.MapMinZ; snap.MapMaxZ = s_carPosCache.MapMaxZ;
+                snap.MapLapRelative  = s_carPosCache.MapLapRelative;
+                snap.Outline         = s_carPosCache.Outline;
                 snap.PlayerLocation  = s_carPosCache.PlayerLocation;
                 snap.CarLocations    = s_carPosCache.CarLocations;
                 snap.CarRelative     = s_carPosCache.CarRelative;
@@ -197,6 +205,16 @@ namespace MozaPlugin.Telemetry.Frames
             try { return data.TrackId; } catch { return null; }
         }
 
+        private static TrackOutline? ResolveOutline(StatusDataBase data)
+        {
+            try
+            {
+                return TrackOutlines.Find(SimHub.Plugins.PluginManager.GetInstance()?.GameName,
+                    data.TrackId, data.TrackConfig, data.TrackName);
+            }
+            catch { return null; }
+        }
+
         // World position (X, Y=elevation, Z) for the local car and every
         // opponent, for the track-map location_t channels. Defensive against
         // null/short arrays (games that don't expose coordinates leave them null).
@@ -222,6 +240,7 @@ namespace MozaPlugin.Telemetry.Frames
                 snap.MapMinX = b.minX; snap.MapMaxX = b.maxX;
                 snap.MapMinY = b.minY; snap.MapMaxY = b.maxY;
                 snap.MapMinZ = b.minZ; snap.MapMaxZ = b.maxZ;
+                snap.MapLapRelative = map!.HasRelativeCarCoordinates;
             }
 
             var pc = data.CarCoordinates;
@@ -524,11 +543,11 @@ namespace MozaPlugin.Telemetry.Frames
             return b;
         }
 
-        // Fraction trimmed off each end of each axis to drop pit-lane / off-track
-        // excursions — sparse spatial tails that inflate the raw min/max but aren't
-        // part of the drawn track surface (e.g. Imola's recorded X runs to 879 in
-        // the pit lane vs the track's 331). TrackMapTransform.FromBounds leaves
-        // headroom for the trimmed tails.
+        // Fraction trimmed off each end of each axis of a world-space map to drop
+        // pit-lane / off-track excursions — sparse spatial tails that inflate the raw
+        // min/max but aren't part of the drawn track surface (e.g. Imola's recorded X
+        // runs to 879 in the pit lane vs the track's 331). Lap-relative maps are the
+        // racing line itself and match the wheel's outline untrimmed.
         private const double BoundsTrimPct = 1.0;
 
         private static double Percentile(List<double> sorted, double pct)
@@ -558,7 +577,7 @@ namespace MozaPlugin.Telemetry.Frames
                 if (xs.Count < 20) return null;
                 xs.Sort(); ys.Sort(); zs.Sort();
 
-                double p = BoundsTrimPct;
+                double p = map.HasRelativeCarCoordinates ? 0.0 : BoundsTrimPct;
                 double minX = Percentile(xs, p), maxX = Percentile(xs, 100 - p);
                 double minZ = Percentile(zs, p), maxZ = Percentile(zs, 100 - p);
                 if (maxX - minX < 10.0 || maxZ - minZ < 10.0) return null;

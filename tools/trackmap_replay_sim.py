@@ -82,8 +82,8 @@ def build_map(frames):
     return MapRecord([(p["pct"], p["v"]) for p in best])
 
 
-def bounds(m, trim_pct=1.0):
-    """GameDataSnapshot.ComputeMapBounds: per-axis percentile trim."""
+def bounds(m, trim_pct=0.0):
+    """GameDataSnapshot.ComputeMapBounds: lap-relative maps are not trimmed."""
     def pc(s, p):
         return s[min(max(round(p / 100.0 * (len(s) - 1)), 0), len(s) - 1)]
     xs = sorted(v[0] for v in m.val)
@@ -97,12 +97,13 @@ def transform_fallback():
     return dict(sx=sx, sz=16 * sx, cx=4719000, cz=8300000)
 
 
-def transform_bounds(b, fill=0.9):
+def transform_bounds(b):
     min_x, max_x, min_z, max_z = b
     ext = max(max_x - min_x, max_z - min_z)
-    s = fill * U20 / ext
+    s = 1e6 / ext  # TrackMapTransform.TrackCounts
     mx, mz = (min_x + max_x) / 2, (min_z + max_z) / 2
-    return dict(sx=s, sz=16 * s, cx=0x480000 - s * mx, cz=0x800000 - 16 * s * mz)
+    # Lap-relative maps run Z opposite to the wheel outline (invertZ).
+    return dict(sx=s, sz=-16 * s, cx=0x480000 - s * mx, cz=0x800000 + 16 * s * mz)
 
 
 def pack(t, x, z):
