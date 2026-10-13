@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Text;
 using MozaPlugin.Diagnostics;
@@ -21,6 +22,54 @@ namespace MozaPlugin.Telemetry.Frames
         // patch/TrackName key, lowercased: the firmware logs "not exist" for
         // "combinedShortB" but loads lowercase keys (bundle PBGRBYY4).
         public string Path = "";
+
+        // The drawn line of a normalised (iRacing) outline: x,y pairs 0..10000 per
+        // axis, spanning XSpan × YSpan (larger = 1), point 0 on the S/F line and
+        // near-evenly spaced by distance — so lap fraction ≈ distance fraction.
+        internal ushort[]? Line;
+        internal float XSpan, YSpan;
+        private double[]? _cumLength;   // closed-loop cumulative length, outline units
+
+        public bool HasLine => Line != null && Line.Length >= 8;
+
+        /// <summary>Line length in outline units (larger axis = 1).</summary>
+        public double Perimeter => CumLength()[Line!.Length / 2];
+
+        /// <summary>Point at lap fraction <paramref name="f"/> (wrapped to 0..1),
+        /// interpolated by distance along the closed line, in outline units.</summary>
+        public (double U, double V) AtLapFraction(double f)
+        {
+            var cum = CumLength();
+            int n = Line!.Length / 2;
+            f -= Math.Floor(f);
+            double target = f * cum[n];
+            int i = Array.BinarySearch(cum, target);
+            if (i < 0) i = ~i - 1;
+            if (i < 0) i = 0; else if (i >= n) i = n - 1;
+            double seg = cum[i + 1] - cum[i];
+            double r = seg > 0.0 ? (target - cum[i]) / seg : 0.0;
+            var (ax, ay) = Pt(i);
+            var (bx, by) = Pt((i + 1) % n);
+            return (ax + (bx - ax) * r, ay + (by - ay) * r);
+        }
+
+        private (double, double) Pt(int i) =>
+            (Line![2 * i] * 0.0001 * XSpan, Line[2 * i + 1] * 0.0001 * YSpan);
+
+        private double[] CumLength()
+        {
+            var cum = _cumLength;
+            if (cum != null) return cum;
+            int n = Line!.Length / 2;
+            cum = new double[n + 1];
+            for (int i = 0; i < n; i++)
+            {
+                var (ax, ay) = Pt(i);
+                var (bx, by) = Pt((i + 1) % n);
+                cum[i + 1] = cum[i] + Math.Sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
+            }
+            return _cumLength = cum;
+        }
     }
 
     /// <summary>
@@ -133,7 +182,72 @@ namespace MozaPlugin.Telemetry.Frames
             {
                 MozaLog.Warn($"[AZOM] track outlines: load failed: {ex.Message}");
             }
+            LoadLines(table);
             return table;
+        }
+
+        private static uint ReadVarint(BinaryReader r)
+        {
+            uint u = 0;
+            for (int shift = 0; ; shift += 7)
+            {
+                byte b = r.ReadByte();
+                u |= (uint)(b & 0x7F) << shift;
+                if (b < 0x80) return u;
+            }
+        }
+
+        // Data/TrackOutlinePoints.bin.gz (format: tools/gen_track_outlines.py).
+        private static void LoadLines(Dictionary<string, Dictionary<string, TrackOutline>> table)
+        {
+            try
+            {
+                using var stream = Assembly.GetExecutingAssembly()
+                    .GetManifestResourceStream("MozaPlugin.Data.TrackOutlinePoints.bin.gz");
+                if (stream == null)
+                {
+                    MozaLog.Warn("[AZOM] track outline lines: embedded resource not found");
+                    return;
+                }
+                using var gz = new GZipStream(stream, CompressionMode.Decompress);
+                using var r = new BinaryReader(gz, Encoding.UTF8);
+                if (Encoding.ASCII.GetString(r.ReadBytes(4)) != "MZOL" || r.ReadUInt16() != 2)
+                {
+                    MozaLog.Warn("[AZOM] track outline lines: bad header");
+                    return;
+                }
+                int count = r.ReadUInt16(), loaded = 0;
+                for (int t = 0; t < count; t++)
+                {
+                    string game = Encoding.UTF8.GetString(r.ReadBytes(r.ReadByte()));
+                    string name = Encoding.UTF8.GetString(r.ReadBytes(r.ReadUInt16()));
+                    float xSpan = r.ReadSingle(), ySpan = r.ReadSingle();
+                    int n = r.ReadInt32();
+                    var line = new ushort[2 * n];
+                    // Per axis: zigzag-varint second differences.
+                    for (int axis = 0; axis < 2; axis++)
+                    {
+                        int v = 0, d = 0;
+                        for (int i = 0; i < n; i++)
+                        {
+                            uint z = ReadVarint(r);
+                            d += (int)(z >> 1) ^ -(int)(z & 1);
+                            v += d;
+                            line[2 * i + axis] = (ushort)v;
+                        }
+                    }
+                    if (table.TryGetValue(game, out var tracks) && tracks.TryGetValue(Key(name), out var o))
+                    {
+                        o.Line = line; o.XSpan = xSpan; o.YSpan = ySpan;
+                        loaded++;
+                    }
+                }
+                MozaLog.Info($"[AZOM] track outline lines: {loaded}/{count} loaded");
+            }
+            catch (Exception ex)
+            {
+                MozaLog.Warn($"[AZOM] track outline lines: load failed: {ex.Message}");
+            }
         }
     }
 }

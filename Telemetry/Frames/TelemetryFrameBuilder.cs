@@ -357,7 +357,7 @@ namespace MozaPlugin.Telemetry.Frames
             if (_mapTransformBounds == b) return;
             _mapTransformBounds = b;
             _mapTransform = TrackMapTransform.FromBounds(snap.MapMinX, snap.MapMaxX, snap.MapMinY,
-                snap.MapMaxY, snap.MapMinZ, snap.MapMaxZ, snap.MapLapRelative, "simhub-map");
+                snap.MapMaxY, snap.MapMinZ, snap.MapMaxZ, snap.MapLapRelative, snap.MapBoundsSource ?? "simhub-map");
             LogMapTransform(snap.TrackFolderName);
         }
 

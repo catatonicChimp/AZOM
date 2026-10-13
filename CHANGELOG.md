@@ -24,7 +24,7 @@ All notable changes to the AZOM plugin are documented here.
   the session a tier definition was sent on.
 
 - **Track-map dots line up in iRacing and other non-AC games.** The map is fitted to the wheel's own
-  track outline (or SimHub's recorded track), and iRacing is no longer mirrored.
+  track outline and iRacing is no longer mirrored. 
 
 - **The wheel shows the right track map for ACC, LMU, F1 and AC layouts.** The track key now matches
   the wheel's map names instead of SimHub's display name.

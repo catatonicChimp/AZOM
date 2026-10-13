@@ -84,8 +84,11 @@ set in `bin/GameConfigs/TrackData/<game>/` for the dashboard builder: folders
   error; Road Atlanta 1.8 %). World-coordinate outlines run +Z, so iRacing's Z
   field is sent inverted.
 
-The names/bounds are embedded as `Data/TrackOutlines.json`
-(`tools/gen_track_outlines.py`). `TrackOutlines.Find` matches SimHub's
+`tools/gen_track_outlines.py` embeds the names/bounds as `Data/TrackOutlines.json`
+and the normalised (iRacing) lines as `Data/TrackOutlinePoints.bin.gz` (466 lines,
+443k points, 249 KB: delta-of-delta varints). The lines are near-evenly spaced (median longest/median
+segment 1.05; worst ~2×, Monza/Bathurst), point 0 on the S/F line, ≤ 1.5 %
+closure gap. `TrackOutlines.Find` matches SimHub's
 `TrackId+TrackConfig`, `TrackId`, then `TrackName` on lowercase letters/digits
 (AC `ks_nordschleife-nordschleife` → `ks_nordschleifenordschleife`; ACC TrackId
 `nurburgring_24h`, whose TrackName is "24H Nürburgring"). Keys are sent
@@ -98,7 +101,8 @@ logged `not exist …/iracing/nurburgring combinedShortB.mztrack` while
 - **AC** — `TrackMapTransform.ResolveMapIni` (track's map.ini).
 - **Outline with world bounds** (ACC, LMU, F1, AC without map.ini) —
   `FromBounds` on the outline's bounds, centred.
-- **Otherwise** (iRacing, untabled tracks) — `FromBounds` on SimHub's recorded
+- **iRacing with an outline line** — `FromBounds` on the line's extent (below).
+- **Otherwise** (iRacing without a line, untabled tracks) — `FromBounds` on SimHub's recorded
   map (`PersistantTrackerPlugin.GetMap()`), refit whenever SimHub swaps the
   record. Lap-relative maps: raw min/max, Z inverted; world maps: 1 %-trimmed
   (pit-lane tails).
@@ -114,10 +118,19 @@ logged `not exist …/iracing/nurburgring combinedShortB.mztrack` while
 iRacing has no world positions. SimHub reports every car, player included, as
 `[LapDistPct, 0, 0]` and resolves it through the recorded map
 (`DataRecordBase.ToAbsoluteCoordinates` → interpolated `CarCoordinates[].Value`,
-built by `CoordinatesCreator` from YawNorth/LapDist/Pitch). Consequences:
+built by `CoordinatesCreator` from YawNorth/LapDist/Pitch). SimHub may have no
+map for a layout (bundle E1K79CQM, Nordschleife VLN: no map → empty slots → the
+wheel showed one dot dead centre), so the plugin prefers the outline line:
 
-- Without a map there is nothing to plot (raw pct would collapse every car onto
-  one point); the plugin sends empty slots until SimHub has one.
+- **Outline line** (`TrackOutline.AtLapFraction`): pct → point at that fraction of
+  the line's length, interpolated, closed loop. Metres = SimHub `TrackLength` /
+  line length; stored in SimHub's lap-relative frame (Z = −outline y), offset one
+  unit so nothing is (0, 0). No elevation (Y = 0). Without a track length
+  (0.5–30 km) the map still fits but the radar is skipped.
+  `tools/outline_line_check.py`: Daytona 2011 road 1.5 m median / 9.6 m max vs
+  SimHub's map; Road Atlanta 2–8 m outside the replay map's broken S/F stretch.
+- **SimHub's map** otherwise; with neither there is nothing to plot (raw pct
+  would collapse every car onto one point) and the plugin sends empty slots.
 - The map's own points are already in the resolved space — they must not be run
   through `ToAbsoluteCoordinates` again (that reads X as a lap fraction).
 - Cars are on the recorded line: no lateral position, so the radar shows gaps

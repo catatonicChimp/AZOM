@@ -68,6 +68,8 @@ namespace MozaPlugin.Telemetry.Frames
         public double MapMinX, MapMaxX, MapMinY, MapMaxY, MapMinZ, MapMaxZ;
         // The recorded map is SimHub's lap-relative integration (iRacing), not world space.
         public bool MapLapRelative;
+        // Where the map bounds came from ("simhub-map" or "outline-line"), for the transform log.
+        public string? MapBoundsSource;
 
         // The wheel's outline for this track, when MOZA has one (TrackOutlines).
         public TrackOutline? Outline;
@@ -150,6 +152,7 @@ namespace MozaPlugin.Telemetry.Frames
                 snap.MapMinY = s_carPosCache.MapMinY; snap.MapMaxY = s_carPosCache.MapMaxY;
                 snap.MapMinZ = s_carPosCache.MapMinZ; snap.MapMaxZ = s_carPosCache.MapMaxZ;
                 snap.MapLapRelative  = s_carPosCache.MapLapRelative;
+                snap.MapBoundsSource = s_carPosCache.MapBoundsSource;
                 snap.Outline         = s_carPosCache.Outline;
                 snap.PlayerLocation  = s_carPosCache.PlayerLocation;
                 snap.CarLocations    = s_carPosCache.CarLocations;
@@ -227,28 +230,47 @@ namespace MozaPlugin.Telemetry.Frames
             // SimHub.Plugins compile-time dependency.
             var map = TryGetMapRecord();
 
-            // iRacing reports every car as [LapDistPct, 0, 0]; only a recorded map
-            // turns that into a position. Without one there is nothing to plot.
-            if (map == null && data.RelativeCarCoordinates != null)
+            // iRacing reports every car as [LapDistPct, 0, 0]. The wheel's own outline
+            // line places it exactly on the drawn track; else SimHub's recorded map
+            // resolves it. Without either there is nothing to plot.
+            var line = data.RelativeCarCoordinates != null && snap.Outline != null && snap.Outline.HasLine
+                ? snap.Outline : null;
+            bool lineMetres = false;
+            double lineScale = line != null ? LineMetresPerUnit(data, line, out lineMetres) : 0.0;
+            if (line == null && map == null && data.RelativeCarCoordinates != null)
                 return;
 
-            var bounds = GetMapBounds(map);
-            if (bounds.HasValue)
+            if (line != null)
             {
-                var b = bounds.Value;
                 snap.MapBoundsValid = true;
-                snap.MapMinX = b.minX; snap.MapMaxX = b.maxX;
-                snap.MapMinY = b.minY; snap.MapMaxY = b.maxY;
-                snap.MapMinZ = b.minZ; snap.MapMaxZ = b.maxZ;
-                snap.MapLapRelative = map!.HasRelativeCarCoordinates;
+                // Same frame as SimHub's lap-relative map (Z = −outline y, see ResolveXyz).
+                snap.MapMinX = lineScale; snap.MapMaxX = (1.0 + line.XSpan) * lineScale;
+                snap.MapMinZ = -(1.0 + line.YSpan) * lineScale; snap.MapMaxZ = -lineScale;
+                snap.MapLapRelative = true;
+                snap.MapBoundsSource = "outline-line";
+            }
+            else
+            {
+                var bounds = GetMapBounds(map);
+                if (bounds.HasValue)
+                {
+                    var b = bounds.Value;
+                    snap.MapBoundsValid = true;
+                    snap.MapMinX = b.minX; snap.MapMaxX = b.maxX;
+                    snap.MapMinY = b.minY; snap.MapMaxY = b.maxY;
+                    snap.MapMinZ = b.minZ; snap.MapMaxZ = b.maxZ;
+                    snap.MapLapRelative = map!.HasRelativeCarCoordinates;
+                    snap.MapBoundsSource = "simhub-map";
+                }
             }
 
             var pc = data.CarCoordinates;
             float px = 0f, py = 0f, pz = 0f; bool havePlayer = false;
             if (pc != null && pc.Length >= 3)
             {
-                (px, py, pz) = ToWorldXyz(map, pc); havePlayer = true;
-                snap.PlayerLocation = (px, py, pz);
+                (px, py, pz) = ResolveXyz(map, line, lineScale, pc);
+                havePlayer = px != 0f || pz != 0f || line == null;
+                if (havePlayer) snap.PlayerLocation = (px, py, pz);
             }
 
             var opps = data.Opponents;
@@ -335,7 +357,7 @@ namespace MozaPlugin.Telemetry.Frames
                     var opp = opps[i];
                     var c = opp?.Coordinates;
                     (float X, float Y, float Z) abs = (c != null && c.Length >= 3 && (c[0] != 0.0 || c[2] != 0.0))
-                        ? ToWorldXyz(map, c)
+                        ? ResolveXyz(map, line, lineScale, c)
                         : (0f, 0f, 0f);
                     locs[s] = abs;
                     if (havePlayer && (abs.X != 0f || abs.Z != 0f))
@@ -348,7 +370,8 @@ namespace MozaPlugin.Telemetry.Frames
             snap.CarRelative = rels;
             snap.PlayerIndex = playerIdx;
 
-            snap.RadarSlotCarIds = havePlayer
+            // The radar works in metres; an outline line without a track length has none.
+            snap.RadarSlotCarIds = havePlayer && (line == null || lineMetres)
                 ? AssignStableRadarSlots(locs, playerIdx, px, pz, snap.TrackFolderName)
                 : null;
         }
@@ -604,6 +627,43 @@ namespace MozaPlugin.Telemetry.Frames
                 catch { /* keep raw [0],[1],[2] */ }
             }
             return ((float)x, (float)y, (float)z);
+        }
+
+        // Car position from its coordinate array. On an outline line, [0] is the lap
+        // fraction; the result is metres in SimHub's lap-relative frame (X = outline
+        // x, Z = −outline y), offset by one unit so no on-track point is (0, 0) — the
+        // empty-slot marker. Y (elevation) is unknown there and left 0.
+        private static (float X, float Y, float Z) ResolveXyz(
+            DataRecordBase? map, TrackOutline? line, double scale, double[] c)
+        {
+            if (line == null) return ToWorldXyz(map, c);
+            double f = c[0];
+            if (!(f >= 0.0 && f <= 1.5)) return (0f, 0f, 0f);   // iRacing: −1 = not in world
+            var (u, v) = line.AtLapFraction(f);
+            return ((float)((1.0 + u) * scale), 0f, (float)(-(1.0 + v) * scale));
+        }
+
+        // Without a known track length the map still fits (the transform is
+        // scale-free); only the radar needs real metres.
+        private const double LineScaleUnknown = 1000.0;
+        private static TrackOutline? s_lineScaleOutline;
+        private static double s_lineScaleLength = double.NaN;
+
+        // Metres per outline unit: SimHub's track length over the line's length.
+        private static double LineMetresPerUnit(StatusDataBase data, TrackOutline line, out bool metres)
+        {
+            double len = 0.0;
+            try { len = data.TrackLength > 0.0 ? data.TrackLength : data.ReportedTrackLength; } catch { }
+            metres = len >= 500.0 && len <= 30000.0;
+            double scale = metres ? len / line.Perimeter : LineScaleUnknown;
+            if (!ReferenceEquals(line, s_lineScaleOutline) || len != s_lineScaleLength)
+            {
+                s_lineScaleOutline = line;
+                s_lineScaleLength = len;
+                MozaLog.Info($"[AZOM] track outline line '{line.Path}': {line.Line!.Length / 2} pts, " +
+                    $"TrackLength={len:F0} -> {scale:F1} m/unit{(metres ? "" : " (no length: radar off)")}");
+            }
+            return scale;
         }
 
         private static double ParseGear(string? gear)
