@@ -88,9 +88,10 @@ The names/bounds are embedded as `Data/TrackOutlines.json`
 (`tools/gen_track_outlines.py`). `TrackOutlines.Find` matches SimHub's
 `TrackId+TrackConfig`, `TrackId`, then `TrackName` on lowercase letters/digits
 (AC `ks_nordschleife-nordschleife` → `ks_nordschleifenordschleife`; ACC TrackId
-`nurburgring_24h`, whose TrackName is "24H Nürburgring"). Keys are sent in the
-file's case (`nurburgring combinedShortB`); whether the firmware's copies share
-that case is unconfirmed.
+`nurburgring_24h`, whose TrackName is "24H Nürburgring"). Keys are sent
+**lowercase**: the firmware's files differ in case from PitHouse's — the wheel
+logged `not exist …/iracing/nurburgring combinedShortB.mztrack` while
+`iracing/nurburgring combined` loaded.
 
 ### Transform source by game
 

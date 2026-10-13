@@ -18,7 +18,9 @@ namespace MozaPlugin.Telemetry.Frames
         public bool HasBounds;
         public double MinX, MaxX, MinY, MaxY, MinZ, MaxZ;
 
-        public string Path => Game + "/" + Name;
+        // patch/TrackName key, lowercased: the firmware logs "not exist" for
+        // "combinedShortB" but loads lowercase keys (bundle PBGRBYY4).
+        public string Path = "";
     }
 
     /// <summary>
@@ -112,7 +114,8 @@ namespace MozaPlugin.Telemetry.Frames
                     var tracks = new Dictionary<string, TrackOutline>(StringComparer.Ordinal);
                     foreach (var t in ((JObject)game.Value).Properties())
                     {
-                        var o = new TrackOutline { Game = game.Name, Name = t.Name };
+                        var o = new TrackOutline { Game = game.Name, Name = t.Name,
+                            Path = (game.Name + "/" + t.Name).ToLowerInvariant() };
                         if (t.Value is JArray b && b.Count == 6)
                         {
                             o.HasBounds = true;

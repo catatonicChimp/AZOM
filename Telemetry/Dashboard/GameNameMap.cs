@@ -49,7 +49,7 @@ namespace MozaPlugin.Telemetry.Dashboard
             if (outline != null) return outline.Path;
             if (string.IsNullOrEmpty(trackName)) return "";
             string prefix = Frames.TrackOutlines.GameFolder(simHubGameName) ?? Resolve(simHubGameName).ToLowerInvariant();
-            return prefix.Length == 0 ? trackName! : prefix + "/" + trackName;
+            return (prefix.Length == 0 ? trackName! : prefix + "/" + trackName).ToLowerInvariant();
         }
     }
 }
