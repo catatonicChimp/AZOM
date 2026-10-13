@@ -13,7 +13,7 @@ TrackOutlines.json — names and bounding boxes,
   in world metres (mztrack x/y are the ground plane = world X/Z, mztrack z is
   elevation). [] marks a normalised outline (iRacing: no world bounds, 0..1).
 
-TrackOutlinePoints.bin.gz — the line of every normalised outline, which the plugin
+TrackOutlinePoints.gz — the line of every normalised outline, which the plugin
   walks by lap fraction (iRacing has no world positions). gzip of, little-endian:
     "MZOL" u16 version=2 u16 count
     count × { u8 len, game utf8; u16 len, name utf8; f32 xMax; f32 yMax; u32 n;
@@ -95,8 +95,8 @@ def main():
                 write_varint(buf, zigzag(d - prev_d))
                 prev, prev_d = int(p[axis]), d
     # mtime=0 keeps the output byte-identical across runs.
-    (out / "TrackOutlinePoints.bin.gz").write_bytes(gzip.compress(bytes(buf), mtime=0))
-    print(f"wrote {out}/TrackOutlines.json, TrackOutlinePoints.bin.gz "
+    (out / "TrackOutlinePoints.gz").write_bytes(gzip.compress(bytes(buf), mtime=0))
+    print(f"wrote {out}/TrackOutlines.json, TrackOutlinePoints.gz "
           f"({len(lines)} lines, {sum(len(l[4]) for l in lines)} points)")
 
 

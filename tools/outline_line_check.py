@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the embedded outline lines (Data/TrackOutlinePoints.bin.gz) against a replay.
+"""Check the embedded outline lines (Data/TrackOutlinePoints.gz) against a replay.
 
 Places the player's lap fraction on the outline line exactly like
 TrackOutline.AtLapFraction (distance-interpolated, closed loop), scales it to metres
@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from simhub_replay import iter_frames  # noqa: E402
 from trackmap_replay_sim import build_map  # noqa: E402
 
-DATA = Path(__file__).resolve().parent.parent / "Data" / "TrackOutlinePoints.bin.gz"
+DATA = Path(__file__).resolve().parent.parent / "Data" / "TrackOutlinePoints.gz"
 
 
 def load_raw(path=DATA):

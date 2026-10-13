@@ -85,7 +85,7 @@ set in `bin/GameConfigs/TrackData/<game>/` for the dashboard builder: folders
   field is sent inverted.
 
 `tools/gen_track_outlines.py` embeds the names/bounds as `Data/TrackOutlines.json`
-and the normalised (iRacing) lines as `Data/TrackOutlinePoints.bin.gz` (466 lines,
+and the normalised (iRacing) lines as `Data/TrackOutlinePoints.gz` (466 lines,
 443k points, 249 KB: delta-of-delta varints). The lines are near-evenly spaced (median longest/median
 segment 1.05; worst ~2×, Monza/Bathurst), point 0 on the S/F line, ≤ 1.5 %
 closure gap. `TrackOutlines.Find` matches SimHub's

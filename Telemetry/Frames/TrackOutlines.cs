@@ -197,13 +197,13 @@ namespace MozaPlugin.Telemetry.Frames
             }
         }
 
-        // Data/TrackOutlinePoints.bin.gz (format: tools/gen_track_outlines.py).
+        // Data/TrackOutlinePoints.gz (format: tools/gen_track_outlines.py).
         private static void LoadLines(Dictionary<string, Dictionary<string, TrackOutline>> table)
         {
             try
             {
                 using var stream = Assembly.GetExecutingAssembly()
-                    .GetManifestResourceStream("MozaPlugin.Data.TrackOutlinePoints.bin.gz");
+                    .GetManifestResourceStream("MozaPlugin.Data.TrackOutlinePoints.gz");
                 if (stream == null)
                 {
                     MozaLog.Warn("[AZOM] track outline lines: embedded resource not found");
