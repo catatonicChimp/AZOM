@@ -674,9 +674,10 @@ namespace MozaPlugin.Telemetry.Frames
             _lastSubscriptionDiag = diag;
 
             // Open a 5 s capture window on the sender for inbound chunks on
-            // session 0x02 — the wheel returns its channel-token TLVs there
+            // the session this tier-def rode — the wheel answers it there
             // right after subscription.
-            _sender.OpenSubscriptionResponseCapture(System.Diagnostics.Stopwatch.GetTimestamp()
+            _sender.OpenSubscriptionResponseCapture(session,
+                System.Diagnostics.Stopwatch.GetTimestamp()
                 + System.Diagnostics.Stopwatch.Frequency * 5);
         }
 

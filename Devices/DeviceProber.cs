@@ -828,7 +828,7 @@ namespace MozaPlugin.Devices
                 // read responses reflect the values we just wrote.
                 var profile = _plugin.Settings.ProfileStore.CurrentProfile;
                 if (profile != null)
-                    _plugin.ApplyProfile(profile);
+                    _plugin.ApplyProfileOnConnect(profile);
                 _deviceManager.ReadSettings(BaseSettingsReadCommands);
 
                 // Capability probe for the wheelbase ambient strip — R21/R25/R27
@@ -1080,7 +1080,7 @@ namespace MozaPlugin.Devices
                             // _data has been populated by intervening read responses.
                             var initialProfile = _plugin.Settings?.ProfileStore?.CurrentProfile;
                             if (initialProfile != null)
-                                _plugin.ApplyProfile(initialProfile);
+                                _plugin.ApplyProfileOnConnect(initialProfile);
 
                             // Auto-load the dashboard library: this wheel's
                             // configured mzdash folder plus MOZA Dashboard
@@ -1167,7 +1167,7 @@ namespace MozaPlugin.Devices
                             // mode bind to the right per-wheel page overlay.
                             var prof = _plugin.Settings?.ProfileStore?.CurrentProfile;
                             if (prof != null)
-                                _plugin.ApplyProfile(prof);
+                                _plugin.ApplyProfileOnConnect(prof);
                         }
                     }
                     break;

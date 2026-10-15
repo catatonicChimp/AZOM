@@ -127,8 +127,11 @@ namespace MozaPlugin
         internal TelemetrySender.SubscriptionDiagnostics? SubscriptionForDiagnostics =>
             _telemetrySender?.LastSubscription;
 
-        // Inbound s02 chunks captured in 5s window after last subscription send.
+        // Inbound chunks on the tier-def session captured in the 5 s window after
+        // the last subscription send, and which session that was.
         internal System.Collections.Generic.IReadOnlyList<byte[]>? SubscriptionResponseForDiagnostics =>
             _telemetrySender?.LastSubscriptionResponse;
+        internal byte SubscriptionResponseSessionForDiagnostics =>
+            _telemetrySender?.LastSubscriptionResponseSession ?? 0;
     }
 }

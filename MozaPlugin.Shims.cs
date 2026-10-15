@@ -380,5 +380,7 @@ namespace MozaPlugin
         /// <summary>Apply a profile via the consolidated Apply*ToHardware methods —
         /// logic lives in Settings/ProfileCoordinator.cs.</summary>
         internal void ApplyProfile(MozaProfile profile) => _profileCoordinator.ApplyProfile(profile);
+        internal void ApplyProfileOnConnect(MozaProfile profile) => _profileCoordinator.ApplyProfileOnConnect(profile);
+        internal bool ProfileHardwareWritesAllowed => _profileCoordinator?.ProfileHardwareWritesAllowed ?? false;
     }
 }

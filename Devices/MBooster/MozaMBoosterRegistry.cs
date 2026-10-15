@@ -793,6 +793,61 @@ namespace MozaPlugin.Devices.MBooster
             return true;
         }
 
+        /// <summary>
+        /// The output mapping (curve, Min, Max) part by part: the profile's
+        /// value where set, else what the unit reports
+        /// (<paramref name="reported"/>: "min", "max", "y1".."y5" → value, -1
+        /// unknown), else Linear 0–100.
+        /// </summary>
+        internal static void ResolveOutputMapping(IMBoosterPedalConfig? cfg, Func<string, int> reported,
+            out int min, out int max, out float[] curve)
+        {
+            int r = reported("min");
+            min = cfg != null && cfg.Min >= 0 ? cfg.Min : r >= 0 ? r : 0;
+            r = reported("max");
+            max = cfg != null && cfg.Max >= 0 ? cfg.Max : r >= 0 ? r : 100;
+            var stored = cfg?.HardwareCurveY;
+            if (stored != null && stored.Length == 5)
+            {
+                curve = (float[])stored.Clone();
+                return;
+            }
+            curve = (float[])MBoosterUiConstants.LinearOutputCurve.Clone();
+            for (int i = 0; i < 5; i++)
+            {
+                r = reported($"y{i + 1}");
+                if (r >= 0) curve[i] = r;
+            }
+        }
+
+        /// <summary>Store the whole output mapping
+        /// (<see cref="ResolveOutputMapping"/>), so no part of it is left to
+        /// whatever the previous profile wrote.</summary>
+        internal static void PinOutputMapping(IMBoosterPedalConfig cfg, Func<string, int> reported)
+        {
+            ResolveOutputMapping(cfg, reported, out int min, out int max, out float[] curve);
+            cfg.Min = min;
+            cfg.Max = max;
+            cfg.HardwareCurveY = curve;
+        }
+
+        /// <summary>Some, not all, of the output mapping stored.</summary>
+        internal static bool IsPartialOutputMapping(IMBoosterPedalConfig cfg)
+        {
+            int set = (cfg.Min >= 0 ? 1 : 0) + (cfg.Max >= 0 ? 1 : 0)
+                    + (cfg.HardwareCurveY != null && cfg.HardwareCurveY.Length == 5 ? 1 : 0);
+            return set > 0 && set < 3;
+        }
+
+        /// <summary>The unit has reported all seven output registers.</summary>
+        internal static bool HasOutputReadBack(Func<string, int> reported)
+        {
+            if (reported("min") < 0 || reported("max") < 0) return false;
+            for (int i = 1; i <= 5; i++)
+                if (reported($"y{i}") < 0) return false;
+            return true;
+        }
+
         // Default/un-dragged shape of the Pedal Feel curve's 6 Y nodes
         // (mbooster-brake-feelcurve-1..6, cmdId 0xAB selectors 0x08-0x0D),
         // as a fraction (0-1) of the way from Deadzone to Max Force —

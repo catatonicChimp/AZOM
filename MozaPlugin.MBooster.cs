@@ -895,6 +895,25 @@ namespace MozaPlugin
         /// every profile's and every pedal's host-side output curve becomes the
         /// device curve — see MozaMBoosterRegistry.MigrateLegacyOutputCurve.
         /// </summary>
+        /// <summary>This device's settings in every profile, under its serial
+        /// key; empty until the serial has resolved.</summary>
+        internal List<MBoosterDeviceSettings> MBoosterSettingsInAllProfiles(string identity)
+        {
+            var list = new List<MBoosterDeviceSettings>();
+            if (string.IsNullOrEmpty(identity) || !_mboosterSerialByIdentity.TryGetValue(identity, out var key))
+                return list;
+            lock (_mboosterSettingsLock)
+            {
+                var profiles = _settings?.ProfileStore?.Profiles;
+                if (profiles == null) return list;
+                foreach (var profile in profiles)
+                    if (profile?.MBoosterSettings != null
+                        && profile.MBoosterSettings.TryGetValue(key, out var s) && s != null)
+                        list.Add(s);
+            }
+            return list;
+        }
+
         private void MigrateMBoosterOutputCurveToDevice()
         {
             var profiles = _settings?.ProfileStore?.Profiles;

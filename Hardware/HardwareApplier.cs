@@ -711,9 +711,20 @@ namespace MozaPlugin.Hardware
         // ===== Apply*ToHardware =====
 
         /// <summary>Push wheel-scoped settings to the connected wheel. Mirrors to _data unconditionally; writes detection-gated.</summary>
+        // Saved-profile writes (and their _data mirror) only once the profile
+        // may be applied — see ProfileCoordinator.ProfileHardwareWritesAllowed.
+        // Setup AZOM needs to run (display rotation off, CM2 meter mode) is
+        // not a saved setting and goes out regardless.
+        private bool ProfileWritesAllowed => _plugin.ProfileHardwareWritesAllowed;
+
         public void ApplyWheelToHardware(MozaProfile? profile)
         {
             if (profile == null) return;
+            if (!ProfileWritesAllowed)
+            {
+                ApplyDisplayRotation(profile, fromProfile: false);
+                return;
+            }
 
             var ov = _plugin.GetCurrentWheelOverlay(profile);
 
@@ -1088,18 +1099,24 @@ namespace MozaPlugin.Hardware
                 }
             }
 
-            // Display-rotation mode (0=off, 1=smooth, 2=immediate). Session-0x02
-            // FF property push (kind=5), so it goes through the wheel's main sender,
-            // NOT the group-0x3F device-manager write path. VGS: profile-driven.
-            // Every other display wheel: forced off — rotation can get latched on
-            // in wheel flash by misrouted V0 value frames (kind=5 collision, seen
-            // on W13/FSR V2 under a wrong manual era pick) and these wheels have
-            // no UI anywhere to clear it. Fires on every wheel (re)detection and
-            // profile switch; TelemetrySender.SendSessionInitHandshake covers the
-            // session-init case where this push may predate an Active session.
+            ApplyDisplayRotation(profile, fromProfile: true);
+        }
+
+        // Display-rotation mode (0=off, 1=smooth, 2=immediate). Session-0x02
+        // FF property push (kind=5), so it goes through the wheel's main sender,
+        // NOT the group-0x3F device-manager write path. VGS: profile-driven.
+        // Every other display wheel: forced off — rotation can get latched on
+        // in wheel flash by misrouted V0 value frames (kind=5 collision, seen
+        // on W13/FSR V2 under a wrong manual era pick) and these wheels have
+        // no UI anywhere to clear it. Fires on every wheel (re)detection and
+        // profile switch; TelemetrySender.SendSessionInitHandshake covers the
+        // session-init case where this push may predate an Active session.
+        private void ApplyDisplayRotation(MozaProfile profile, bool fromProfile)
+        {
+            var model = _plugin.WheelModelInfo;
             if (model?.SupportsDisplayRotation == true)
             {
-                if (profile.DashDisplayRotation >= 0)
+                if (fromProfile && profile.DashDisplayRotation >= 0)
                     _plugin.TelemetrySender?.SendDashDisplayRotation(profile.DashDisplayRotation);
             }
             else if (model?.HasDisplay == true)
@@ -1116,6 +1133,12 @@ namespace MozaPlugin.Hardware
         public void ApplyDashToHardware(MozaProfile? profile)
         {
             if (profile == null) return;
+            if (!ProfileWritesAllowed)
+            {
+                if (_detectionState.DashDetected && _plugin.IsCm2Present && !_plugin.DashIsCm1)
+                    ApplyCm2MeterMode();
+                return;
+            }
 
             // SimHub auto-creates per-game profiles with all-sentinel dash fields
             // and never seeds their baselines. Without seeding, the >=0 guards
@@ -1184,6 +1207,48 @@ namespace MozaPlugin.Hardware
         /// </summary>
         private void ApplyCm2DashboardConfig(MozaProfile profile)
         {
+            ApplyCm2MeterMode();
+
+            // Indicator brightness — authoritative path for CM2. Reuse the
+            // existing DashRpmBrightness slider as the source so the UI knob
+            // does not double up; the legacy dash-rpm-brightness write above
+            // is kept for compatibility.
+            if (profile.DashRpmBrightness >= 0)
+                WriteCm2Config("cm2-indicator-brightness", profile.DashRpmBrightness);
+
+            // STANDBY per-LED colors only (idle appearance, shown when no game
+            // is running). rs21_parameter.db: SetIndicatorGroupStandbyModeColor
+            // (0x1B 00 FF <i>) + RGB. RPM colors 1-10 → cm2-stored-color1..10,
+            // flag colors 1-6 → cm2-stored-color11..16.
+            //
+            // The LIVE/active colors (0x0B) are NOT written here — they are
+            // pushed per-frame through the SimHub LED pipeline
+            // (MozaDashLedDeviceManager.SendCm2LiveColors), exactly like the
+            // wheel's RPM LEDs. Config sets up the device + idle look only.
+            if (profile.DashRpmColors != null)
+            {
+                int rpmCount = System.Math.Min(profile.DashRpmColors.Length, 10);
+                for (int i = 0; i < rpmCount; i++)
+                {
+                    var rgb = MozaProfile.UnpackColor(profile.DashRpmColors[i]);
+                    WriteCm2Config($"cm2-stored-color{i + 1}", new byte[] { rgb[0], rgb[1], rgb[2] });
+                }
+            }
+            if (profile.DashFlagColors != null)
+            {
+                int flagCount = System.Math.Min(profile.DashFlagColors.Length, 6);
+                for (int i = 0; i < flagCount; i++)
+                {
+                    var rgb = MozaProfile.UnpackColor(profile.DashFlagColors[i]);
+                    WriteCm2Config($"cm2-stored-color{i + 11}", new byte[] { rgb[0], rgb[1], rgb[2] });
+                }
+            }
+        }
+
+        /// <summary>The CM2 meter setup AZOM needs to drive it (SimHub
+        /// telemetry mode, RPM ramp) — not a saved profile setting.</summary>
+        private void ApplyCm2MeterMode()
+        {
             // All writes go through _plugin.WriteCm2Config so they reach the CM2's OWN
             // pipe + device — a standalone-USB CM2 is on the dedicated dashboard
             // connection, not the wheelbase _deviceManager (which would land these on
@@ -1222,41 +1287,6 @@ namespace MozaPlugin.Hardware
                 int threshold = (int)((long)maxRpm * (i + 1) / 10);
                 WriteCm2Config($"cm2-rpm-absolute-threshold{i + 1}", threshold);
             }
-
-            // Indicator brightness — authoritative path for CM2. Reuse the
-            // existing DashRpmBrightness slider as the source so the UI knob
-            // does not double up; the legacy dash-rpm-brightness write above
-            // is kept for compatibility.
-            if (profile.DashRpmBrightness >= 0)
-                WriteCm2Config("cm2-indicator-brightness", profile.DashRpmBrightness);
-
-            // STANDBY per-LED colors only (idle appearance, shown when no game
-            // is running). rs21_parameter.db: SetIndicatorGroupStandbyModeColor
-            // (0x1B 00 FF <i>) + RGB. RPM colors 1-10 → cm2-stored-color1..10,
-            // flag colors 1-6 → cm2-stored-color11..16.
-            //
-            // The LIVE/active colors (0x0B) are NOT written here — they are
-            // pushed per-frame through the SimHub LED pipeline
-            // (MozaDashLedDeviceManager.SendCm2LiveColors), exactly like the
-            // wheel's RPM LEDs. Config sets up the device + idle look only.
-            if (profile.DashRpmColors != null)
-            {
-                int rpmCount = System.Math.Min(profile.DashRpmColors.Length, 10);
-                for (int i = 0; i < rpmCount; i++)
-                {
-                    var rgb = MozaProfile.UnpackColor(profile.DashRpmColors[i]);
-                    WriteCm2Config($"cm2-stored-color{i + 1}", new byte[] { rgb[0], rgb[1], rgb[2] });
-                }
-            }
-            if (profile.DashFlagColors != null)
-            {
-                int flagCount = System.Math.Min(profile.DashFlagColors.Length, 6);
-                for (int i = 0; i < flagCount; i++)
-                {
-                    var rgb = MozaProfile.UnpackColor(profile.DashFlagColors[i]);
-                    WriteCm2Config($"cm2-stored-color{i + 11}", new byte[] { rgb[0], rgb[1], rgb[2] });
-                }
-            }
         }
 
         /// <summary>
@@ -1265,7 +1295,7 @@ namespace MozaPlugin.Hardware
         /// </summary>
         public void ApplyBaseAmbientToHardware(MozaProfile? profile)
         {
-            if (profile == null) return;
+            if (profile == null || !ProfileWritesAllowed) return;
 
             if (profile.BaseAmbientBrightness     >= 0) _data.BaseAmbientBrightness     = profile.BaseAmbientBrightness;
             if (profile.BaseAmbientStandbyMode    >= 0) _data.BaseAmbientStandbyMode    = profile.BaseAmbientStandbyMode;
@@ -1346,7 +1376,7 @@ namespace MozaPlugin.Hardware
         /// <summary>Push handbrake settings. No-op unless detected.</summary>
         public void ApplyHandbrakeToHardware(MozaProfile? profile)
         {
-            if (profile == null) return;
+            if (profile == null || !ProfileWritesAllowed) return;
 
             if (profile.HandbrakeMode            >= 0) _data.HandbrakeMode            = profile.HandbrakeMode;
             if (profile.HandbrakeButtonThreshold >= 0) _data.HandbrakeButtonThreshold = profile.HandbrakeButtonThreshold;
@@ -1376,7 +1406,7 @@ namespace MozaPlugin.Hardware
         /// <summary>Push pedal settings. No-op unless detected.</summary>
         public void ApplyPedalsToHardware(MozaProfile? profile)
         {
-            if (profile == null) return;
+            if (profile == null || !ProfileWritesAllowed) return;
 
             if (profile.PedalsThrottleDir      >= 0) _data.PedalsThrottleDir      = profile.PedalsThrottleDir;
             if (profile.PedalsThrottleMin      >= 0) _data.PedalsThrottleMin      = profile.PedalsThrottleMin;
@@ -1438,7 +1468,7 @@ namespace MozaPlugin.Hardware
 
         private void ApplyShifterToHardware(ShifterModelKind model, MozaProfile? profile)
         {
-            if (profile == null) return;
+            if (profile == null || !ProfileWritesAllowed) return;
             foreach (var cmd in ShifterProfileCommands(model))
                 ApplyShifterCommand(model, profile, cmd);
         }
@@ -1485,7 +1515,7 @@ namespace MozaPlugin.Hardware
         /// </summary>
         public void ApplyBaseToHardware(MozaProfile? profile)
         {
-            if (profile == null) return;
+            if (profile == null || !ProfileWritesAllowed) return;
 
             // Drop the per-base write cache if a different base is now attached
             // (keeps base config from being re-pushed on every wheel hot-attach —
@@ -1724,7 +1754,7 @@ namespace MozaPlugin.Hardware
         /// </summary>
         public void ApplyAb9ToHardware(MozaProfile? profile)
         {
-            if (!_detectionState.Ab9Detected || _ab9Manager == null || !_ab9Manager.IsConnected) return;
+            if (!ProfileWritesAllowed || !_detectionState.Ab9Detected || _ab9Manager == null || !_ab9Manager.IsConnected) return;
 
             var ab9 = profile?.Ab9 ?? new Ab9Settings();
             _ab9Manager.ApplyInputModeIfChanged(ab9.InputMode);

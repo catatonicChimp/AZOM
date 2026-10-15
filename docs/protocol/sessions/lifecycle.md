@@ -200,3 +200,31 @@ PitHouse never sees the push.
 The opening order above assumes the wheel is already booted when the host opens its sessions. **Hot-attach (wheel clipped onto a running host)** has very different timing: the wheel MCU answers settings reads ~immediately but its **display sub-device takes ~20 s to boot**, and the wheel silently drops every `7c:00 type=0x81` open frame addressed to its display channel during that window. A host that opens 0x01/0x02 on first wheel-MCU response (e.g. a `wheel-telemetry-mode` read returning a valid frame) gets no fc:00 acks and no subsequent device-initiated open of 0x04/0x06/0x08/0x09/0x0a — the wheel never engaged from its own side, so the dashboard renders locally with zero channel data.
 
 Hosts should defer the sess=0x01/0x02 open burst until the display sub-device identity probe completes (`87 "<display name>"` response on `0x43 dev=0x17`, or any of the parallel HW/FW/MCU-UID responses). See [`../identity/display-sub-device.md`](../identity/display-sub-device.md) and [`../startup-timeline.md`](../startup-timeline.md) for the full timing breakdown and the plugin's gating hook.
+
+### Session roles are assigned per open — re-learn them every cycle
+
+Which of the two host sessions carries the channel catalog + END (the
+tier-def session) and which carries the identity blob / type-04 slot record /
+FF records (the mirror) is decided by the wheel at each open, not by the
+session number, and the **same wheel can swap them between cycles**.
+Bundle `5NDCADWR` (W17 on CS-Pro, 2026-10-11, host opened 0x01 then 0x02
+~10 ms apart both times):
+
+| Cycle | sess 0x01 first chunks | sess 0x02 first chunks | Form |
+|-------|------------------------|------------------------|------|
+| 11:45 first start, display long booted | `07` identity blob, `01 51…`, `05 00`, `04` slot=12, `06 04` END stub | `ff 00 00 00 ff`, `03 04 … 01`, `04` URL records ×23, `06 04 … 17` END=23 | B (catalog on 0x02) |
+| 12:35 after KS → W17 rim hot-swap (display booted 21 s earlier) | `ff 00 00 00 ff`, `03 04 … 01`, then URL records ×23 + END=23 at +2.9 s | `07` identity blob, `01 51…`, `05 00`, `04` slot=0, `06 04` END stub | A (catalog on 0x01) |
+
+A host that reuses the previous cycle's roles sends the tier-def and FF-init
+to the wrong sessions. In that bundle the wheel then (a) pushed its catalog
+on 0x01, (b) sent one type-00 CLOSE for 0x02 1.8 s after the tier-def it had
+received there, (c) re-sent `06 04 00 00 00 17 00 00 00` on 0x01 once per
+second for the rest of the capture, and (d) never echoed the host's kind=4
+nor sent the `03 04 00 00 00 02 00 00 00` record it had sent 14 ms after the
+accepted tier-def in the 11:45 cycle. Transport-level fc:00 acks continued on
+both sessions throughout, including on the closed 0x02, so acks prove
+nothing about binding. The plugin clears its per-session catalog/END memory
+in `ChannelCatalogParser.ClearBuffer` on every `StartInner` and waits for the
+wheel's fresh advertisement before the FF-init, and `DisplayWatchdog` treats
+a wheel-initiated CLOSE of the session the last tier-def rode (within 10 s of
+it) as a reject and restarts.

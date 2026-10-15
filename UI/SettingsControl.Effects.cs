@@ -278,7 +278,10 @@ namespace MozaPlugin.UI
             bool isBrake = rolePrefix == "brake";
             bool isThrottle = rolePrefix == "throttle";
             bool isClutch = rolePrefix == "clutch";
-            MBoosterBrakeOnlyPanel.Visibility = isBrake ? Visibility.Visible : Visibility.Collapsed;
+            // A passive Brake-role pedal has no load cell of its own; these
+            // would set the active pedal's.
+            bool ownsLoadCell = CurrentMBoosterController()?.OwnsSingletonRegisters(_mboosterEffectPedalIndex) ?? false;
+            MBoosterBrakeOnlyPanel.Visibility = isBrake && ownsLoadCell ? Visibility.Visible : Visibility.Collapsed;
 
             // Max Force/Deadzone slider bounds are role-scoped: Throttle and
             // Clutch are both much lighter springs than a brake's load cell,

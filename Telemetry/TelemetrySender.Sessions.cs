@@ -178,9 +178,10 @@ namespace MozaPlugin.Telemetry
             set => _catalogCountAtLastSubscription = value;
         }
         internal void ScheduleCatalogResyncProbeInternal() => ScheduleCatalogResyncProbe();
-        internal void OpenSubscriptionResponseCapture(long deadlineTicks)
+        internal void OpenSubscriptionResponseCapture(byte session, long deadlineTicks)
         {
             lock (_subscriptionResponseChunks) _subscriptionResponseChunks.Clear();
+            _subscriptionResponseSession = session;
             Interlocked.Exchange(ref _subscriptionResponseDeadlineTicks, deadlineTicks);
         }
 
@@ -210,6 +211,7 @@ namespace MozaPlugin.Telemetry
             get => Interlocked.Read(ref _subscriptionResponseDeadlineTicks);
             set => Interlocked.Exchange(ref _subscriptionResponseDeadlineTicks, value);
         }
+        internal byte SubscriptionResponseSessionField => _subscriptionResponseSession;
         internal System.Collections.Generic.List<byte[]> SubscriptionResponseChunksList => _subscriptionResponseChunks;
         internal System.Collections.Generic.Dictionary<byte, int> TileServerHighestSeqMap => _tileServerHighestSeq;
         internal int IncrementCatalogCrcRejects() => Interlocked.Increment(ref _catalogCrcRejects);

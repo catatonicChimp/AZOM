@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using GameReaderCommon;
+using MozaPlugin.Diagnostics;
 using MozaPlugin.Protocol;
 using MozaPlugin.Telemetry.Dashboard;
 using MozaPlugin.Telemetry.TestMode;
@@ -51,10 +52,14 @@ namespace MozaPlugin.Telemetry.Frames
         // docs/protocol/telemetry/track-map.md). The wheel's map widget does NOT
         // auto-fit: it only renders coordinates inside its per-track field window
         // (a different scale/centre draws nothing), so the scale + centres are
-        // TRACK-SPECIFIC. They are now resolved per track by TrackMapTransform
-        // (from the track's map.ini), cached here and re-resolved on track change.
+        // TRACK-SPECIFIC. Resolved per track by TrackMapTransform: AC's map.ini,
+        // else the wheel outline's bounds, else SimHub's recorded map (refit when it changes),
+        // else the fixed fallback.
         private TrackMapTransform _mapTransform = TrackMapTransform.Fallback();
+        private TrackMapTransform? _mapFixedTransform;   // map.ini or outline: set once per track
+        private TrackOutline? _mapTransformOutline;
         private string? _mapTransformTrack;
+        private (double, double, double, double, double, double)? _mapTransformBounds;
 
         // Pre-allocated buffers reused every frame to avoid GC pressure
         private readonly byte[] _frameBuffer;
@@ -318,13 +323,49 @@ namespace MozaPlugin.Telemetry.Frames
                 return;
             }
             if (float.IsNaN(y) || float.IsInfinity(y)) y = 0f;
+            // A live car clamps to 1, never 0 — zero is the empty-slot marker.
             var t = _mapTransform;
-            uint fy = (uint)ClampInt(t.CenterY + Round(y * t.ScaleY), 0, 0xFFFF);
-            uint fz = (uint)ClampInt(t.CenterZ + Round(z * t.ScaleZ), 0, 0xFFFFFF);
-            uint fx = (uint)ClampInt(t.CenterX + Round(x * t.ScaleX), 0, 0xFFFFFF);
+            uint fy = (uint)ClampInt(t.CenterY + Round(y * t.ScaleY), 1, 0xFFFF);
+            uint fz = (uint)ClampInt(t.CenterZ + Round(z * t.ScaleZ), 1, 0xFFFFFF);
+            uint fx = (uint)ClampInt(t.CenterX + Round(x * t.ScaleX), 1, 0xFFFFFF);
             _bitWriter!.WriteBits(fy, 16);
             _bitWriter!.WriteBits(fz, 24);
             _bitWriter!.WriteBits(fx, 24);
+        }
+
+        // Pick the world→field transform for the location_t channels, per track:
+        // AC map.ini, else the wheel outline's world bounds, else SimHub's recorded
+        // map (refit whenever its bounds change), else Fallback.
+        private void UpdateMapTransform(in GameDataSnapshot snap)
+        {
+            if (snap.TrackFolderName != _mapTransformTrack || !ReferenceEquals(snap.Outline, _mapTransformOutline))
+            {
+                _mapTransformTrack = snap.TrackFolderName;
+                _mapTransformOutline = snap.Outline;
+                _mapTransformBounds = null;
+                _mapFixedTransform = TrackMapTransform.ResolveMapIni(snap.TrackFolderName);
+                var o = snap.Outline;
+                bool fromOutline = _mapFixedTransform == null && o != null && o.HasBounds;
+                if (fromOutline)
+                    _mapFixedTransform = TrackMapTransform.FromBounds(
+                        o!.MinX, o.MaxX, o.MinY, o.MaxY, o.MinZ, o.MaxZ, false, "outline");
+                _mapTransform = _mapFixedTransform ?? TrackMapTransform.Fallback();
+                if (fromOutline) LogMapTransform(o!.Path);
+            }
+            if (_mapFixedTransform != null || !snap.MapBoundsValid) return;
+            var b = (snap.MapMinX, snap.MapMaxX, snap.MapMinY, snap.MapMaxY, snap.MapMinZ, snap.MapMaxZ);
+            if (_mapTransformBounds == b) return;
+            _mapTransformBounds = b;
+            _mapTransform = TrackMapTransform.FromBounds(snap.MapMinX, snap.MapMaxX, snap.MapMinY,
+                snap.MapMaxY, snap.MapMinZ, snap.MapMaxZ, snap.MapLapRelative, snap.MapBoundsSource ?? "simhub-map");
+            LogMapTransform(snap.TrackFolderName);
+        }
+
+        private void LogMapTransform(string? track)
+        {
+            var t = _mapTransform;
+            MozaLog.Info($"[AZOM] track transform '{track}': {t.Source} -> X_scale={t.ScaleX:F1} " +
+                $"X_center={t.CenterX} Z_scale={t.ScaleZ:F0} Z_center={t.CenterZ} Y_center={t.CenterY}");
         }
 
         private static int Round(float v) => (int)Math.Round((double)v);
@@ -575,14 +616,8 @@ namespace MozaPlugin.Telemetry.Frames
                 // (feeds the ri high-12-bit relative-orientation field).
                 UpdateRadarHeadings(in snapshot);
 
-                // Pick the per-track world→field transform for the location_t
-                // channels (map-pixel scale keyed to map.ini SCALE_FACTOR);
-                // resolved once per track, cached until the track changes.
-                if (snapshot.TrackFolderName != _mapTransformTrack)
-                {
-                    _mapTransformTrack = snapshot.TrackFolderName;
-                    _mapTransform = TrackMapTransform.Resolve(snapshot.TrackFolderName);
-                }
+                if (NeedsCarPositions)
+                    UpdateMapTransform(in snapshot);
 
                 for (int i = 0; i < _profile.Channels.Count; i++)
                 {

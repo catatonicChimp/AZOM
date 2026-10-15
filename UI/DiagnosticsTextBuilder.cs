@@ -1235,10 +1235,11 @@ namespace MozaPlugin.UI
         public static string BuildSubscriptionResponse(MozaPlugin plugin)
         {
             var chunks = plugin.SubscriptionResponseForDiagnostics;
+            string ses = $"0x{plugin.SubscriptionResponseSessionForDiagnostics:X2}";
             if (chunks == null || chunks.Count == 0)
-                return "(no inbound chunks captured on session 0x02 in 5s window after subscription)";
+                return $"(no inbound chunks captured on tier-def session {ses} in 5s window after subscription)";
             var sb = new StringBuilder();
-            sb.AppendLine($"{chunks.Count} chunks captured on session 0x02 after most-recent subscription:");
+            sb.AppendLine($"{chunks.Count} chunks captured on tier-def session {ses} after most-recent subscription:");
             int total = 0;
             for (int i = 0; i < chunks.Count; i++)
             {

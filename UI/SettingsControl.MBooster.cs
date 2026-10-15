@@ -473,10 +473,39 @@ namespace MozaPlugin.UI
                 roles[axisIndex] = role;
         }
 
+        /// <summary>
+        /// The other axis of the lane that already holds <paramref name="role"/>,
+        /// or -1. It takes the edited axis's old role, or the first role no axis
+        /// holds if that was Disabled, so a lane keeps distinct roles (Pit House's
+        /// unit map goes 1/2/3 → 2/1/3 the same way).
+        /// </summary>
+        private static int MBoosterRoleSwapPartner(
+            MBoosterDeviceSettings s, int connectedAxisCount, int rawAxisCount, int axisIndex,
+            MBoosterRole role, out MBoosterRole partnerRole)
+        {
+            partnerRole = MBoosterRole.Disabled;
+            if (connectedAxisCount <= 1 || role == MBoosterRole.Disabled) return -1;
+            int length = Math.Max(rawAxisCount, axisIndex + 1);
+            var current = new MBoosterRole[length];
+            for (int i = 0; i < length; i++)
+                current[i] = global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.ResolveAxisRole(s, i, connectedAxisCount);
+            int partner = Array.FindIndex(current, (r) => r == role);
+            if (partner == axisIndex) partner = Array.FindIndex(current, axisIndex + 1, (r) => r == role);
+            if (partner < 0) return -1;
+            partnerRole = current[axisIndex];
+            if (partnerRole == MBoosterRole.Disabled)
+            {
+                current[axisIndex] = role;
+                foreach (var r in new[] { MBoosterRole.Throttle, MBoosterRole.Brake, MBoosterRole.Clutch })
+                    if (Array.IndexOf(current, r) < 0) { partnerRole = r; break; }
+            }
+            return partner;
+        }
+
         /// <summary>Role-combo callback for <see cref="MBoosterDeviceRow"/> — edits
         /// THAT row's pedal Role regardless of which row is currently selected.
-        /// Two pedals may share a role, as Pit House allows: only the edited
-        /// pedal is written.</summary>
+        /// A pedal already holding the new role swaps to the edited pedal's old
+        /// one (see <see cref="MBoosterRoleSwapPartner"/>).</summary>
         private void OnMBoosterDeviceRowRoleChanged(string identity, int axisIndex, MBoosterRole role)
         {
             if (_suppressEvents) return;
@@ -485,12 +514,24 @@ namespace MozaPlugin.UI
             var controller = _plugin.MBoosterRegistry?.FindByIdentity(identity);
             int axisCount = controller?.AxisSlotCount ?? 1;
             int connectedAxisCount = controller?.ConnectedAxisCount ?? 1;
+            int partner = MBoosterRoleSwapPartner(s, connectedAxisCount, axisCount, axisIndex, role, out var partnerRole);
             // A motor pedal's role lives on its unit (register 0x22) — write it
             // there too, as Pit House does. Before the setting changes: the
-            // unit is found from the axis's current role.
-            if (role != MBoosterRole.Disabled)
-                controller?.WritePedalRole(axisIndex, MBoosterDeviceController.RoleIndexOf(role));
+            // unit is found from the axis's current role, so both units of a
+            // swap are resolved before either is written.
+            byte unit = 0, partnerUnit = 0;
+            bool writeUnit = role != MBoosterRole.Disabled && controller != null
+                && controller.TryPedalRoleUnit(axisIndex, out unit);
+            bool writePartnerUnit = partner >= 0 && partnerRole != MBoosterRole.Disabled && controller != null
+                && controller.TryPedalRoleUnit(partner, out partnerUnit);
+            if (writeUnit) controller!.WritePedalRoleTo(unit, MBoosterDeviceController.RoleIndexOf(role));
+            if (writePartnerUnit) controller!.WritePedalRoleTo(partnerUnit, MBoosterDeviceController.RoleIndexOf(partnerRole));
             SetMBoosterPedalRole(s, connectedAxisCount, axisCount, axisIndex, role);
+            if (partner >= 0)
+            {
+                SetMBoosterPedalRole(s, connectedAxisCount, axisCount, partner, partnerRole);
+                MozaLog.Info($"[AZOM/mBooster] {identity}: axis {axisIndex} -> {role}, axis {partner} swapped to {partnerRole}");
+            }
             _plugin.SaveSettings();
             // Max Force/Deadzone bounds follow the pedal's hardware (active
             // 0-200kg / 0-37kg, passive 4-20kg / 0-8kg) — a pedal whose type
@@ -532,7 +573,8 @@ namespace MozaPlugin.UI
                     }
                 }
             }
-            if (string.Equals(identity, _mboosterSelectedIdentity, StringComparison.OrdinalIgnoreCase) && axisIndex == _mboosterEffectPedalIndex)
+            if (string.Equals(identity, _mboosterSelectedIdentity, StringComparison.OrdinalIgnoreCase)
+                && (axisIndex == _mboosterEffectPedalIndex || partner == _mboosterEffectPedalIndex))
             {
                 UpdateMBoosterConfigVisibilityForRole();
                 // Bounds just changed above — re-seed so a value that was

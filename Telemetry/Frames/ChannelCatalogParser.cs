@@ -667,7 +667,15 @@ namespace MozaPlugin.Telemetry.Frames
         /// <summary>Reset the per-session buffers (typically on session restart
         /// or before a forced reparse). Does NOT clear the parsed catalog — the
         /// wheel relies on prior idx→URL bindings for back-references after a
-        /// dash switch.</summary>
+        /// dash switch.
+        ///
+        /// DOES clear which session carried the catalog/END. The wheel assigns
+        /// the catalog and FF roles per session open and can swap them between
+        /// cycles on the same wheel (bundle 5NDCADWR, W17/CS-Pro 2026-10-11:
+        /// catalog on 0x02 at the first start, on 0x01 after a rim hot-swap).
+        /// Carrying the previous cycle's roles across let the pre-init catalog
+        /// wait pass at 0 ms and sent the tier-def and FF-init to the wrong
+        /// sessions; the wheel closed 0x02 and never bound.</summary>
         public void ClearBuffer()
         {
             lock (_bufferLock)
@@ -682,6 +690,8 @@ namespace MozaPlugin.Telemetry.Frames
                 _headBlockedSinceTickMs.Clear();
                 _lastAppendTickMs.Clear();
                 _lastProgressTickMs.Clear();
+                _endMarkerBySession.Clear();
+                _sessionsWithValidUrls.Clear();
             }
             _lastParseLen = 0;
         }
@@ -836,15 +846,6 @@ namespace MozaPlugin.Telemetry.Frames
             _lastActivityMs = 0;
             _liveCatalog = null;
             BeginCatalogEpoch();
-            // Per-session catalog/END tracking is part of "what the wheel has
-            // advertised this connection" — drop it on a full restart like the
-            // parsed catalog above (kept across ClearBuffer for back-refs, but
-            // a Reset is a fresh wheel session).
-            lock (_bufferLock)
-            {
-                _endMarkerBySession.Clear();
-                _sessionsWithValidUrls.Clear();
-            }
         }
 
         /// <summary>Returns the total buffer length (across sessions) the last

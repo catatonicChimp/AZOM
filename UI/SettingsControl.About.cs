@@ -124,7 +124,7 @@ namespace MozaPlugin.UI
             sb.AppendLine("=== Last subscription sent ===");
             sb.AppendLine(DiagnosticsTextBuilder.BuildSubscription(_plugin));
             sb.AppendLine();
-            sb.AppendLine("=== Wheel response on 0x02 (post-subscription window) ===");
+            sb.AppendLine("=== Wheel response on the tier-def session (post-subscription window) ===");
             sb.AppendLine(DiagnosticsTextBuilder.BuildSubscriptionResponse(_plugin));
             sb.AppendLine();
             sb.AppendLine("=== Firmware debug (wire group 0x0E) ===");

@@ -1003,54 +1003,27 @@ namespace MozaPlugin.Devices.MBooster
         /// Travel (0x84/0x85), End Stop (0xB2), Natural Friction (0xAE),
         /// Virtual Damping (0xAD), Segmented Damping (0xB7), Deadzone/Max
         /// Force/feel curve (0xAB), Max Threshold (0xB3), Sensor Ratio (0x1A).
-        /// None of them carries a per-pedal selector, so they configure
-        /// whichever pedal owns that hardware on the device id they are sent
-        /// to.
+        /// None carries a per-pedal selector: they set the motor pedal of the
+        /// unit they are sent to.
         ///
-        /// Normally every motorized axis resolves to its own device id and the
-        /// answer is yes for all of them. But when two motorized axes land on
-        /// the SAME id — a routed chain whose role map hasn't resolved, so both
-        /// fall back to the host — they would take turns overwriting one
-        /// register set. Bug 34JAASN5 is exactly that: throttle 3.8/35.9mm and
-        /// brake 17.6/49.7mm hitting 0x19's travel registers 74ms apart on
-        /// every apply, last writer winning.
-        ///
-        /// In that case exactly one axis owns them: the pedal whose role the
-        /// registers are named for (Brake), else the lowest axis index, so the
-        /// choice is stable across applies rather than order-dependent.
+        /// That pedal is always the unit's local channel B, and 0x22 holds its
+        /// role — Pit House's model: a role change pushes the new role's feel
+        /// config to the unit with the 0x22 write (moza-simulator, 2026-09-29 /
+        /// 2026-10-10). So the owner is the axis whose role matches the 0x22
+        /// of the unit it addresses. A passive pedal (channel T/C, 0x21/0x23)
+        /// never matches, and two axes falling back to one id (34JAASN5's
+        /// unresolved routed chain) can't both own it. Until that unit's 0x22
+        /// has been read, nobody owns them; the read triggers a re-apply.
         /// </summary>
         public bool OwnsSingletonRegisters(int axisIndex)
         {
-            if (!IsAxisMotorized(axisIndex)) return false;
-            if (!TryCalibDeviceForAxis(axisIndex, out byte mine)) return false;
-
-            int bestAxis = axisIndex;
-            int bestRank = SingletonOwnerRank(axisIndex);
-            for (int a = 0; a < MaxAxes; a++)
-            {
-                if (a == axisIndex || !IsAxisMotorized(a)) continue;
-                if (!TryCalibDeviceForAxis(a, out byte other) || other != mine) continue;
-                int rank = SingletonOwnerRank(a);
-                if (rank < bestRank || (rank == bestRank && a < bestAxis))
-                {
-                    bestRank = rank;
-                    bestAxis = a;
-                }
-            }
-            return bestAxis == axisIndex;
-        }
-
-        // Brake wins (the registers are its own hardware), then throttle, then
-        // clutch, then an unresolved role.
-        private int SingletonOwnerRank(int axisIndex)
-        {
-            switch (RoleIndexForAxis(axisIndex))
-            {
-                case 1: return 0;   // Brake
-                case 0: return 1;   // Throttle
-                case 2: return 2;   // Clutch
-                default: return 3;
-            }
+            int role = RoleIndexForAxis(axisIndex);
+            if (role < 0 || !TryCalibDeviceForAxis(axisIndex, out byte mine)) return false;
+            if (StatusValue(mine, "mbooster-status-22") != role + 1) return false;
+            for (int a = 0; a < axisIndex; a++)
+                if (RoleIndexForAxis(a) == role && TryCalibDeviceForAxis(a, out byte other) && other == mine)
+                    return false;
+            return true;
         }
 
         /// <summary>Command-name prefix ("throttle"/"brake"/"clutch") for an
@@ -1236,17 +1209,48 @@ namespace MozaPlugin.Devices.MBooster
         private void StoreStatusRegister(byte device, string name, int value)
         {
             if (name != "mbooster-motor-cal-locate" && Array.IndexOf(StatusReadNames, name) < 0) return;
-            lock (_statusLock) _statusRegs[$"{device:x2}:{name}"] = value;
+            string key = $"{device:x2}:{name}";
+            bool firstMotorRole;
+            lock (_statusLock)
+            {
+                firstMotorRole = name == "mbooster-status-22" && !_statusRegs.ContainsKey(key);
+                _statusRegs[key] = value;
+            }
+            // The unit's motor-pedal role decides who owns its singleton
+            // registers (OwnsSingletonRegisters); the connect-time apply ran
+            // before it was read, so re-apply now that it's known.
+            if (firstMotorRole)
+            {
+                try { RoutingResolved?.Invoke(false); }
+                catch (Exception ex) { MozaLog.Debug($"[AZOM/mBooster] RoutingResolved handler: {ex.Message}"); }
+            }
         }
 
         // Latest read-back / write-echo of each per-role output register
-        // (dir, min, max, y1..y5), keyed "<dev hex>:<command name>". Seeds the
-        // Pedals tab for a passive pedal the profile holds no override for.
+        // (dir, min, max, y1..y5) and the brake config registers below, keyed
+        // "<dev hex>:<command name>". Seeds the Pedals tab for a passive pedal
+        // the profile holds no override for, and lets the connect/profile apply
+        // skip what the unit already holds. Cleared on disconnect.
         private readonly System.Collections.Generic.Dictionary<string, int> _outputRegs =
             new System.Collections.Generic.Dictionary<string, int>();
 
+        private static readonly HashSet<string> CachedConfigRegisters = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "mbooster-brake-angle-ratio", "mbooster-brake-threshold",
+            "mbooster-brake-travel-start", "mbooster-brake-travel-end",
+            "mbooster-brake-endstop-front", "mbooster-brake-endstop-end",
+            "mbooster-brake-friction-0", "mbooster-brake-friction-1",
+            "mbooster-brake-damping-press", "mbooster-brake-damping-release",
+            "mbooster-brake-deadzone", "mbooster-brake-maxforce",
+            "mbooster-brake-feelcurve-1", "mbooster-brake-feelcurve-2", "mbooster-brake-feelcurve-3",
+            "mbooster-brake-feelcurve-4", "mbooster-brake-feelcurve-5", "mbooster-brake-feelcurve-6",
+            "mbooster-brake-feelcurve-x-1", "mbooster-brake-feelcurve-x-2", "mbooster-brake-feelcurve-x-3",
+            "mbooster-brake-feelcurve-x-4", "mbooster-brake-feelcurve-x-5", "mbooster-brake-feelcurve-x-6",
+        };
+
         private static bool IsOutputRegister(string name)
         {
+            if (CachedConfigRegisters.Contains(name)) return true;
             if (!name.StartsWith("mbooster-", StringComparison.Ordinal)) return false;
             int dash = name.LastIndexOf('-');
             // "mbooster-<role>-<field>": a single-segment name
@@ -1272,6 +1276,32 @@ namespace MozaPlugin.Devices.MBooster
             lock (_statusLock)
                 return _outputRegs.TryGetValue($"{device:x2}:{name}", out var v) ? v : -1;
         }
+
+        // Every one of these registers is a flash parameter on the unit
+        // (firmware param_manage "Written", AA3FY2YZ): a write the unit already
+        // reports (read-back or echo) is skipped, from the apply and the UI
+        // alike. A dropped write leaves the old value cached, so it's retried.
+        private bool UnitHolds(byte device, string name, int value) =>
+            IsOutputRegister(name) ? OutputRegisterValue(device, name) == value
+            : name == "mbooster-sleep-minutes" && StatusValue(device, name) == value;
+
+        /// <summary>Send a Segmented Damping frame unless it matches the last
+        /// one sent to that unit since connect (the frame has no named
+        /// read-back to compare against).</summary>
+        public void SendSegmentedDampingIfChanged(byte[] frame, byte device)
+        {
+            lock (_lastSegDamp)
+            {
+                if (_lastSegDamp.TryGetValue(device, out var last)
+                    && System.Linq.Enumerable.SequenceEqual(last, frame))
+                    return;
+                _lastSegDamp[device] = frame;
+            }
+            SendOneShot(frame);
+        }
+
+        // Last Segmented Damping frame sent, per device id. Cleared on disconnect.
+        private readonly Dictionary<byte, byte[]> _lastSegDamp = new Dictionary<byte, byte[]>();
 
         /// <summary>Snapshot of the status registers for the diagnostics dump,
         /// keyed "&lt;dev hex&gt;:&lt;command name&gt;".</summary>
@@ -1540,8 +1570,12 @@ namespace MozaPlugin.Devices.MBooster
             // "already complete" before the reconnected pedal has answered
             // anything.
             lock (_statusLock) _statusRegs.Clear();
+            // Register values describe a live unit; a stale one would let the
+            // next apply skip a write the reconnected unit needs.
+            lock (_statusLock) _outputRegs.Clear();
             // The next connect-time apply resends every feel-curve X.
             lock (_lastFeelX) _lastFeelX.Clear();
+            lock (_lastSegDamp) _lastSegDamp.Clear();
         }
 
         private void OnConnectionMessage(byte[] data)
@@ -2279,9 +2313,11 @@ namespace MozaPlugin.Devices.MBooster
         public bool SendIntWrite(string commandName, int value, byte? device = null)
         {
             if (!_connection.IsConnected) return false;
+            byte dev = device ?? HostDeviceId;
+            if (UnitHolds(dev, commandName, value)) return true;
             var cmd = MozaCommandDatabase.Get(commandName);
             if (cmd == null) return false;
-            var msg = cmd.BuildWriteInt(device ?? HostDeviceId, value);
+            var msg = cmd.BuildWriteInt(dev, value);
             if (msg == null) return false;
             _connection.Send(msg);
             return true;
@@ -2294,9 +2330,11 @@ namespace MozaPlugin.Devices.MBooster
         public bool SendFloatWrite(string commandName, float value, byte? device = null)
         {
             if (!_connection.IsConnected) return false;
+            byte dev = device ?? HostDeviceId;
+            if (UnitHolds(dev, commandName, (int)Math.Round(value))) return true;
             var cmd = MozaCommandDatabase.Get(commandName);
             if (cmd == null) return false;
-            var msg = cmd.BuildWriteFloat(device ?? HostDeviceId, value);
+            var msg = cmd.BuildWriteFloat(dev, value);
             if (msg == null) return false;
             _connection.Send(msg);
             return true;
@@ -2332,6 +2370,7 @@ namespace MozaPlugin.Devices.MBooster
         public void PushFeelCurveResync(double deadzoneKg, double maxForceKg, float[]? inputCurveY, float[]? inputCurveX, byte device,
             bool allX = false)
         {
+
             var midX = MozaMBoosterRegistry.ComputeFeelCurveX(inputCurveX);
             var midY = MozaMBoosterRegistry.ComputeFeelCurveY(deadzoneKg, maxForceKg, inputCurveY);
             // Pit House's bursts (moza-simulator bridge, 2026-09-29): a

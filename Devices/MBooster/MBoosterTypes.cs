@@ -210,6 +210,9 @@ namespace MozaPlugin.Devices.MBooster
         // start point at 90 against an end at 100, and the end at 10 against
         // a start at 0. MozaCurveEditor.MinEndpointGap's default matches.
         public const int OutputCurveMinRangePct = 10;
+
+        // Output curve y1..y5 of Pit House's Linear preset.
+        public static readonly float[] LinearOutputCurve = { 20, 40, 60, 80, 100 };
     }
 
     /// <summary>

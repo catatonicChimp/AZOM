@@ -75,6 +75,7 @@ namespace MozaPlugin.UI
                 (float)Math.Round(MBoosterY4Slider.Value), (float)Math.Round(MBoosterY5Slider.Value),
                 (float)Math.Round(MBoosterY6Slider.Value),
             };
+            MozaMBoosterRegistry.PinOutputMapping(s, MBoosterReportedOutput());
             s.HardwareCurveY = curve;
             string? prefix = MBoosterSelectedPedalRolePrefix();
             if (prefix == null) return;
@@ -98,6 +99,7 @@ namespace MozaPlugin.UI
             var s = CurrentMBoosterEffectTarget();
             if (s == null) return;
             int v = (int)Math.Round(value);
+            MozaMBoosterRegistry.PinOutputMapping(s, MBoosterReportedOutput());
             if (isMin) s.Min = v; else s.Max = v;
             _plugin.SaveSettings();
             string? prefix = MBoosterSelectedPedalRolePrefix();
@@ -107,39 +109,30 @@ namespace MozaPlugin.UI
                 (c, dev) => c.SendIntWrite($"mbooster-{prefix}-{field}", v, dev));
         }
 
-        /// <summary>Seed the output curve: the profile's value where set, else
-        /// what the pedal's unit reports, else Linear over 0–100. Assumes the
-        /// event suppressor is active.</summary>
+        /// <summary>Seed the output curve and range
+        /// (<see cref="MozaMBoosterRegistry.ResolveOutputMapping"/>). Assumes
+        /// the event suppressor is active.</summary>
         private void SeedMBoosterOutputCurve(IMBoosterPedalConfig? fx)
+        {
+            MozaMBoosterRegistry.ResolveOutputMapping(fx, MBoosterReportedOutput(), out int lo, out int hi, out float[] curve);
+            MBoosterRangeStartSlider.Value = Clamp(lo, 0, 100);
+            MBoosterRangeEndSlider.Value = Clamp(hi, 0, 100);
+            var ySliders = new[] { MBoosterY2Slider, MBoosterY3Slider, MBoosterY4Slider, MBoosterY5Slider, MBoosterY6Slider };
+            var yLabels = new[] { MBoosterY2Value, MBoosterY3Value, MBoosterY4Value, MBoosterY5Value, MBoosterY6Value };
+            for (int i = 0; i < 5; i++)
+                SetSliderRaw(ySliders[i], yLabels[i], (int)Math.Round(curve[i]), 0, 100, "");
+            MBoosterY1Slider.Value = 0;
+        }
+
+        /// <summary>The selected pedal's output registers as its unit reports
+        /// them ("min", "max", "y1".."y5"; -1 unknown).</summary>
+        private Func<string, int> MBoosterReportedOutput()
         {
             var c = CurrentMBoosterController();
             string? prefix = MBoosterSelectedPedalRolePrefix();
             byte dev = 0;
             bool haveDev = c != null && prefix != null && c.TryCalibDeviceForAxis(_mboosterEffectPedalIndex, out dev);
-            int Device(string field) => haveDev ? c!.OutputRegisterValue(dev, $"mbooster-{prefix}-{field}") : -1;
-            int Pick(int stored, string field, int fallback)
-            {
-                if (stored >= 0) return stored;
-                int reported = Device(field);
-                return reported >= 0 ? reported : fallback;
-            }
-
-            int lo = (int)Clamp(Pick(fx?.Min ?? -1, "min", 0), 0, 100);
-            int hi = (int)Clamp(Pick(fx?.Max ?? -1, "max", 100), 0, 100);
-            MBoosterRangeStartSlider.Value = lo;
-            MBoosterRangeEndSlider.Value = hi;
-
-            var stored = fx?.HardwareCurveY;
-            var ySliders = new[] { MBoosterY2Slider, MBoosterY3Slider, MBoosterY4Slider, MBoosterY5Slider, MBoosterY6Slider };
-            var yLabels = new[] { MBoosterY2Value, MBoosterY3Value, MBoosterY4Value, MBoosterY5Value, MBoosterY6Value };
-            for (int i = 0; i < 5; i++)
-            {
-                int y = stored != null && stored.Length == 5
-                    ? (int)Math.Round(stored[i])
-                    : Pick(-1, $"y{i + 1}", PedalCurvePresets[0][i]);
-                SetSliderRaw(ySliders[i], yLabels[i], y, 0, 100, "");
-            }
-            MBoosterY1Slider.Value = 0;
+            return field => haveDev ? c!.OutputRegisterValue(dev, $"mbooster-{prefix}-{field}") : -1;
         }
 
         private void MBoosterRangeStartSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => SetMBoosterRangeEnd(true, e.NewValue);
@@ -524,7 +517,7 @@ namespace MozaPlugin.UI
             var s = CurrentMBoosterEffectTarget();
             if (s == null) return;
             s.SensorOutputRatioPct = v;
-            QueueMBoosterCalibPush("angle-ratio",
+            QueueMBoosterPedalFeelPush("angle-ratio",
                 (c, dev) => c.SendFloatWrite("mbooster-brake-angle-ratio", v, dev));
             _plugin.SaveSettings();
         }
@@ -541,7 +534,7 @@ namespace MozaPlugin.UI
                 var s = CurrentMBoosterEffectTarget();
                 if (s == null) return;
                 s.MaxThresholdKg = v;
-                QueueMBoosterCalibPush("brake-threshold", (c, dev) =>
+                QueueMBoosterPedalFeelPush("brake-threshold", (c, dev) =>
                     c.SendIntWrite("mbooster-brake-threshold",
                         global::MozaPlugin.Protocol.MozaMBoosterProtocol.EncodeThresholdKg(v), dev));
             });
@@ -687,7 +680,7 @@ namespace MozaPlugin.UI
             // Built inside the parked action so the flush sends whatever the
             // plots hold when the drag settles, not a mid-drag snapshot.
             QueueMBoosterPedalFeelPush("segdamp", (c, dev) =>
-                c.SendOneShot(global::MozaPlugin.Protocol.MozaMBoosterProtocol.BuildSegmentedDampingFrame(
+                c.SendSegmentedDampingIfChanged(global::MozaPlugin.Protocol.MozaMBoosterProtocol.BuildSegmentedDampingFrame(
                     sd.Divider1Pressed >= 0 ? sd.Divider1Pressed : MBoosterUiConstants.SegDampDivider1PressedDefaultPct,
                     sd.Divider2Pressed >= 0 ? sd.Divider2Pressed : MBoosterUiConstants.SegDampDivider2PressedDefaultPct,
                     sd.Divider1Released >= 0 ? sd.Divider1Released : MBoosterUiConstants.SegDampDivider1ReleasedDefaultPct,
@@ -698,7 +691,7 @@ namespace MozaPlugin.UI
                     !enabled ? 0 : sd.Seg2Released >= 0 ? sd.Seg2Released : MBoosterUiConstants.SegDampSegDefaultPct,
                     !enabled ? 0 : sd.Seg3Pressed >= 0 ? sd.Seg3Pressed : MBoosterUiConstants.SegDampSegDefaultPct,
                     !enabled ? 0 : sd.Seg3Released >= 0 ? sd.Seg3Released : MBoosterUiConstants.SegDampSegDefaultPct,
-                    dev)));
+                    dev), dev));
         }
 
         // Master on/off for the whole Segmented Damping feature — see
@@ -725,7 +718,7 @@ namespace MozaPlugin.UI
             var c = CurrentMBoosterController();
             var s = CurrentMBoosterSettings();
             if (c == null || s == null) return;
-            _plugin.HardwareApplier.ApplyMBoosterToHardware(c, s);
+            _plugin.HardwareApplier.ApplyMBoosterToHardware(c, s, userRequested: true);
         }
 
         // ------- Language picker (Options tab) -------

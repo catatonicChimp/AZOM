@@ -9,12 +9,14 @@ Encoding selection is driven by the wheel-era policy, not a user "Protocol versi
 - **V2Type02**: compact numeric tier definitions via `TierDefinitionBuilder.BuildTierDefinitionMessage()`.
 - **V0Url**: URL subscription via `TierDefinitionBuilder.BuildV0UrlSubscription()`. Double-sent (once at startup, once after preamble) to match PitHouse.
 
-The tier-def is emitted on the **management** session `0x01`, independent of era, by `TelemetrySender.ResolveTierDefSession()`:
+The tier-def is emitted on whichever host session carries the wheel's real catalog + END, resolved per cycle by `TelemetrySender.ResolveTierDefSession()`:
 
-- The wheel's channel catalog is **parsed from whichever session delivered it** (`ChannelCatalogParser.HasRealCatalogOnSession`). On cold start the wheel's first catalog can transiently arrive on the telemetry session `0x02`.
-- The tier-def echo, however, **always stays on `0x01`**, because that is where the wheel binds the subscription. Echoing it on `0x02` after a cold-start catalog landed there left the wheel **unbound** — host kind=4 ignored, test mode dead — until a `DisplayWatchdog` recovery (~24 s + Stop/Start) nudged the catalog back to `0x01`. Verified CS-Pro 2026-06-07: catalog-on-0x02 + tier-def-on-0x02 → no bind; tier-def-on-0x01 → binds.
+- The wheel's channel catalog is **parsed from whichever session delivered it** (`ChannelCatalogParser.HasRealCatalogOnSession`). Form A puts it on `0x01`, Form B on `0x02`; the wheel picks per open and the same wheel can switch forms between cycles (see [`../sessions/lifecycle.md`](../sessions/lifecycle.md) § "Session roles are assigned per open").
+- The tier-def follows the catalog, and its END u32 echoes that session's own END (`GetEndMarkerForSession`). Emitting on the other session, or with the other session's END, is rejected: the wheel sends one type-00 CLOSE for the session the tier-def rode and never binds (CS-Pro 2026-06-07, 2026-06-10, bundle 5NDCADWR 2026-10-11).
+- The per-session catalog/END memory is cleared in `ChannelCatalogParser.ClearBuffer` on every `StartInner`, so `StartInner`'s pre-init catalog wait always holds for the current cycle's advertisement before the FF-init goes out. Reusing the previous cycle's roles sent both to the wrong sessions after a rim hot-swap (5NDCADWR).
+- `DisplayWatchdog` treats a wheel-initiated CLOSE of the session the most recent tier-def rode, within 10 s of that emission, as a reject and requests a restart.
 
-FF-init records, dashboard-switch (kind=4), and property pushes ride the **mirror** session `0x02` (`ResolveFfSession()`, the *opposite* of the tier-def session; PitHouse-derived). The flag byte for value frames is 0x00-based, not session-port-based.
+FF-init records, dashboard-switch (kind=4), and property pushes ride the **mirror** session (`ResolveFfSession()`, the *opposite* of the tier-def session; PitHouse-derived). The flag byte for value frames is 0x00-based, not session-port-based.
 
 (The earlier `TelemetryProtocolVersion` and `FlagByteMode` settings were removed in favour of this era policy.)
 

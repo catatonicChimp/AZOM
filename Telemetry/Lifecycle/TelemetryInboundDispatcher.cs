@@ -196,18 +196,6 @@ namespace MozaPlugin.Telemetry.Lifecycle
                 _sender.SlotTracker.TryAbsorbKind4Echo(chunkPayload);
                 // FF-record reassembly (device display log, kind=14).
                 _sender.FeedFfRecords(session, seq, chunkPayload);
-
-                // Capture wheel's post-subscription response (5 s window).
-                if (_sender.SubscriptionResponseDeadlineTicksField != 0
-                    && System.Diagnostics.Stopwatch.GetTimestamp() < _sender.SubscriptionResponseDeadlineTicksField
-                    && chunkPayload.Length > 0)
-                {
-                    var list = _sender.SubscriptionResponseChunksList;
-                    lock (list)
-                    {
-                        if (list.Count < 32) list.Add(chunkPayload);
-                    }
-                }
             }
 
             // Ack on mgmt session. Specific-seq ack (NOT running max) — otherwise
@@ -239,6 +227,20 @@ namespace MozaPlugin.Telemetry.Lifecycle
                 // because which one carries the FF records is Form-dependent;
                 // a duplicate feed (FlagByte == MgmtPort) is dropped by seq.
                 _sender.FeedFfRecords(session, seq, chunkPayload);
+            }
+
+            // Capture the wheel's post-subscription response (5 s window) on
+            // the session the tier-def rode — 0x01 or 0x02 by form.
+            if (session == _sender.SubscriptionResponseSessionField
+                && _sender.SubscriptionResponseDeadlineTicksField != 0
+                && System.Diagnostics.Stopwatch.GetTimestamp() < _sender.SubscriptionResponseDeadlineTicksField
+                && chunkPayload.Length > 0)
+            {
+                var list = _sender.SubscriptionResponseChunksList;
+                lock (list)
+                {
+                    if (list.Count < 32) list.Add(chunkPayload);
+                }
             }
 
             // File-transfer candidate sessions (0x04..0x08): forward to the

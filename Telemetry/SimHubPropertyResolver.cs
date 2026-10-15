@@ -20,7 +20,7 @@ namespace MozaPlugin.Telemetry
         private readonly MozaHidReader _hidReader;
         private readonly NCalcExpressionEvaluator _formula = new NCalcExpressionEvaluator();
         private bool _allPropertiesNamesWarned;
-        private static bool s_trackNameLogged;
+        private static string? s_lastTrackPath;
 
         public SimHubPropertyResolver(PluginManager pluginManager, MozaData data, MozaHidReader hidReader)
         {
@@ -172,17 +172,20 @@ namespace MozaPlugin.Telemetry
                     // (e.g. "ac/imola"), not a display string — without the
                     // game prefix the wheel can't locate the map and the
                     // track-map widget renders blank.
-                    string? game = null; object? track = null, propGame = null;
+                    string? game = null; object? track = null, trackId = null, config = null;
                     try { game = _pluginManager?.GameName; } catch { }
-                    try { propGame = _pluginManager?.GetPropertyValue("DataCorePlugin.GameName"); } catch { }
                     try { track = _pluginManager?.GetPropertyValue("DataCorePlugin.GameData.TrackName"); }
                     catch { /* unresolvable → empty track name */ }
-                    string result = Dashboard.GameNameMap.TrackPath(game, track?.ToString());
-                    if (!s_trackNameLogged)
+                    try { trackId = _pluginManager?.GetPropertyValue("DataCorePlugin.GameData.TrackId"); } catch { }
+                    try { config = _pluginManager?.GetPropertyValue("DataCorePlugin.GameData.TrackConfig"); } catch { }
+                    string result = Dashboard.GameNameMap.TrackPath(game, trackId?.ToString(),
+                        config?.ToString(), track?.ToString());
+                    if (result != s_lastTrackPath)
                     {
-                        s_trackNameLogged = true;
+                        s_lastTrackPath = result;
                         MozaLog.Info($"[AZOM] @internal/TrackName resolve: GameName={game ?? "<null>"} " +
-                            $"prop.GameName={propGame ?? "<null>"} TrackName={track ?? "<null>"} -> '{result}'");
+                            $"TrackId={trackId ?? "<null>"} TrackConfig={config ?? "<null>"} " +
+                            $"TrackName={track ?? "<null>"} -> '{result}'");
                     }
                     return result;
                 }
