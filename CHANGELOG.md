@@ -6,55 +6,35 @@ All notable changes to the AZOM plugin are documented here.
 
 ## Added
 
-- **Soft limit strength: Soft, Middle or Hard, as in Pit House.** Sets the soft limit to 50, 75 or
-  100% of its maximum. It's saved in profiles and imported from Pit House presets.
-
-- **FFB center deadzone compensation, 0 to 10, as in Pit House.** It lives under the output curve
-  and bends it, boosting the middle of the range the most. Like Pit House, it rebuilds the curve
-  from linear, so it replaces a hand-edited curve, and a curve it didn't make reads as 10.
+- **iRacing track maps on the wheel.** The plugin now ships iRacing track outlines, so the map
+  shows up, isn't mirrored, and car dots line up with the track (thanks to help from Marc Mas!).
+- **Soft limit strength: Soft, Middle or Hard, as in Pit House.** Saved in profiles and imported
+  from Pit House presets.
+- **FFB center deadzone compensation, 0 to 10, as in Pit House.** Found under the output curve.
+  Like Pit House, changing it replaces a hand-edited curve.
 
 ## Changed
 
-- **Game FFB intensity goes up to 200%.** That's Pit House's range. It used to stop at 100%.
+- **Game FFB intensity goes up to 200%,** matching Pit House.
 
 ## Fixed
 
-- **The dashboard connects after swapping to a display wheel.** The plugin re-learns which session the
-  wheel put its catalog on instead of reusing the previous wheel's, and restarts when the wheel closes
-  the session a tier definition was sent on.
-
-- **Track-map dots line up in iRacing and other non-AC games.** The map is fitted to the wheel's own
-  track outline and iRacing is no longer mirrored. 
-
-- **The wheel shows the right track map for ACC, LMU, F1 and AC layouts.** The track key now matches
-  the wheel's map names instead of SimHub's display name.
-
-- **Changing an mBooster pedal's role swaps it with the pedal that had that role.** Two pedals
+- **Track-map car dots line up better in other games.**
+- **The wheel shows the right track map for ACC, LMU, F1 and AC layouts.**
+- **The dashboard connects after swapping to a different display wheel.**
+- **Dashboards are more stable,** and no longer get stuck resending data every second.
+- **A CM2 dash gets telemetry back after its hub or base is power-cycled,** without restarting SimHub.
+- **Changing an mBooster pedal's role swaps it with the pedal that had that role,** so two pedals
   no longer end up on the same role.
-
-- **The mBooster output curve is set on the pedal correctly.** Its start and end points set
-  the pedal's range, and the four points between stay evenly spaced.
-
+- **mBooster output curve and range are set correctly** and no longer carry over from the previous
+  profile.
 - **Switching profiles or reconnecting sets the mBooster to the profile's role.**
-
-- **An mBooster output curve no longer keeps the previous profile's range.** Each profile's curve
-  and range are now saved together; a profile that had only part of them takes the rest from the
-  pedal once.
-
-- **"Apply profile settings on launch" off now leaves your devices alone.** Connecting a device no
-  longer writes the saved profile; it's applied when you switch profiles or import one.
-
 - **Multiple standalone mBooster pedals read from the correct axis.**
-
-- **Dashboard data on session 0x01 is acknowledged again.** When the wheel skipped the open ack, its
-  catalog and log went unacknowledged and it resent them every second.
-
-- **A CM2 dash gets telemetry back after its hub or base is power-cycled.** A quick reconnect left it
-  on dead sessions until SimHub was restarted.
-
-- **Retain Game FFB now sends the same "on" value as Pit House.** It used to send 1 where Pit House
-  sends 20, and SimHub's `AZOM.SoftLimitRetain` read a base set by Pit House as off. Profiles saved
-  with the old value are updated when applied.
+- **mBooster settings are held until the pedal is detected as active or passive.**
+- **Linux: the serial port warm-up works again on newer Wine versions.**
+- **"Apply profile settings on launch" turned off now leaves your devices alone.** Profiles are
+  applied only when you switch or import one.
+- **Retain Game FFB setting now sends correct value.** 
 
 ## [1.6.3]
 
@@ -66,10 +46,8 @@ All notable changes to the AZOM plugin are documented here.
 
 - **mBooster pedals can share a role, as in Pit House.** Picking a role another pedal holds no
   longer clears it from that pedal.
-
 - **mBooster Travel start and end can be set any distance apart.** The end no longer stops
   32 mm past the start.
-
 - **The mBooster pedal display-name field is removed.** It only appeared on the selected row and
   had no useful effect.
 
@@ -77,64 +55,44 @@ All notable changes to the AZOM plugin are documented here.
 
 - **Stock pedal-haptics effects won't fail to vibrate.** Switching an effect on now gives it an
   oscillator; switching it off frees it.
-
 - **Wheel and base LEDs no longer lag behind the game.** Busy LED effects used to queue up and
   replay seconds late; the LEDs now always show the latest frame.
-
 - **Knobs can now be skipped in SimHub LED effects.** A skipped knob keeps its own colours
   instead of going dark.
-
 - **Wheel LEDs stay on SimHub while the wheel renegotiates its dashboard.** They no longer
   fall back to the wheel's own lighting during a dashboard switch or game-switch reload.
-
 - **Switching games no longer rewrites every wheel LED setting.** Only what the new game's
   profile actually changes is written.
-
 - **The sleep-light colour you pick survives a game switch.** An older saved colour was being
   written over it on every profile apply.
-
 - **Wheel LEDs repaint straight after a profile apply.** They no longer show the stored colours
   until SimHub's next frame.
-
 - **Base ambient LEDs hold when SimHub's LED output pauses.** Their refresh now runs on its own
   timer, like the wheel and dash.
-
 - **The Clear LEDs action keeps the LEDs off.** The plugin no longer relit the frame it had just
   cleared, and the knob rings are cleared too.
-
 - **ES rims return to SimHub lighting after an idle gap.** The wake-up that puts them in
   telemetry mode is repeated when lit frames resume.
-
 - **Wheel, pedal and button inputs read again on newer Wine.** Inputs are now decoded through
   the system HID parser, which handles devices the previous parser rejected.
-
 - **mBooster Sim Input Mapping can have a deadzone.** Its first node now drags vertically too;
   at 0 it holds the output at zero up to that point.
-
 - **The mBooster Pedal Feel graph scales to Max Force.** A light setting no longer sits
   squashed at the bottom of a 200 kg axis.
-
 - **The mBooster page shows the right pedal's settings after startup.** When a passive pedal
   moved to the Pedals tab, the page switched pedals but kept showing the old one's values.
-
 - **mBooster passive pedals land on the Pedals tab straight away.** Their type is remembered
   from the last session instead of waiting ~30 s for the pedal to report it.
-
 - **PitHouse mBooster presets import the travel, force and feel curve PitHouse shows.** Newer
   presets store these twice, and the importer read the older copy.
-
 - **The mBooster page shows imported values straight away.** It kept showing the pre-import
   settings until you switched pedals or profiles, though the pedal already had the new ones.
-
 - **PitHouse pedal presets import Pedal Feel, damping, friction and G-Force.** Deadzone, Max
   Force and the feel curve now come across instead of being skipped.
-
 - **Changing an mBooster pedal's role sets it on the pedal.** The role is written to the unit the
   way Pit House does, which also repairs a chain whose pedals had swapped.
-
 - **mBooster error reports are acknowledged, as Pit House does.** A unit no longer repeats the
   same error once a second for the whole session.
-
 - **mBooster settings are read-only until the pedal has identified.** Edits made in the first
   seconds after connect could be overridden by the saved values.
 
@@ -145,7 +103,6 @@ All notable changes to the AZOM plugin are documented here.
 
 - **Active shifter detection can be turned off.** An Options toggle stops the plugin
   claiming the AB9 / AB6 port and releases it if already held.
-
 - **Automatic channel selection for pedal haptics.** Effects output automatically per 
   pedal without needing to assign channel slots.
 
@@ -153,10 +110,8 @@ All notable changes to the AZOM plugin are documented here.
 
 - **AB9 settings are no longer re-written on every connect.** They are read back first and
   only what the profile changes is written.
-
 - **A shifter that never reports its settings is no longer written to.** Its stored values
   can't be read back, so the profile is held rather than committed blind to its EEPROM.
-
 - **Passive pedals on an mBooster moved to the Pedals tab.** A CRP2 throttle or clutch
   wired to an mBooster gets the normal range, curve and calibration controls again.
 
@@ -166,19 +121,14 @@ All notable changes to the AZOM plugin are documented here.
 
 - **Pedal haptics support.** The new pedal vibration module shows up as its own SimHub ShakeIt
   device per pedal.
-
 - **Convert a SimHub dashboard to MOZA format.** A Files tab button turns a `.djson` or
   `.simhubdash` into an uploadable `.mzdash` — widgets, images, fonts and formulas — and
   reports what it could not carry across.
-
 - **mBooster travel and motor calibration.** Both run from the pedal's tab, per pedal on a
   chained pair.
-
 - **The Files tab's dashboard list is sorted.**
-
 - **The wheel's RPM bar shows upload progress.** While a dashboard is uploading, the LEDs
   stop following telemetry and the RPM bar fills up as the transfer lands.
-
 - **Knob rings can be filled on alternating LEDs.** A button beside "Fill ring" on the Knobs
   tab colours every other LED in the group that contains the selected one.
 
@@ -187,7 +137,6 @@ All notable changes to the AZOM plugin are documented here.
 - **The LED colour palette is two rows of standard colours.** Red, orange, yellow, green, cyan,
   blue, purple and magenta over their pastel tints, plus off and white, with the last custom
   colour as the final swatch of every palette, kept across restarts.
-
 - **Clicking a selected LED again closes its colour editor.**
 
 ### Fixed
@@ -195,49 +144,35 @@ All notable changes to the AZOM plugin are documented here.
 - **The LEDs stay lit when SimHub's effect pipeline stalls.** The keepalive now runs on
   its own timer instead of riding SimHub's LED callback, so a pause in that callback no
   longer drops the wheel and dash back to their own lighting mid-session.
-
 - **A sequential shifter wired through the wheelbase is no longer reported as an H-pattern
   one.** It is identified by the name it reports, the only reply that differs between them.
-
 - **A shifter on its own USB port stays connected.** Its keepalive stopped after the first
   answer, so the port was closed as dead and reopened every 35 seconds.
-
 - **A shifter's settings are no longer re-written on every connect.** They are read back
   first and only what the profile changes is written, sparing the shifter's EEPROM.
-
 - **A rim that hasn't identified yet no longer gets its base port bounced.** The
   display-wedge watchdog waits for the wheel model to resolve before it can fire.
-
 - **Two chained mBoosters get their own settings and calibration.** Which pedal sits on
   the USB unit is now read from the pedal's own heartbeat instead of assumed to be the
   throttle.
-
 - **An mBooster comes back after its calibration reboot.** Its pedal positions and its
   pedal row no longer stay gone until SimHub restarts.
-
 - **mBooster Max Force goes down to 0 kg.** The 24 kg floor was a Pit House UI limit, not
   a hardware one, and it kept pulling lighter settings back up to 24.
-
 - **AB9 engine vibration now has a 20hz floor** 
-
 - **A CM2 dash shows data on every dashboard, not just the one it started on.** Switching
   it to another dashboard left the display rendering with no telemetry behind it.
-
 - **A dashboard switched with the CM2's own buttons is followed** — the plugin no longer
   pulls the dash back to its previously saved dashboard on the next restart.
-
 - **Other serial devices keep working.** The plugin was opening every COM port it couldn't
   identify while hunting for a wheelbase, holding a DIY pedal set or Arduino dash away from
   SimHub's own scanner; it now leaves ports the registry attributes to another vendor alone.
-
 - **mBooster settings survive a reconnect.** When the pedal's serial arrived mid-session its
   two settings entries were reconciled by letting one replace the other outright, so a single
   stored value on one side could discard everything on the other; they are now merged field by
   field.
-
 - **mBooster calibration reaches the pedal.** On a unit hosting a passive pedal the whole
   connect-time config batch was addressed to a chained device that wasn't there.
-
 - **Dashboard uploads no longer stall part-way.** An upload could stop advancing at any
   percentage and sit there indefinitely, never finishing and never failing. The plugin was
   overrunning the cable, losing its place in the wheel's replies, and giving up on the one
