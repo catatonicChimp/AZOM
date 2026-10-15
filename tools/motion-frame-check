@@ -4,7 +4,7 @@
 Mirrors the C# builders in Python and rebuilds every host->controller frame of the
 Motion Manager captures from its decoded fields; any byte difference is reported.
 Covers mode set/poll, status polls, run state, port role read/write, effect slots,
-road detail, global read/write, rig-dimension read, device type, lighting read/write,
+road detail write/read, global read/write, rig-dimension read, device type, lighting read/write,
 notification ack, presence and the 0x22/00 telemetry frame (including frames whose
 body contains 0x7E, which exercise the doubled-0x7E checksum).
 
@@ -53,6 +53,7 @@ def road_detail(a, b):      return build(0x1E, DEV, bytes([0x06]) + f32(a) + f32
 def global_read(i):         return build(0x1F, DEV, bytes([0x04, i, 0, 0, 0, 0]))
 def global_write(i, v):     return build(0x1E, DEV, bytes([0x04, i]) + f32(v))
 def rig_read():             return build(0x1F, DEV, bytes([0x08]) + bytes(8))
+def road_detail_read():     return build(0x1F, DEV, bytes([0x06]) + bytes(8))
 def device_type():          return build(0x1E, DEV, bytes([0x0A, 0x01]))
 def lighting_write(z, p, v): return build(0x1E, DEV, bytes([0x0B, z, p]) + bytes(v))
 def lighting_read(z, p):
@@ -91,6 +92,7 @@ def rebuild(fr):
     if g == 0x1F and c == 0x04 and len(p) == 6: return global_read(p[1])
     if g == 0x1E and c == 0x04 and len(p) == 6: return global_write(p[1], unf32(p, 2))
     if g == 0x1F and c == 0x08 and len(p) == 9: return rig_read()
+    if g == 0x1F and c == 0x06 and len(p) == 9: return road_detail_read()
     if g == 0x1E and c == 0x0A and len(p) == 2: return device_type()
     if g == 0x1E and c == 0x0B and len(p) >= 4: return lighting_write(p[1], p[2], p[3:])
     if g == 0x1F and c == 0x0B and len(p) in (4, 6): return lighting_read(p[1], p[2])

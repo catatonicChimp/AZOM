@@ -20,18 +20,21 @@ namespace MozaPlugin.Integration.Motion
     /// <summary>
     /// SimHub Motion output for the MOZA HMA150 platform. Not in SimHub's hard-coded
     /// controller list; reached through the presets the plugin deploys (resolved by
-    /// <c>TypeName</c> from this assembly). Pairs with the 6DOF pose-bypass geometry: the
-    /// controller does its own kinematics, so the output forwards SimHub's final pose.
+    /// <c>TypeName</c> from this assembly). Pairs with the 6DOF pose-bypass geometry, which
+    /// has no corner channels to map.
+    ///
+    /// Like Motion Manager, it streams the game's raw telemetry (<see cref="MotionGameFeed"/>)
+    /// and leaves cueing and strength to the controller's own Motion Effects sliders; SimHub
+    /// Motion supplies the lifecycle: start, idle, stop and failure.
     ///
     /// The port belongs to the plugin's motion lane (<see cref="MozaMotionController"/>),
-    /// which holds it whenever the controller is present. This class only maps SimHub's
-    /// lifecycle onto the lane:
+    /// which this output holds while started:
     /// <list type="bullet">
-    /// <item>Start — engage (self-check once per power-up, game mode); returns at once, and
+    /// <item>Start — connect if needed, engage (self-check, game mode); returns at once, and
     /// <see cref="IsReadyForLiveMotionData"/> stays false ("Starting") until the
     /// controller reports game mode.</item>
     /// <item>Idle — stay in game mode, neutral frames with the in-game flag clear.</item>
-    /// <item>Stop — run state stop, then standby.</item>
+    /// <item>Stop — run state stop, standby, then the port is released.</item>
     /// <item>Lane fault or disconnect — <c>ConnectionState.Failure</c>; SimHub freezes the pose.</item>
     /// </list>
     /// Reference: docs/simhub.md § Motion Plugin — Custom Outputs.
@@ -40,6 +43,10 @@ namespace MozaPlugin.Integration.Motion
     public class MozaHma150Output : MotionOutputBase<MozaHma150OutputSettings>
     {
         public const string DisplayNameText = "MOZA HMA150";
+
+        // Motion Manager streams 0x22/00 at ~33 Hz.
+        private const int FrameIntervalMs = 30;
+        private const int FeedMaxAgeMs = 500;
 
         private static int s_activeInstances;
 
@@ -102,7 +109,7 @@ namespace MozaPlugin.Integration.Motion
         protected override void StartInternal()
         {
             var lane = Lane;
-            if (lane == null || !lane.IsConnected)
+            if (lane == null || !lane.IsPresent)
             {
                 LastErrorMessage = Strings.Motion_Error_NotConnected;
                 ConnectionState = OutputConnectionState.NotFound;
@@ -115,16 +122,25 @@ namespace MozaPlugin.Integration.Motion
                 ConnectionState = OutputConnectionState.Failure;
                 return;
             }
+            if (Interlocked.Exchange(ref _counted, 1) == 0)
+            {
+                Interlocked.Increment(ref s_activeInstances);
+                lane.Acquire();
+            }
             lane.SetIdle(false);
-            lane.Engage(MozaHma150PoseMapping.EngageConfig());
-            if (Interlocked.Exchange(ref _counted, 1) == 0) Interlocked.Increment(ref s_activeInstances);
+            lane.Engage(new MotionEngageConfig { FrameIntervalMs = FrameIntervalMs });
             ConnectionState = OutputConnectionState.Connected;
         }
 
         public override void StopInternal()
         {
-            if (Interlocked.Exchange(ref _counted, 0) == 1) Interlocked.Decrement(ref s_activeInstances);
-            Lane?.Disengage();
+            var lane = Lane;
+            lane?.Disengage();
+            if (Interlocked.Exchange(ref _counted, 0) == 1)
+            {
+                Interlocked.Decrement(ref s_activeInstances);
+                lane?.Release();
+            }
         }
 
         public override bool IsReadyForLiveMotionData()
@@ -134,9 +150,8 @@ namespace MozaPlugin.Integration.Motion
         {
             var lane = Lane;
             if (!CheckLane(lane)) return;
-            var pose = geometryResult?.PrimaryGeometryResult?.MotionState;
-            if (pose == null) return;
-            lane!.PostFrame(MozaHma150PoseMapping.ToFrame(pose.PitchDegrees, pose.RollDegrees, pose.HeaveMm));
+            var frame = MozaPlugin.Instance?.MotionFeed.Latest(FeedMaxAgeMs);
+            if (frame != null) lane!.PostFrame(frame);
         }
 
         protected override void KeepAliveInternal(CompositeGeometryResult geometryResult)
@@ -154,9 +169,18 @@ namespace MozaPlugin.Integration.Motion
 
         private bool CheckLane(MozaMotionController? lane)
         {
-            if (lane == null || !lane.IsConnected)
+            if (lane == null)
             {
                 Fail(Strings.Motion_Error_NotConnected);
+                return false;
+            }
+            if (!lane.IsConnected || lane.Phase == MotionLanePhase.Enrolling)
+            {
+                // Started with the port closed: the lane is opening and enrolling it.
+                if (lane.EngagePending) return false;
+                Fail(lane.FaultReason != null
+                    ? string.Format(Strings.Motion_Error_FaultFmt, lane.FaultReason)
+                    : Strings.Motion_Error_NotConnected);
                 return false;
             }
             if (lane.Phase == MotionLanePhase.Faulted || lane.Phase == MotionLanePhase.Disconnected)
@@ -176,7 +200,11 @@ namespace MozaPlugin.Integration.Motion
 
         public override void Dispose()
         {
-            if (Interlocked.Exchange(ref _counted, 0) == 1) Interlocked.Decrement(ref s_activeInstances);
+            if (Interlocked.Exchange(ref _counted, 0) == 1)
+            {
+                Interlocked.Decrement(ref s_activeInstances);
+                Lane?.Release();
+            }
             base.Dispose();
         }
     }

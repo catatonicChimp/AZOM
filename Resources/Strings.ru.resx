@@ -850,4 +850,13 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>MOZA Motion Controller подключён, но плагин Motion в SimHub не включён. Включите его в Settings &gt; Plugins, затем добавьте контроллер MOZA HMA150 в Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 не добавлен в SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>MOZA Motion Controller подключён, но в активной конфигурации SimHub Motion нет контроллера MOZA HMA150. В Motion добавьте контроллер и выберите пресет MOZA HMA150.</value></data>
+  <data name="Motion_Panel_Effects" xml:space="preserve"><value>Эффекты движения</value></data>
+  <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Интенсивность (%)</value></data>
+  <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Сглаживание (%)</value></data>
+  <data name="Motion_Effect_Pitch" xml:space="preserve"><value>Тангаж</value></data>
+  <data name="Motion_Effect_Roll" xml:space="preserve"><value>Крен</value></data>
+  <data name="Motion_Effect_Heave" xml:space="preserve"><value>Вертикальное смещение</value></data>
+  <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Тангаж от ускорения</value></data>
+  <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Крен от ускорения</value></data>
+  <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Детали дороги</value></data>
 </root>

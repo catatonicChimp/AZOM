@@ -1948,7 +1948,16 @@ own kinematics"). What the decompile requires of such an output:
   `RollDegrees`, `HeaveMm`, …). The bypass geometry already folds corner haptics into
   pitch/roll/heave (`SixDofInput.GetHapticsPose`). Signs: `MotionPlugin` builds
   `OrientationPitchDegrees = −GameData.OrientationPitch` and `OrientationRollDegrees =
-  +GameData.OrientationRoll`.
+  +GameData.OrientationRoll`. The HMA150 output does **not** use it: its controller wants raw
+  physics like Motion Manager sends, so it streams `GameData` from the plugin's own
+  `DataUpdate` (`MotionInputData` is `internal`). `StatusDataBase.Acceleration{Surge,Sway,Heave}`
+  are m/s² with surge positive when braking — `GameManagerBase`'s fallback sets
+  `GlobalAccelerationG = −AccelerationSurge` and derives it from Δspeed(m/s)/Δt.
+- **Configuration errors gate enabling, not running.** `MotionDevice.Enable` runs
+  `CheckAndShowConfigurationErrors` before `IsEnabled = true`; at runtime only `IsValid`
+  (geometry and output exist) can switch a device off. So an output whose hardware port is
+  opened on `Start` must not report "not connected" just because the port is closed — the
+  HMA150 reports only absence from USB and the last session's port-map problems.
 - **Failure:** set `ConnectionState = Failure` + `LastErrorMessage` from `UpdateInternal` /
   `KeepAliveInternal`; `OutputWorker.ApplyState` then skips the output and `MotionDevice`
   freezes the pose. `Enable` calls `RearmAfterFailure` before restarting.

@@ -908,5 +908,14 @@ namespace MozaPlugin.Resources
         public static string Banner_MotionPluginDisabled_Body => Get("Banner_MotionPluginDisabled_Body");
         public static string Banner_ProfileNotAddedMotion_Title => Get("Banner_ProfileNotAddedMotion_Title");
         public static string Banner_ProfileNotAddedMotion_Body => Get("Banner_ProfileNotAddedMotion_Body");
+        public static string Motion_Panel_Effects => Get("Motion_Panel_Effects");
+        public static string Motion_Panel_Intensity => Get("Motion_Panel_Intensity");
+        public static string Motion_Panel_Smoothness => Get("Motion_Panel_Smoothness");
+        public static string Motion_Effect_Pitch => Get("Motion_Effect_Pitch");
+        public static string Motion_Effect_Roll => Get("Motion_Effect_Roll");
+        public static string Motion_Effect_Heave => Get("Motion_Effect_Heave");
+        public static string Motion_Effect_AccelPitch => Get("Motion_Effect_AccelPitch");
+        public static string Motion_Effect_AccelRoll => Get("Motion_Effect_AccelRoll");
+        public static string Motion_Effect_RoadDetail => Get("Motion_Effect_RoadDetail");
     }
 }

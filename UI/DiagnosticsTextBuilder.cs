@@ -1279,8 +1279,11 @@ namespace MozaPlugin.UI
             var lane = plugin.MotionController;
             if (lane == null) return "(motion lane not created)";
             var s = lane.Snapshot();
-            if (!s.Connected)
+            if (!s.Present)
                 return "(no MOZA Motion Controller — this lane claims PID 0x2000 from the registry)";
+            if (!s.Connected)
+                return "(MOZA Motion Controller present, port released — opened only while SimHub Motion or its settings hold it)"
+                    + (s.FaultReason != null ? $"  fault=\"{s.FaultReason}\"" : "");
 
             var sb = new StringBuilder();
             sb.AppendLine($"Port:           {s.PortName ?? "-"}  phase={s.Phase}"
@@ -1294,6 +1297,11 @@ namespace MozaPlugin.UI
                 + $"errors={(s.ActiveErrorCodes.Count == 0 ? "none" : string.Join(",", s.ActiveErrorCodes))}");
             sb.AppendLine($"Setup:          maxStroke={Fmt(s.MaxStroke)} haptic={Fmt(s.HapticIntensity)} "
                 + $"rig={Fmt(s.RigLengthMm)} x {Fmt(s.RigWidthMm)} mm  framesSent={s.FramesSent}");
+            var effects = new List<string>();
+            for (int i = 0; i < s.Effects.Length; i++)
+                effects.Add($"{MozaMotionProtocol.EffectSlots[i]:X2}={FmtEffect(s.Effects[i])}");
+            effects.Add($"road={FmtEffect(s.RoadDetail)}");
+            sb.AppendLine("Effects:        " + string.Join(" ", effects));
             foreach (var p in s.Ports)
             {
                 if (p.Present != true && p.Role is null or MotionCorner.None) continue;
@@ -1308,6 +1316,7 @@ namespace MozaPlugin.UI
             return sb.ToString();
 
             static string Fmt(float? v) => v.HasValue ? v.Value.ToString("0.###", CultureInfo.InvariantCulture) : "?";
+            static string FmtEffect(MotionEffect? e) => e.HasValue ? $"{Fmt(e.Value.Intensity)}/{Fmt(e.Value.Smoothness)}" : "?";
         }
     }
 }

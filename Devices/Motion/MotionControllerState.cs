@@ -18,17 +18,23 @@ namespace MozaPlugin.Devices.Motion
         Faulted,
     }
 
-    /// <summary>
-    /// Effect-slot values pushed on engage. The pose-injection pass-through values come
-    /// from Phase 0 characterization; until then the caller supplies them.
-    /// </summary>
+    /// <summary>Engage parameters. The effect sliders live on the controller and are not touched.</summary>
     public sealed class MotionEngageConfig
     {
-        public readonly List<(byte Slot, float Intensity, float Smoothness)> Slots
-            = new List<(byte, float, float)>();
-        public float RoadDetailIntensity;
-        public float RoadDetailSmoothness;
         public int FrameIntervalMs = 30;
+    }
+
+    /// <summary>One Motion Effects slider pair as the controller holds it (0..1 each).</summary>
+    public readonly struct MotionEffect
+    {
+        public readonly float Intensity;
+        public readonly float Smoothness;
+
+        public MotionEffect(float intensity, float smoothness)
+        {
+            Intensity = intensity;
+            Smoothness = smoothness;
+        }
     }
 
     public enum MotionConfigIssueKind
@@ -78,6 +84,7 @@ namespace MozaPlugin.Devices.Motion
     /// <summary>Point-in-time copy of the lane state for UI, diagnostics and properties.</summary>
     public sealed class MotionControllerSnapshot
     {
+        public bool Present;
         public bool Connected;
         public string? PortName;
         public MotionLanePhase Phase;
@@ -106,6 +113,10 @@ namespace MozaPlugin.Devices.Motion
         public float? HapticIntensity;
         public float? RigLengthMm;
         public float? RigWidthMm;
+
+        /// <summary>Per <see cref="MozaMotionProtocol.EffectSlots"/> entry; null until read.</summary>
+        public MotionEffect?[] Effects = Array.Empty<MotionEffect?>();
+        public MotionEffect? RoadDetail;
 
         public MotionPortSnapshot[] Ports = Array.Empty<MotionPortSnapshot>();
         public long FramesSent;

@@ -14,6 +14,7 @@
   tools/motion-decode); step boundaries go to <Log>.markers.csv. Send both files back.
 
   Usage:
+    .\hma150-characterize.ps1                      # All: Gain pitch+roll, Heave, Sweep, Gating, Feedback (~20 min)
     .\hma150-characterize.ps1 -Experiment Gain -Axis Pitch
     .\hma150-characterize.ps1 -Experiment Gain -Axis Roll -Intensities 1
     .\hma150-characterize.ps1 -Experiment Sweep -Axis Pitch -RateHz 60
@@ -24,8 +25,8 @@
 #>
 param(
     [string]  $ComPort      = "COM6",
-    [ValidateSet("Gain", "Sweep", "Heave", "Gating", "Feedback", "Writes")]
-    [string]  $Experiment   = "Gain",
+    [ValidateSet("All", "Gain", "Sweep", "Heave", "Gating", "Feedback", "Writes")]
+    [string]  $Experiment   = "All",
     [ValidateSet("Pitch", "Roll")]
     [string]  $Axis         = "Pitch",
     [double[]]$Intensities  = @(1.0, 0.5, 0.25),
@@ -279,14 +280,13 @@ function Enter-Game {
 }
 
 # ---------------------------------------------------------------- experiments
-$fieldIdx = @{ Pitch = 0; Roll = 1 }[$Axis]
-
-function Exp-Gain {
+function Exp-Gain([string]$ax = $Axis) {
+    $fieldIdx = @{ Pitch = 0; Roll = 1 }[$ax]
     foreach ($I in $Intensities) {
-        if ($Axis -eq "Pitch") { Set-Slots $I 0 0 0 } else { Set-Slots 0 $I 0 0 }
+        if ($ax -eq "Pitch") { Set-Slots $I 0 0 0 } else { Set-Slots 0 $I 0 0 }
         Neutral 3
         foreach ($s in $StepsDeg) {
-            Mark ("STEP {0} {1:+0.0;-0.0} deg intensity {2} - read the inclinometer at the start and end of the hold" -f $Axis, $s, $I)
+            Mark ("STEP {0} {1:+0.0;-0.0} deg intensity {2} - read the inclinometer at the start and end of the hold" -f $ax, $s, $I)
             $v = Rad $s
             Stream $HoldSec { param($t) $in = New-Inputs; $in.f[$fieldIdx] = $v; $in }
             Mark "release"
@@ -295,13 +295,14 @@ function Exp-Gain {
     }
 }
 
-function Exp-Sweep {
+function Exp-Sweep([string]$ax = $Axis) {
+    $fieldIdx = @{ Pitch = 0; Roll = 1 }[$ax]
     foreach ($sm in $Smooths) {
-        if ($Axis -eq "Pitch") { Set-Slots 1.0 0 0 $sm } else { Set-Slots 0 1.0 0 $sm }
+        if ($ax -eq "Pitch") { Set-Slots 1.0 0 0 $sm } else { Set-Slots 0 1.0 0 $sm }
         Neutral 3
         foreach ($hz in $SweepHz) {
             $dur = [Math]::Max(5.0, 6.0 / $hz)
-            Mark ("SWEEP {0} {1} Hz +/-{2} deg smooth {3} rate {4} Hz" -f $Axis, $hz, $SweepAmpDeg, $sm, $RateHz)
+            Mark ("SWEEP {0} {1} Hz +/-{2} deg smooth {3} rate {4} Hz" -f $ax, $hz, $SweepAmpDeg, $sm, $RateHz)
             $amp = Rad $SweepAmpDeg
             Stream $dur { param($t) $in = New-Inputs; $in.f[$fieldIdx] = $amp * [Math]::Sin(2 * [Math]::PI * $hz * $t); $in }
             Neutral 3
@@ -428,6 +429,17 @@ try {
     if ($Experiment -eq "Writes") { Exp-Writes; return }
     Enter-Game
     switch ($Experiment) {
+        "All"      {
+            $runs = @(
+                @("Gain Pitch", { Exp-Gain "Pitch" }), @("Gain Roll", { Exp-Gain "Roll" }), @("Heave", { Exp-Heave }),
+                @("Sweep Pitch", { Exp-Sweep "Pitch" }), @("Gating", { Exp-Gating }), @("Feedback", { Exp-Feedback }))
+            foreach ($run in $runs) {
+                Write-Host ("--- {0}" -f $run[0]) -ForegroundColor Cyan
+                Mark ("EXPERIMENT {0}" -f $run[0])
+                & $run[1]
+                Neutral 5
+            }
+        }
         "Gain"     { Exp-Gain }
         "Sweep"    { Exp-Sweep }
         "Heave"    { Exp-Heave }

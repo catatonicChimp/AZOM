@@ -849,4 +849,13 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>Está ligado um MOZA Motion Controller, mas o plugin Motion do SimHub não está ativado. Ative-o em Settings &gt; Plugins e depois adicione o controlador MOZA HMA150 em Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 não adicionado no SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>Está ligado um MOZA Motion Controller, mas a configuração ativa do SimHub Motion não tem nenhum controlador MOZA HMA150. Em Motion, adicione um controlador e escolha a predefinição MOZA HMA150.</value></data>
+  <data name="Motion_Panel_Effects" xml:space="preserve"><value>Efeitos de movimento</value></data>
+  <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Intensidade (%)</value></data>
+  <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Suavização (%)</value></data>
+  <data name="Motion_Effect_Pitch" xml:space="preserve"><value>Arfagem</value></data>
+  <data name="Motion_Effect_Roll" xml:space="preserve"><value>Rolagem</value></data>
+  <data name="Motion_Effect_Heave" xml:space="preserve"><value>Movimento vertical</value></data>
+  <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Arfagem por aceleração</value></data>
+  <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Rolagem por aceleração</value></data>
+  <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Detalhe da estrada</value></data>
 </root>

@@ -217,14 +217,13 @@ namespace MozaPlugin.UI
                         + " / " + MozaPedalHapticsProtocol.PedalLabel((byte)PedalHapticsPedal.Clutch))));
             }
 
-            // Rule 7: the motion controller is enrolled but SimHub Motion can't drive it —
+            // Rule 7: the motion controller is on USB but SimHub Motion can't drive it —
             // either the Motion plugin is off or its active setup has no HMA150 output.
+            // Presence, not connection: the lane only opens the port while motion runs.
             var motionLane = plugin.MotionController;
             if (elapsed >= ProfileNotAddedSettling
                 && motionLane != null
-                && motionLane.IsConnected
-                && motionLane.Phase != Devices.Motion.MotionLanePhase.Enrolling
-                && motionLane.Phase != Devices.Motion.MotionLanePhase.Disconnected)
+                && motionLane.IsPresent)
             {
                 switch (plugin.MotionSetupStatus)
                 {

@@ -15,8 +15,9 @@ namespace MozaPlugin.Integration.Motion
     /// <summary>
     /// HMA150 controller setup, shown inside SimHub Motion's controller settings: live
     /// status, port → corner assignment with identify and the port self-test, travel
-    /// self-check, Max Available Stroke, rig dimensions and lighting. Everything here is
-    /// stored on the controller, not in SimHub. Refreshes every 500 ms while loaded.
+    /// self-check, Max Available Stroke, rig dimensions, the Motion Effects sliders and
+    /// lighting. Everything here is stored on the controller, not in SimHub. Holds the
+    /// lane's port open while loaded; refreshes every 500 ms.
     /// </summary>
     public partial class MozaHma150SettingsControl : UserControl
     {
@@ -33,16 +34,34 @@ namespace MozaPlugin.Integration.Motion
         private readonly Dictionary<int, Button> _identifyButtons = new Dictionary<int, Button>();
         private readonly Dictionary<byte, Border> _zoneSwatches = new Dictionary<byte, Border>();
         private readonly Dictionary<byte, Button> _zoneButtons = new Dictionary<byte, Button>();
+        private readonly List<(TextBox Intensity, TextBox Smoothness)> _effectBoxes = new List<(TextBox, TextBox)>();
         private string _portLayout = string.Empty;
         private bool _setupLoaded;
+        private bool _effectsLoaded;
+        private bool _readsRequested;
+        private MozaMotionController? _held;
 
         public MozaHma150SettingsControl()
         {
             InitializeComponent();
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
             _timer.Tick += (_, __) => Refresh();
-            Loaded += (_, __) => { RequestReads(); BuildZoneRows(); Refresh(); _timer.Start(); };
-            Unloaded += (_, __) => _timer.Stop();
+            Loaded += (_, __) => { Hold(); BuildZoneRows(); BuildEffectRows(); Refresh(); _timer.Start(); };
+            Unloaded += (_, __) => { _timer.Stop(); Unhold(); };
+        }
+
+        private void Hold()
+        {
+            if (_held != null) return;
+            _held = Lane;
+            _held?.Acquire();
+            _readsRequested = _setupLoaded = _effectsLoaded = false;
+        }
+
+        private void Unhold()
+        {
+            _held?.Release();
+            _held = null;
         }
 
         private static MozaMotionController? Lane => MozaPlugin.Instance?.MotionController;
@@ -60,6 +79,12 @@ namespace MozaPlugin.Integration.Motion
             var lane = Lane;
             var s = lane?.Snapshot();
             bool connected = s?.Connected == true;
+            // Lighting reads need the port, which may open only after this panel took its hold.
+            if (connected && !_readsRequested && s!.Phase != MotionLanePhase.Enrolling)
+            {
+                _readsRequested = true;
+                RequestReads();
+            }
 
             ConnectionValue.Text = connected ? s!.PortName ?? "" : Strings.Motion_Panel_NotConnected;
             StateValue.Text = s == null ? "" : PhaseLabel(s.Phase)
@@ -79,6 +104,8 @@ namespace MozaPlugin.Integration.Motion
             TravelSelfCheckButton.IsEnabled = idle;
             MaxStrokeApply.IsEnabled = RigApply.IsEnabled = BrightnessApply.IsEnabled = idle;
             foreach (var b in _zoneButtons.Values) b.IsEnabled = idle;
+            // Effects are live-tunable like Motion Manager's sliders, also while running.
+            EffectsApply.IsEnabled = connected && s!.Phase != MotionLanePhase.Enrolling && _effectsLoaded;
 
             if (s != null && connected && !_setupLoaded && s.MaxStroke.HasValue)
             {
@@ -87,8 +114,66 @@ namespace MozaPlugin.Integration.Motion
                 if (s.RigLengthMm.HasValue) RigLengthBox.Text = s.RigLengthMm.Value.ToString("0", CultureInfo.CurrentCulture);
                 if (s.RigWidthMm.HasValue) RigWidthBox.Text = s.RigWidthMm.Value.ToString("0", CultureInfo.CurrentCulture);
             }
+            if (s != null && connected && !_effectsLoaded && s.RoadDetail.HasValue && s.Effects.All(e => e.HasValue))
+            {
+                _effectsLoaded = true;
+                for (int i = 0; i < s.Effects.Length; i++) ShowEffect(_effectBoxes[i], s.Effects[i]!.Value);
+                ShowEffect(_effectBoxes[s.Effects.Length], s.RoadDetail.Value);
+            }
             RefreshLighting(lane);
         }
+
+        // ------------------------------------------------------------ motion effects
+
+        private static string[] EffectLabels() => new[]
+        {
+            Strings.Motion_Effect_Pitch, Strings.Motion_Effect_Roll, Strings.Motion_Effect_Heave,
+            Strings.Motion_Effect_AccelPitch, Strings.Motion_Effect_AccelRoll, Strings.Motion_Effect_RoadDetail,
+        };
+
+        /// <summary>One row per <see cref="MozaMotionProtocol.EffectSlots"/> entry, then road detail.</summary>
+        private void BuildEffectRows()
+        {
+            if (EffectRows.Children.Count > 0) return;
+            foreach (var label in EffectLabels())
+            {
+                var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+                row.Children.Add(new TextBlock { Text = label, Width = 260, VerticalAlignment = VerticalAlignment.Center });
+                var intensity = new TextBox { Width = 80, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+                var smoothness = new TextBox { Width = 80, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+                row.Children.Add(intensity);
+                row.Children.Add(smoothness);
+                EffectRows.Children.Add(row);
+                _effectBoxes.Add((intensity, smoothness));
+            }
+        }
+
+        private static void ShowEffect((TextBox Intensity, TextBox Smoothness) boxes, MotionEffect e)
+        {
+            boxes.Intensity.Text = (e.Intensity * 100).ToString("0", CultureInfo.CurrentCulture);
+            boxes.Smoothness.Text = (e.Smoothness * 100).ToString("0", CultureInfo.CurrentCulture);
+        }
+
+        private void EffectsApply_Click(object sender, RoutedEventArgs e)
+        {
+            var lane = Lane;
+            var s = lane?.Snapshot();
+            if (lane == null || s == null) return;
+            int slots = MozaMotionProtocol.EffectSlots.Length;
+            for (int i = 0; i < _effectBoxes.Count; i++)
+            {
+                if (!TryParse(_effectBoxes[i].Intensity.Text, out double ip) || ip < 0 || ip > 100) continue;
+                if (!TryParse(_effectBoxes[i].Smoothness.Text, out double sp) || sp < 0 || sp > 100) continue;
+                var value = new MotionEffect((float)(ip / 100.0), (float)(sp / 100.0));
+                var current = i < slots ? s.Effects[i] : s.RoadDetail;
+                if (current.HasValue && Same(current.Value, value)) continue;
+                if (i < slots) lane.WriteEffect(MozaMotionProtocol.EffectSlots[i], value.Intensity, value.Smoothness);
+                else lane.WriteRoadDetail(value.Intensity, value.Smoothness);
+            }
+        }
+
+        private static bool Same(MotionEffect a, MotionEffect b)
+            => Math.Abs(a.Intensity - b.Intensity) < 0.001f && Math.Abs(a.Smoothness - b.Smoothness) < 0.001f;
 
         private void RefreshPorts(MotionControllerSnapshot? s, bool idle)
         {

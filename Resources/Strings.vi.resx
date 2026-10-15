@@ -850,4 +850,13 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>MOZA Motion Controller đã kết nối nhưng plugin Motion của SimHub chưa được bật. Hãy bật trong Settings &gt; Plugins, sau đó thêm bộ điều khiển MOZA HMA150 trong Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>Chưa thêm MOZA HMA150 trong SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>MOZA Motion Controller đã kết nối nhưng thiết lập SimHub Motion hiện tại không có bộ điều khiển MOZA HMA150. Trong Motion, hãy thêm bộ điều khiển và chọn cấu hình sẵn MOZA HMA150.</value></data>
+  <data name="Motion_Panel_Effects" xml:space="preserve"><value>Hiệu ứng chuyển động</value></data>
+  <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Cường độ (%)</value></data>
+  <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Độ mượt (%)</value></data>
+  <data name="Motion_Effect_Pitch" xml:space="preserve"><value>Chúi</value></data>
+  <data name="Motion_Effect_Roll" xml:space="preserve"><value>Lắc ngang</value></data>
+  <data name="Motion_Effect_Heave" xml:space="preserve"><value>Nhấp nhô</value></data>
+  <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Chúi theo gia tốc</value></data>
+  <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Lắc ngang theo gia tốc</value></data>
+  <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Chi tiết mặt đường</value></data>
 </root>

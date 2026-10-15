@@ -19,6 +19,15 @@ b2h  7E 0A 9E 21 05 00 3F19999A 3E4CCCCD [chk]     echo
 | `07` | Acceleration Pitch | 0.20 / 0.30 — 20 % / 30 % |
 | `08` | Acceleration Roll | 0.20 / 0.35 — 20 % / 35 % |
 
+Readback `1F 12 05 [slot] 00×8` → `9F 21 05 [slot] [f32][f32]`. Motion Manager never reads the
+slots; the request length is inferred from the read-reply rule below, and a register scan read
+`1F 12 05 00 00 00 00` → `9F 21 05 00 3F 00 00` (slot 0 intensity 0.5, cut short).
+
+**The controller keeps the values across a power cycle.** `Coldstart-software` (controller
+powered up, then Motion Manager started) reads road detail `1F 06` as `00000000 3F000000` —
+the 0.0/0.5 the previous session had pushed — before Motion Manager writes anything;
+`startup-shutdown` and `nurburgring` read back the GT3 preset's 0.79/0.40 the same way.
+
 Slots 2, 4, 5, 6 are never written on this rig (presumably surge / sway / yaw / traction-loss
 effects of other platform types). The "Gear Shift Isolation" toggle under Acceleration Pitch has
 no observed write.
@@ -59,7 +68,7 @@ Read at connect as `1F 12 04 00 00 00 00 00` / `1F 12 04 01 …` → `9F 21 04 [
 `1F 12 08 00×8` → `9F 21 08 43FA0000 43FA0000` = L1 500.0 mm, L2 500.0 mm ("Actuators
 Installation Distance": front↔rear and left↔right actuator-centre distances). Read at connect
 and again after a self-test. No write captured (the fields were never edited); the controller
-logs them as `Calib Length : 500.00000,Width : 500.00000` when entering mode 3.
+logs them as `Calib Length : 500.00000,Width : 500.00000` in its 60 s `controller_model` block.
 
 ## Lighting table — `0x1E/0B [zone] [param] [value…]` ("Table 12")
 
@@ -84,9 +93,18 @@ partially inferable from the shape. Readback `9F 21 0B [zone][param][value]`.
 
 ## Everything else on `0x1F`
 
+**Read replies are cut to the request's length.** The reply payload is exactly as long as the
+request's: `1F 04 00` + 4 bytes answers `3E 99 99` (Max Available Stroke 0.30, last byte
+dropped), + 5 bytes answers the whole `3E99999A` (register scan, 14 Oct). A read must pad its
+request to the full reply size.
+
 | Read | Reply | Page |
 |------|-------|------|
 | `00` | `00 04 08` | [`identity-and-ports.md`](identity-and-ports.md) |
+| `01` | empty `9F 21` | unsupported (register scan) |
 | `02 [port]` | port → role | identity-and-ports |
 | `03` | mode poll | [`modes-and-control.md`](modes-and-control.md) |
+| `06` / `07` | `00 00 00 00` | `06` = road detail; `07` unknown, read with a 4-byte request only |
 | `09` | `09 00` | unknown |
+| `0A` | `01 00 00 00` at neutral and roll +4°, `01 00 04 04` at pitch +4°, `01 8E FA 35` at pitch −4° | unknown; one read per pose, so stale bytes are not ruled out (register scan, 14 Oct) |
+| `0C`–`0F` | empty `9F 21` | unsupported (register scan) |

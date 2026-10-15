@@ -11,11 +11,13 @@ namespace MozaPlugin.Devices.Motion
 {
     /// <summary>
     /// Dedicated lane for the MOZA Motion Controller (HMA150 platform, PID <c>0x2000</c>).
-    /// Holds the controller's CDC port whenever it is present: keeps the host heartbeat
-    /// alive (the controller raises error 269 and drops to mode 0 after ~500 ms of
-    /// silence), enrols identity / port map / setup values, and runs the engage sequence
-    /// (travel self-check once per power-up, mode-1 entry, 0x22/00 streaming) for the
-    /// SimHub Motion output.
+    /// Holds the controller's CDC port only while something needs it — a started SimHub
+    /// Motion output or an open settings panel (<see cref="Acquire"/>) — so Motion Manager
+    /// or another tool can open it the rest of the time. While held it keeps the host
+    /// heartbeat alive (the controller raises error 269 and drops to mode 0 after ~500 ms
+    /// of silence), enrols identity / port map / setup / effect values, and runs the engage
+    /// sequence (travel self-check, mode-1 entry, 0x22/00 streaming). On release it puts
+    /// the controller in standby and closes the port.
     ///
     /// Threading: inbound frames are parsed on the connection's dispatch thread into
     /// volatile/Interlocked fields (no locks — the 0x0E notification ack is sent from
@@ -38,6 +40,9 @@ namespace MozaPlugin.Devices.Motion
         private const int EnrolReadSpacingMs = 15;
         private const int EnrolRetryMs = 500;
         private const int EnrolTimeoutMs = 5_000;
+        private const int ConnectRetryMs = 1_000;
+        private const int EngageConnectTimeoutMs = 15_000;
+        private const int StandbyTimeoutMs = 5_000;
 
         private readonly MozaSerialConnection _connection;
         private readonly Func<bool> _isShuttingDown;
@@ -67,6 +72,9 @@ namespace MozaPlugin.Devices.Motion
         private volatile string _fw = string.Empty, _hw = string.Empty, _uid = string.Empty;
         private float _maxStroke = float.NaN, _hapticIntensity = float.NaN;
         private float _rigLength = float.NaN, _rigWidth = float.NaN;
+        private readonly float[] _effectIntensity = new float[MozaMotionProtocol.EffectSlots.Length];
+        private readonly float[] _effectSmoothness = new float[MozaMotionProtocol.EffectSlots.Length];
+        private float _roadIntensity = float.NaN, _roadSmoothness = float.NaN;
         private readonly ConcurrentDictionary<int, byte> _activeErrors = new ConcurrentDictionary<int, byte>();
         private readonly ConcurrentQueue<string> _logRing = new ConcurrentQueue<string>();
         private readonly ConcurrentDictionary<byte, string> _logPartial = new ConcurrentDictionary<byte, string>();
@@ -85,6 +93,14 @@ namespace MozaPlugin.Devices.Motion
         private long _framesSent;
         private int _frameIntervalMs = 30;
         private bool _wasConnected;
+        private bool _released;
+        private long _lastConnectAttemptMs = -ConnectRetryMs;
+        private IReadOnlyList<MotionConfigIssue> _lastIssues = Array.Empty<MotionConfigIssue>();
+
+        // ---- port demand
+        private int _holds;
+        private MotionEngageConfig? _pendingEngage;
+        private long _pendingEngageSinceMs;
 
         // ---- posted by the output
         private MotionTelemetryFrame? _postedFrame;
@@ -98,6 +114,7 @@ namespace MozaPlugin.Devices.Motion
         {
             _isShuttingDown = isShuttingDown ?? (() => false);
             for (int p = 0; p <= MozaMotionProtocol.PortCount; p++) { _portPresent[p] = -1; _portRole[p] = -1; }
+            ResetEffects();
 
             // Registry-only like every other PID-classified lane: never scans ports.
             _connection = new MozaSerialConnection(
@@ -122,47 +139,47 @@ namespace MozaPlugin.Devices.Motion
         public string? LastPortName { get => _connection.LastPortName; set => _connection.LastPortName = value; }
         public string? LastDeviceId { get => _connection.LastDeviceId; set => _connection.LastDeviceId = value; }
 
-        /// <summary>Open the controller's port. Idempotent; called from the 5 s reconnect tick.</summary>
-        public bool TryConnect()
+        /// <summary>Whether the controller is on the USB bus (enumeration only; the port may be closed).</summary>
+        public bool IsPresent => MozaPortDiscovery.Instance.EnumerateMatching(MozaUsbIds.IsMotionPid).Count > 0;
+
+        /// <summary>True from <see cref="Engage"/> until the engage sequence starts or gives up.</summary>
+        public bool EngagePending => Volatile.Read(ref _pendingEngage) != null;
+
+        /// <summary>Keep the port open until the matching <see cref="Release"/>. The worker connects.</summary>
+        public void Acquire() => Interlocked.Increment(ref _holds);
+
+        /// <summary>Drop a hold; with none left the lane goes to standby and closes the port.</summary>
+        public void Release()
         {
-            if (_connection.IsConnected) return true;
-            if (_isShuttingDown()) return false;
-            bool ok = _connection.Connect();
-            if (ok) MozaLog.Info($"[AZOM/Motion] Connected to MOZA Motion Controller on {_connection.LastPortName}");
-            return ok;
+            if (Interlocked.Decrement(ref _holds) < 0) Interlocked.Exchange(ref _holds, 0);
         }
+
+        private bool Wanted => Volatile.Read(ref _holds) > 0 || Volatile.Read(ref _pendingEngage) != null;
 
         // ------------------------------------------------------------ output API
 
-        /// <summary>Push the slot config, self-check if needed, enter game mode and start streaming.</summary>
+        /// <summary>
+        /// Self-check if needed, enter game mode and start streaming. Connects and enrols
+        /// first when the port is closed; the caller should hold the lane (<see cref="Acquire"/>).
+        /// </summary>
         public void Engage(MotionEngageConfig config)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             // Clear a previous fault now, so the output's first update after Start doesn't
             // see it before the worker picks the request up.
-            if (_phase == MotionLanePhase.Faulted)
-            {
-                _faultReason = null;
-                _phase = MotionLanePhase.Ready;
-            }
-            _requests.Enqueue(() =>
-            {
-                if (_phase == MotionLanePhase.Game || _phase == MotionLanePhase.EnteringGame
-                    || _phase == MotionLanePhase.SelfChecking) return;
-                if (_phase != MotionLanePhase.Ready && _phase != MotionLanePhase.Faulted)
-                {
-                    Fault($"engage refused in phase {_phase}");
-                    return;
-                }
-                _frameIntervalMs = Math.Max(5, config.FrameIntervalMs);
-                _faultReason = null;
-                StartSequence(EngageSequence(config));
-            });
+            _faultReason = null;
+            var phase = _phase;
+            if (phase == MotionLanePhase.Game || phase == MotionLanePhase.EnteringGame
+                || phase == MotionLanePhase.SelfChecking) return;
+            if (phase == MotionLanePhase.Faulted) _phase = MotionLanePhase.Ready;
+            Interlocked.Exchange(ref _pendingEngageSinceMs, _clock.ElapsedMilliseconds);
+            Volatile.Write(ref _pendingEngage, config);
         }
 
         /// <summary>Stop streaming: run state stop, then standby (motors off).</summary>
         public void Disengage()
         {
+            Volatile.Write(ref _pendingEngage, null);
             _requests.Enqueue(() =>
             {
                 if (_phase == MotionLanePhase.Disconnected || _phase == MotionLanePhase.Enrolling
@@ -227,6 +244,21 @@ namespace MozaPlugin.Devices.Motion
                 Send(MozaMotionProtocol.BuildRigDimensionsRead());
             });
 
+        /// <summary>Motion Effects slider pair (0..1 each); the controller keeps it across power cycles. Read back.</summary>
+        public void WriteEffect(byte slot, float intensity, float smoothness)
+            => _requests.Enqueue(() =>
+            {
+                Send(MozaMotionProtocol.BuildEffectSlot(slot, intensity, smoothness));
+                Send(MozaMotionProtocol.BuildEffectSlotRead(slot));
+            });
+
+        public void WriteRoadDetail(float intensity, float smoothness)
+            => _requests.Enqueue(() =>
+            {
+                Send(MozaMotionProtocol.BuildRoadDetail(intensity, smoothness));
+                Send(MozaMotionProtocol.BuildRoadDetailRead());
+            });
+
         public void WriteLighting(byte zone, byte param, byte[] value)
             => _requests.Enqueue(() =>
             {
@@ -246,6 +278,7 @@ namespace MozaPlugin.Devices.Motion
         {
             var s = new MotionControllerSnapshot
             {
+                Present = IsPresent,
                 Connected = _connection.IsConnected,
                 PortName = _connection.LastPortName,
                 Phase = _phase,
@@ -289,21 +322,41 @@ namespace MozaPlugin.Devices.Motion
                 };
             }
             s.Ports = ports;
+            var effects = new MotionEffect?[MozaMotionProtocol.EffectSlots.Length];
+            for (int i = 0; i < effects.Length; i++)
+                effects[i] = Effect(Volatile.Read(ref _effectIntensity[i]), Volatile.Read(ref _effectSmoothness[i]));
+            s.Effects = effects;
+            s.RoadDetail = Effect(Volatile.Read(ref _roadIntensity), Volatile.Read(ref _roadSmoothness));
             s.RecentLog = _logRing.ToArray();
             return s;
         }
 
         private static float? Nullable(float v) => float.IsNaN(v) ? (float?)null : v;
 
+        private static MotionEffect? Effect(float intensity, float smoothness)
+            => float.IsNaN(intensity) || float.IsNaN(smoothness) ? (MotionEffect?)null : new MotionEffect(intensity, smoothness);
+
         /// <summary>
-        /// Configuration problems that block an engage: not connected, actuators missing,
+        /// Configuration problems that block an engage: controller absent, actuators missing,
         /// port map incomplete or duplicated, port configuration pending. Empty = ready.
+        /// With the port closed this is what the last session found; an engage re-checks
+        /// after enrolling.
         /// </summary>
         public IReadOnlyList<MotionConfigIssue> GetConfigurationErrors()
         {
+            if (!_connection.IsConnected)
+            {
+                if (!IsPresent) return new[] { new MotionConfigIssue(MotionConfigIssueKind.NotConnected) };
+                return _lastIssues;
+            }
+            if (_phase == MotionLanePhase.Enrolling)
+                return EngagePending ? Array.Empty<MotionConfigIssue>() : new[] { new MotionConfigIssue(MotionConfigIssueKind.Enrolling) };
+            return CurrentIssues();
+        }
+
+        private List<MotionConfigIssue> CurrentIssues()
+        {
             var issues = new List<MotionConfigIssue>();
-            if (!_connection.IsConnected) { issues.Add(new MotionConfigIssue(MotionConfigIssueKind.NotConnected)); return issues; }
-            if (_phase == MotionLanePhase.Enrolling) { issues.Add(new MotionConfigIssue(MotionConfigIssueKind.Enrolling)); return issues; }
             var seen = new HashSet<int>();
             int populated = 0;
             for (int p = 1; p <= MozaMotionProtocol.PortCount; p++)
@@ -348,9 +401,11 @@ namespace MozaPlugin.Devices.Motion
                     ResetDeviceState();
                     _phase = MotionLanePhase.Disconnected;
                     if (streaming) _faultReason = "Motion controller disconnected while running";
-                    MozaLog.Info("[AZOM/Motion] Controller disconnected");
+                    MozaLog.Info(_released ? "[AZOM/Motion] Port released" : "[AZOM/Motion] Controller disconnected");
+                    _released = false;
                 }
                 while (_requests.TryDequeue(out _)) { }
+                TryConnect(now);
                 Thread.Sleep(50);
                 return;
             }
@@ -395,10 +450,41 @@ namespace MozaPlugin.Devices.Motion
                 else _sequence = null;
             }
 
+            if (_sequence == null && (_phase == MotionLanePhase.Ready || _phase == MotionLanePhase.Faulted))
+            {
+                var engage = Interlocked.Exchange(ref _pendingEngage, null);
+                if (engage != null)
+                {
+                    _frameIntervalMs = Math.Max(5, engage.FrameIntervalMs);
+                    _faultReason = null;
+                    StartSequence(EngageSequence());
+                }
+                else if (!Wanted)
+                    StartSequence(ReleaseSequence());
+            }
+
             if (_phase == MotionLanePhase.Game || _phase == MotionLanePhase.EnteringGame)
                 StreamTick(now);
             if (_phase == MotionLanePhase.Game)
                 WatchGameMode(now);
+        }
+
+        /// <summary>Open the port when wanted and present; an engage that can't connect gives up.</summary>
+        private void TryConnect(long now)
+        {
+            if (!Wanted || _isShuttingDown()) return;
+            if (EngagePending && now - Interlocked.Read(ref _pendingEngageSinceMs) > EngageConnectTimeoutMs)
+            {
+                Volatile.Write(ref _pendingEngage, null);
+                _faultReason = "Motion controller not found";
+                MozaLog.Warn($"[AZOM/Motion] {_faultReason}");
+                return;
+            }
+            if (now - _lastConnectAttemptMs < ConnectRetryMs) return;
+            _lastConnectAttemptMs = now;
+            if (!IsPresent) return;
+            if (_connection.Connect())
+                MozaLog.Info($"[AZOM/Motion] Connected to MOZA Motion Controller on {_connection.LastPortName}");
         }
 
         private void StartSequence(IEnumerator<int> sequence)
@@ -478,9 +564,21 @@ namespace MozaPlugin.Devices.Motion
                 Volatile.Write(ref _portRole[p], -1);
                 Interlocked.Exchange(ref _portWord[p], 0);
             }
+            ResetEffects();
             _activeErrors.Clear();
             _logPartial.Clear();
             _gameLostSinceMs = -1;
+        }
+
+        private void ResetEffects()
+        {
+            for (int i = 0; i < _effectIntensity.Length; i++)
+            {
+                Volatile.Write(ref _effectIntensity[i], float.NaN);
+                Volatile.Write(ref _effectSmoothness[i], float.NaN);
+            }
+            Volatile.Write(ref _roadIntensity, float.NaN);
+            Volatile.Write(ref _roadSmoothness, float.NaN);
         }
 
         // ------------------------------------------------------------ sequences (yield = wait ms)
@@ -500,6 +598,13 @@ namespace MozaPlugin.Devices.Motion
             reads.Add((MozaMotionProtocol.BuildGlobalRead(MozaMotionProtocol.GlobalHapticIntensity),
                 () => !float.IsNaN(Volatile.Read(ref _hapticIntensity))));
             reads.Add((MozaMotionProtocol.BuildRigDimensionsRead(), () => !float.IsNaN(Volatile.Read(ref _rigLength))));
+            for (int i = 0; i < MozaMotionProtocol.EffectSlots.Length; i++)
+            {
+                int idx = i;
+                reads.Add((MozaMotionProtocol.BuildEffectSlotRead(MozaMotionProtocol.EffectSlots[idx]),
+                    () => !float.IsNaN(Volatile.Read(ref _effectSmoothness[idx]))));
+            }
+            reads.Add((MozaMotionProtocol.BuildRoadDetailRead(), () => !float.IsNaN(Volatile.Read(ref _roadSmoothness))));
             for (int p = 1; p <= MozaMotionProtocol.PortCount; p++)
             {
                 int port = p, bit = 1 << p;
@@ -532,6 +637,7 @@ namespace MozaPlugin.Devices.Motion
             // MM ends its connect push with run-state stop and device type 1.
             SendRunState(MotionRunState.Stop);
             Send(MozaMotionProtocol.BuildDeviceType());
+            _lastIssues = CurrentIssues();
             _phase = MotionLanePhase.Ready;
             MozaLog.Info($"[AZOM/Motion] Enrolled {_model} fw {_fw}, mode {_modeCurrent}, "
                 + $"{CountPresent()} actuators");
@@ -568,12 +674,15 @@ namespace MozaPlugin.Devices.Motion
             return n;
         }
 
-        private IEnumerator<int> EngageSequence(MotionEngageConfig config)
+        private IEnumerator<int> EngageSequence()
         {
-            foreach (var (slot, intensity, smoothness) in config.Slots)
-                Send(MozaMotionProtocol.BuildEffectSlot(slot, intensity, smoothness));
-            Send(MozaMotionProtocol.BuildRoadDetail(config.RoadDetailIntensity, config.RoadDetailSmoothness));
-            yield return 50;
+            // The port may have opened just for this engage, so the setup is first known here.
+            var issues = CurrentIssues();
+            if (issues.Count > 0)
+            {
+                Fault("configuration: " + string.Join("; ", issues));
+                yield break;
+            }
 
             if (!_selfCheckPassed)
             {
@@ -617,11 +726,34 @@ namespace MozaPlugin.Devices.Motion
             SendRunState(MotionRunState.Stop);
             yield return 50;
             Send(MozaMotionProtocol.BuildSetMode(MotionMode.Standby));
-            long deadline = _clock.ElapsedMilliseconds + 5000;
+            long deadline = _clock.ElapsedMilliseconds + StandbyTimeoutMs;
             while (_modeCurrent != (int)MotionMode.Standby && _clock.ElapsedMilliseconds < deadline)
                 yield return 50;
             _phase = MotionLanePhase.Ready;
             MozaLog.Info($"[AZOM/Motion] Disengaged (mode {_modeCurrent})");
+        }
+
+        /// <summary>Nothing holds the lane: standby (as Motion Manager's Close), then close the port.</summary>
+        private IEnumerator<int> ReleaseSequence()
+        {
+            _phase = MotionLanePhase.Disengaging;
+            if (_modeCurrent != (int)MotionMode.Standby)
+            {
+                SendRunState(MotionRunState.Stop);
+                yield return 50;
+                Send(MozaMotionProtocol.BuildSetMode(MotionMode.Standby));
+                long deadline = _clock.ElapsedMilliseconds + StandbyTimeoutMs;
+                while (_modeCurrent != (int)MotionMode.Standby && _clock.ElapsedMilliseconds < deadline)
+                    yield return 50;
+            }
+            if (Wanted)
+            {
+                _phase = MotionLanePhase.Ready;
+                yield break;
+            }
+            _lastIssues = CurrentIssues();
+            _released = true;
+            _connection.Disconnect();
         }
 
         private IEnumerator<int> TravelSelfCheckSequence()
@@ -742,6 +874,20 @@ namespace MozaPlugin.Devices.Motion
                 _supported = supported;
                 _portCount = ports;
                 _countsSeen = true;
+                return;
+            }
+            if (MozaMotionProtocol.TryParseEffectSlot(d, out byte slot, out float intensity, out float smoothness))
+            {
+                int idx = Array.IndexOf(MozaMotionProtocol.EffectSlots, slot);
+                if (idx < 0) return;
+                Volatile.Write(ref _effectIntensity[idx], intensity);
+                Volatile.Write(ref _effectSmoothness[idx], smoothness);
+                return;
+            }
+            if (MozaMotionProtocol.TryParseRoadDetail(d, out float roadIntensity, out float roadSmoothness))
+            {
+                Volatile.Write(ref _roadIntensity, roadIntensity);
+                Volatile.Write(ref _roadSmoothness, roadSmoothness);
                 return;
             }
             if (MozaMotionProtocol.TryParseLighting(d, out byte zone, out byte param, out byte[] lightValue))

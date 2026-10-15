@@ -112,6 +112,7 @@ namespace MozaPlugin.Protocol
 
         /// <summary>Effect slots MM writes on this platform.</summary>
         public const byte SlotPitch = 0x00, SlotRoll = 0x01, SlotHeave = 0x03, SlotAccelPitch = 0x07, SlotAccelRoll = 0x08;
+        public static readonly byte[] EffectSlots = { SlotPitch, SlotRoll, SlotHeave, SlotAccelPitch, SlotAccelRoll };
 
         // Mode-poll / controller-status flag byte.
         public const byte FlagSelfCheckRunning = 0x80;
@@ -230,6 +231,17 @@ namespace MozaPlugin.Protocol
             PutF32(p, 5, smoothness);
             return Build(GroupWrite, DeviceController, p);
         }
+
+        /// <summary>
+        /// <c>1F 12 05 [slot] 00×8</c> → <c>9F 21 05 [slot] [f32][f32]</c>. Read replies are cut
+        /// to the request's length, so the request carries both float slots.
+        /// </summary>
+        public static byte[] BuildEffectSlotRead(byte slot)
+            => Build(GroupRead, DeviceController, CmdEffectSlot, slot, 0, 0, 0, 0, 0, 0, 0, 0);
+
+        /// <summary><c>7e091f12060000000000000000cb</c> → <c>9F 21 06 [f32][f32]</c>.</summary>
+        public static byte[] BuildRoadDetailRead()
+            => Build(GroupRead, DeviceController, CmdRoadDetail, 0, 0, 0, 0, 0, 0, 0, 0);
 
         /// <summary><c>7e061f12040000000000c6</c> (idx 0) → <c>9F 21 04 [idx] [f32]</c>.</summary>
         public static byte[] BuildGlobalRead(byte index)
@@ -428,6 +440,17 @@ namespace MozaPlugin.Protocol
             slot = d[3];
             intensity = GetF32(d, 4);
             smoothness = GetF32(d, 8);
+            return true;
+        }
+
+        /// <summary><c>9F 21 06 [f32][f32]</c> / <c>9E</c> echo.</summary>
+        public static bool TryParseRoadDetail(byte[] d, out float intensity, out float smoothness)
+        {
+            intensity = smoothness = 0;
+            if (d == null || d.Length < 11 || d[1] != ReplyController || d[2] != CmdRoadDetail) return false;
+            if (d[0] != ReplyRead && d[0] != ReplyWrite) return false;
+            intensity = GetF32(d, 3);
+            smoothness = GetF32(d, 7);
             return true;
         }
 
