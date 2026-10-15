@@ -231,18 +231,23 @@ namespace MozaPlugin.Telemetry
 
             // CRITICAL ordering: wait for a REAL catalog (on either session)
             // before the FF-init handshake, so the handshake goes on the correct
-            // (mirror) FF session the FIRST time. The cold-start bug: the catalog
-            // reveals which session is the tier-def session (Form A=0x01,
-            // Form B=0x02), and the FF-init must ride the OPPOSITE session. If we
-            // send the init before the catalog arrives, it lands on the
-            // pre-catalog default (0x02) and we re-send on 0x01 once the catalog
-            // shows Form B — but the wheel, having received a premature 0x02 init
-            // then a 0x01 init, never commits the binding (dash renders, no
-            // data). Proof: a telemetry off→on toggle PRESERVES the catalog, so
-            // its StartInner sends the init straight to 0x01 once and the wheel
-            // renders fine. WaitForChannelCatalogQuiet only waits for QUIET (which
-            // fires during the pre-catalog silence, before the catalog burst), so
-            // it is NOT sufficient — we explicitly wait for HasRealCatalogOnSession.
+            // (mirror) FF session the FIRST time. The catalog reveals which
+            // session is the tier-def session (Form A=0x01, Form B=0x02), and the
+            // FF-init must ride the OPPOSITE session. If we send the init before
+            // the catalog arrives, it lands on the pre-catalog default and we
+            // re-send on the other session once the catalog shows the form — but
+            // the wheel, having received a premature init on one session then
+            // another on the other, never commits the binding (dash renders, no
+            // data). The form is re-learned on EVERY start: ClearBuffer (in
+            // InitTickStateAndTransitionToStarting) drops the per-session
+            // catalog/END flags, so this wait always holds for THIS cycle's
+            // advertisement. The same wheel swaps forms between cycles (bundle
+            // 5NDCADWR: Form B at first start, Form A after a rim hot-swap), and
+            // trusting the previous cycle's flags passed this wait at 0 ms with
+            // both the init and the tier-def on the wrong sessions.
+            // WaitForChannelCatalogQuiet only waits for QUIET (which fires during
+            // the pre-catalog silence, before the catalog burst), so it is NOT
+            // sufficient — we explicitly wait for HasRealCatalogOnSession.
             // Bounded so a screenless / never-cataloging wheel still proceeds.
             {
                 // Base wait for an ordinary (small) catalog. A radar/track-map
@@ -287,7 +292,7 @@ namespace MozaPlugin.Telemetry
                 int MaxCatalogRequests =
                     (MozaPlugin.Instance?.Settings?.EnableRadarTrackMapChannels ?? false)
                         ? 6 : 3;
-                byte mgmt = _mgmtPort != 0 ? _mgmtPort : (byte)0x01;
+                byte mgmt = EffectiveMgmtPort;
                 byte flag = FlagByte;
                 int totalWaited = 0;
                 bool haveCatalog = false;
@@ -436,7 +441,9 @@ namespace MozaPlugin.Telemetry
             _displayConfigPage = 0;
             // ClearBuffer keeps the resolved _catalog so cross-switch backrefs
             // resolve (wheel uses size=1 backref records post-switch). Drops
-            // in-progress reassembly buffer + per-session seq dedup.
+            // in-progress reassembly buffer, per-session seq dedup, and which
+            // session carried the catalog/END — the wheel re-picks that per
+            // open, so the pre-init wait below must re-learn it.
             _catalogParser.ClearBuffer();
             // Same boundary, generation side: the wheel's END counter restarts low
             // on each session open, so the already-committed marker values from the

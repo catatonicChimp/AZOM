@@ -431,8 +431,7 @@ namespace MozaPlugin.UI
                     $"dir={(cfg.Direction < 0 ? "—" : cfg.Direction.ToString())} " +
                     $"min={(cfg.Min < 0 ? "—" : cfg.Min.ToString())} " +
                     $"max={(cfg.Max < 0 ? "—" : cfg.Max.ToString())} " +
-                    $"outCurve={(cfg.CurveY != null ? "set" : "—")} " +
-                    $"hwCurve={(cfg.HardwareCurveY != null ? "set" : "—")}");
+                    $"curve={(cfg.HardwareCurveY != null ? string.Join("/", cfg.HardwareCurveY.Select(v => v.ToString("F0", CultureInfo.InvariantCulture))) : "—")}");
                 sb.AppendLine(
                     $"             pedalFeel: deadzone={cfg.DeadzoneKg.ToString("F1", CultureInfo.InvariantCulture)}kg " +
                     $"maxForce={cfg.MaxForceKg.ToString("F0", CultureInfo.InvariantCulture)}kg " +
@@ -1235,10 +1234,11 @@ namespace MozaPlugin.UI
         public static string BuildSubscriptionResponse(MozaPlugin plugin)
         {
             var chunks = plugin.SubscriptionResponseForDiagnostics;
+            string ses = $"0x{plugin.SubscriptionResponseSessionForDiagnostics:X2}";
             if (chunks == null || chunks.Count == 0)
-                return "(no inbound chunks captured on session 0x02 in 5s window after subscription)";
+                return $"(no inbound chunks captured on tier-def session {ses} in 5s window after subscription)";
             var sb = new StringBuilder();
-            sb.AppendLine($"{chunks.Count} chunks captured on session 0x02 after most-recent subscription:");
+            sb.AppendLine($"{chunks.Count} chunks captured on tier-def session {ses} after most-recent subscription:");
             int total = 0;
             for (int i = 0; i < chunks.Count; i++)
             {

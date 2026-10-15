@@ -36,10 +36,10 @@ linear (R²=1.0) **across x=0**, where a float's sign bit would flip and break
 linearity. The high byte of each field also ramps smoothly (a float exponent
 would not).
 
-### Scale & offset are track-specific (and the wheel auto-fits)
+### Scale & offset are track-specific
 
 The per-axis scale `S` and the centre offsets differ by track and are **not**
-derivable from spline length or AC's `map.ini` (checked: `S/SCALE_FACTOR` is
+derivable from spline length or SCALE_FACTOR alone (`S/SCALE_FACTOR` is
 459.8 for Imola vs 379.0 for Spa — not constant):
 
 | Track | S (X & Y) | Z scale | Z/X ratio |
@@ -53,15 +53,88 @@ Two robust facts hold on both tracks:
 - The track occupies only a small, off-centre slice of the field (PitHouse's
   values sit around 4.3–4.9 M of the 16.7 M u24 range).
 
-Because the track fills <5 % of the field off-centre, **and** Z is sent 16×
-finer than X (a 1:1 renderer would squash the map 16:1), the wheel's map widget
-**must auto-normalise each axis independently** for display. Therefore the
-absolute scale/offset are **not load-bearing** — any consistent linear
-projection in the right packed layout renders correctly. The plugin
-(`TelemetryFrameBuilder.WritePackedLocation`) uses fixed `S=128`, `Z=2048`,
-centres `2^23` (X/Z) and `2^15` (Y) — chosen so any track (±several km) stays in
-range — and preserves PitHouse's 16× Z ratio. Confirm on hardware; tune the
-`MapScale*` constants if the map looks mis-sized.
+The 16× ratio is a normalisation, not a squash: PitHouse's X always sits at
+`0x48xxxx` (top nibble 4), and its **low 20 bits** are centred on `2^19` exactly
+as Z's 24 bits are centred on `2^23`. So `X_low20 / 2^20` and `Z / 2^24` are the
+same unit — one window, one scale:
+
+```
+X = 0x480000 + S·(x − cx)        Z = 0x800000 + 16·S·(z − cz)
+```
+
+**`S = 10^6 / E`**, with `E` the larger dimension of the track's outline bounds
+(below): `S·E` = 999,900 / 999,875 / 1,000,246 on Imola / Spa / Zandvoort. The
+window does not auto-fit (on hardware a mismatched scale/centre drew nothing);
+fields are clamped.
+
+### Wheel outlines (`.mztrack`)
+
+`patch/TrackName` = `<game>/<name>`; the wheel loads
+`/home/moza/resource/maps/<game>/<name>.mztrack` from its firmware (its display
+log prints `setCurTrack` / `loading …` or `not exist …`). PitHouse keeps the same
+set in `bin/GameConfigs/TrackData/<game>/` for the dashboard builder: folders
+`ac`, `acc`, `f1`, `iracing`, `lemans`; JSON, XOR-0x5A obfuscated
+(`tools/mztrack_compare.py` decodes). Each file has `x/y/z_min/max` and
+`sectors[].data` points `[x, y, z]` scaled 0..10000 per axis (`transform` 0.0001).
+
+- **World-coordinate games** (AC, ACC, LMU, F1): bounds are world metres —
+  mztrack x/y = world X/Z, z = elevation — the raw extent of the line.
+- **iRacing**: normalised (`x_min=y_min=0`, larger axis 1, z 0) — the shape of
+  SimHub's lap-relative map with **Z negated** (Daytona 2011 road: 0.2 % mean
+  error; Road Atlanta 1.8 %). World-coordinate outlines run +Z, so iRacing's Z
+  field is sent inverted.
+
+`tools/gen_track_outlines.py` embeds the names/bounds as `Data/TrackOutlines.json`
+and the normalised (iRacing) lines as `Data/TrackOutlinePoints.gz` (466 lines,
+443k points, 249 KB: delta-of-delta varints). The lines are near-evenly spaced (median longest/median
+segment 1.05; worst ~2×, Monza/Bathurst), point 0 on the S/F line, ≤ 1.5 %
+closure gap. `TrackOutlines.Find` matches SimHub's
+`TrackId+TrackConfig`, `TrackId`, then `TrackName` on lowercase letters/digits
+(AC `ks_nordschleife-nordschleife` → `ks_nordschleifenordschleife`; ACC TrackId
+`nurburgring_24h`, whose TrackName is "24H Nürburgring"). Keys are sent
+**lowercase**: the firmware's files differ in case from PitHouse's — the wheel
+logged `not exist …/iracing/nurburgring combinedShortB.mztrack` while
+`iracing/nurburgring combined` loaded.
+
+### Transform source by game
+
+- **AC** — `TrackMapTransform.ResolveMapIni` (track's map.ini).
+- **Outline with world bounds** (ACC, LMU, F1, AC without map.ini) —
+  `FromBounds` on the outline's bounds, centred.
+- **iRacing with an outline line** — `FromBounds` on the line's extent (below).
+- **Otherwise** (iRacing without a line, untabled tracks) — `FromBounds` on SimHub's recorded
+  map (`PersistantTrackerPlugin.GetMap()`), refit whenever SimHub swaps the
+  record. Lap-relative maps: raw min/max, Z inverted; world maps: 1 %-trimmed
+  (pit-lane tails).
+- Y (u16) gets a smaller scale when the elevation range would overflow it
+  (Bathurst: 191 m) — a clamped 0 there collides with the empty-slot marker. Live
+  fields clamp to ≥ 1 for the same reason.
+- **No map yet** — fixed `Fallback()` (SCALE_FACTOR 1.2 at world origin). Large
+  tracks clamp; `tools/trackmap_replay_sim.py` measures it on a replay (iRacing
+  Road Atlanta: 28 % of positions clamped).
+
+### iRacing (lap-relative coordinates)
+
+iRacing has no world positions. SimHub reports every car, player included, as
+`[LapDistPct, 0, 0]` and resolves it through the recorded map
+(`DataRecordBase.ToAbsoluteCoordinates` → interpolated `CarCoordinates[].Value`,
+built by `CoordinatesCreator` from YawNorth/LapDist/Pitch). SimHub may have no
+map for a layout (bundle E1K79CQM, Nordschleife VLN: no map → empty slots → the
+wheel showed one dot dead centre), so the plugin prefers the outline line:
+
+- **Outline line** (`TrackOutline.AtLapFraction`): pct → point at that fraction of
+  the line's length, interpolated, closed loop. Metres = SimHub `TrackLength` /
+  line length; stored in SimHub's lap-relative frame (Z = −outline y), offset one
+  unit so nothing is (0, 0). No elevation (Y = 0). Without a track length
+  (0.5–30 km) the map still fits but the radar is skipped.
+  `tools/outline_line_check.py`: Daytona 2011 road 1.5 m median / 9.6 m max vs
+  SimHub's map; Road Atlanta 2–8 m outside the replay map's broken S/F stretch.
+- **SimHub's map** otherwise; with neither there is nothing to plot (raw pct
+  would collapse every car onto one point) and the plugin sends empty slots.
+- The map's own points are already in the resolved space — they must not be run
+  through `ToAbsoluteCoordinates` again (that reads X as a lap fraction).
+- Cars are on the recorded line: no lateral position, so the radar shows gaps
+  along the line only.
 
 ### Empty slots
 

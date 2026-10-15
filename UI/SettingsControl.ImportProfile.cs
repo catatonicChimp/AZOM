@@ -54,7 +54,7 @@ namespace MozaPlugin.UI
                 {
                     var settings = controller.CurrentSettings;
                     if (settings != null)
-                        _plugin.HardwareApplier.ApplyMBoosterToHardware(controller, settings);
+                        _plugin.HardwareApplier.ApplyMBoosterToHardware(controller, settings, userRequested: true);
                 }
                 catch (Exception ex)
                 {

@@ -365,6 +365,40 @@ namespace MozaPlugin.Settings
         /// </summary>
         internal void ApplyProfile(MozaProfile profile)
         {
+            _profileApplied = true;
+            ApplyProfileCore(profile);
+        }
+
+        // Set by the first deliberate apply (profile/game switch, import, or the
+        // launch apply when the option allows it). Device-detect applies don't set it.
+        private volatile bool _profileApplied;
+
+        /// <summary>
+        /// Whether applies may write the saved profile to hardware. With "Apply
+        /// profile settings on launch" off, the devices keep what they hold
+        /// (e.g. Pit House's settings, bug report AA3FY2YZ) until a profile is
+        /// applied deliberately; device-detect applies then write only the
+        /// setup AZOM itself needs (HardwareApplier.ProfileWritesAllowed).
+        /// </summary>
+        internal bool ProfileHardwareWritesAllowed =>
+            _profileApplied || _plugin.Settings?.AutoApplyProfileOnLaunch != false;
+
+        /// <summary>The apply a device detection runs: the full apply when
+        /// profile writes are allowed, else only what AZOM needs to run.</summary>
+        internal void ApplyProfileOnConnect(MozaProfile profile)
+        {
+            if (ProfileHardwareWritesAllowed)
+            {
+                ApplyProfileCore(profile);
+                return;
+            }
+            MozaLog.Debug($"[AZOM] Device detected — profile '{profile.Name}' not written (Apply profile settings on launch is off)");
+            _plugin.HardwareApplier.ApplyProfileHardware(profile);
+            SyncTelemetryAfterApply();
+        }
+
+        private void ApplyProfileCore(MozaProfile profile)
+        {
             MozaLog.Debug($"[AZOM] Applying profile: {profile.Name}");
             _plugin.HardwareApplier.ApplyProfileHardware(profile);
 
@@ -414,6 +448,11 @@ namespace MozaPlugin.Settings
             // We still apply telemetry settings (dashboard mapping, mzdash
             // resolution) and kick StartTelemetryIfReady so an inactive
             // sender starts up — but we leave ProfileTelemetryEnabled alone.
+            SyncTelemetryAfterApply();
+        }
+
+        private void SyncTelemetryAfterApply()
+        {
             try
             {
                 _plugin.ApplyTelemetrySettings();

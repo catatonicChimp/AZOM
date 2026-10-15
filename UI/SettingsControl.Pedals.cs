@@ -178,21 +178,15 @@ namespace MozaPlugin.UI
             }
 
             dir.IsChecked = Pick(cfg?.Direction ?? -1, "dir", 0) != 0;
-            int lo = (int)Clamp(Pick(cfg?.Min ?? -1, "min", 0), 0, 100);
-            int hi = (int)Clamp(Pick(cfg?.Max ?? -1, "max", 100), 0, 100);
+            MozaMBoosterRegistry.ResolveOutputMapping(cfg, Device, out int lo, out int hi, out float[] curve);
+            lo = (int)Clamp(lo, 0, 100);
+            hi = (int)Clamp(hi, 0, 100);
             min.Value = lo;
             SetValueText(minValue, $"{lo}%");
             max.Value = hi;
             SetValueText(maxValue, $"{hi}%");
-
-            var stored = cfg?.HardwareCurveY;
             for (int i = 0; i < 5; i++)
-            {
-                int y = stored != null && stored.Length == 5
-                    ? (int)Math.Round(stored[i])
-                    : Pick(-1, $"y{i + 1}", PedalCurvePresets[0][i]);
-                SetSliderRaw(curveSliders[i], curveLabels[i], y, 0, 100, "");
-            }
+                SetSliderRaw(curveSliders[i], curveLabels[i], (int)Math.Round(curve[i]), 0, 100, "");
         }
 
         /// <summary>
@@ -208,8 +202,13 @@ namespace MozaPlugin.UI
             var cfg = MozaMBoosterRegistry.GetOrCreatePedalConfig(
                 _plugin.GetOrCreateMBoosterSettings(c.Identity), target.Axis, c.SoleConnectedAxis());
             if (cfg == null) return;
+            bool haveDev = c.TryCalibDeviceForAxis(target.Axis, out byte dev);
+            // Curve and range are one setting; pin the rest as shown.
+            if (field != "dir")
+                MozaMBoosterRegistry.PinOutputMapping(cfg,
+                    f => haveDev ? c.OutputRegisterValue(dev, $"mbooster-{pedal}-{f}") : -1);
             store(cfg);
-            if (!c.TryCalibDeviceForAxis(target.Axis, out byte dev)) return;
+            if (!haveDev) return;
             c.QueueCalibWrite($"{dev:x2}:mbooster-{pedal}-{field}", () => push(c, dev));
         }
 

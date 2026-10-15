@@ -278,7 +278,10 @@ namespace MozaPlugin.UI
             bool isBrake = rolePrefix == "brake";
             bool isThrottle = rolePrefix == "throttle";
             bool isClutch = rolePrefix == "clutch";
-            MBoosterBrakeOnlyPanel.Visibility = isBrake ? Visibility.Visible : Visibility.Collapsed;
+            // A passive Brake-role pedal has no load cell of its own; these
+            // would set the active pedal's.
+            bool ownsLoadCell = CurrentMBoosterController()?.OwnsSingletonRegisters(_mboosterEffectPedalIndex) ?? false;
+            MBoosterBrakeOnlyPanel.Visibility = isBrake && ownsLoadCell ? Visibility.Visible : Visibility.Collapsed;
 
             // Max Force/Deadzone slider bounds are role-scoped: Throttle and
             // Clutch are both much lighter springs than a brake's load cell,
@@ -385,7 +388,7 @@ namespace MozaPlugin.UI
             // sliders (BindEditorToSliders), so without a seed those sliders sit at
             // 0 and the editors draw a collapsed/garbage curve. A null target makes
             // both seeders fall back to their own Linear-preset default array
-            // (MBoosterOutputCurveDefault / MBoosterInputCurveDefault) and sane
+            // (Linear over 0–100 / MBoosterInputCurveDefault) and sane
             // per-control defaults; the seed writes go through _suppressor so the
             // slider ValueChanged handlers (which would no-op on the null target
             // anyway) stay quiet while the bindings still update the editors.

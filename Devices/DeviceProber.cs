@@ -20,7 +20,7 @@ namespace MozaPlugin.Devices
             "base-damper", "base-friction", "base-inertia", "base-spring",
             "base-protection", "base-natural-inertia",
             "base-speed-damping", "base-speed-damping-point",
-            "base-soft-limit-stiffness", "base-soft-limit-retain",
+            "base-soft-limit-stiffness", "base-soft-limit-strength", "base-soft-limit-retain",
             "base-ffb-reverse", "base-temp-strategy", "base-gearshift-vibration",
             "main-get-work-mode", "main-get-led-status",
             "main-get-damper-gain", "main-get-friction-gain",
@@ -828,7 +828,7 @@ namespace MozaPlugin.Devices
                 // read responses reflect the values we just wrote.
                 var profile = _plugin.Settings.ProfileStore.CurrentProfile;
                 if (profile != null)
-                    _plugin.ApplyProfile(profile);
+                    _plugin.ApplyProfileOnConnect(profile);
                 _deviceManager.ReadSettings(BaseSettingsReadCommands);
 
                 // Capability probe for the wheelbase ambient strip — R21/R25/R27
@@ -1080,7 +1080,7 @@ namespace MozaPlugin.Devices
                             // _data has been populated by intervening read responses.
                             var initialProfile = _plugin.Settings?.ProfileStore?.CurrentProfile;
                             if (initialProfile != null)
-                                _plugin.ApplyProfile(initialProfile);
+                                _plugin.ApplyProfileOnConnect(initialProfile);
 
                             // Auto-load the dashboard library: this wheel's
                             // configured mzdash folder plus MOZA Dashboard
@@ -1167,7 +1167,7 @@ namespace MozaPlugin.Devices
                             // mode bind to the right per-wheel page overlay.
                             var prof = _plugin.Settings?.ProfileStore?.CurrentProfile;
                             if (prof != null)
-                                _plugin.ApplyProfile(prof);
+                                _plugin.ApplyProfileOnConnect(prof);
                         }
                     }
                     break;

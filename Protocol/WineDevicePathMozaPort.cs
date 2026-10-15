@@ -90,8 +90,12 @@ namespace MozaPlugin.Protocol
         internal static void WarmUpEndpoint(string devicePath)
         {
             if (!WineNativeExec.Available) return;
-            string? node = WineHost.ToUnixPath(devicePath);
-            if (string.IsNullOrEmpty(node)) return;
+            string? node = WineHost.UnixPathOf(devicePath);
+            if (string.IsNullOrEmpty(node))
+            {
+                MozaLog.Debug($"[AZOM] WineDevicePathPort: no unix node for {devicePath} — warm-up skipped");
+                return;
+            }
 
             var r = WineNativeExec.Run(
                 new[] { "stty", "-F", node!, "115200", "raw", "-echo", "clocal", "-hupcl" },

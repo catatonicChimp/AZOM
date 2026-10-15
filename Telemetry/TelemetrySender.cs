@@ -609,15 +609,18 @@ namespace MozaPlugin.Telemetry
         }
         public SubscriptionDiagnostics? LastSubscription => _tierDefEmitter.LastSubscription;
 
-        /// <summary>Raw hex of inbound sess=0x02 chunks captured in the 5 s window
-        /// after the most-recent subscription send. Wheel returns channel-token
-        /// assignments here (tag 0x0c + 4B per channel).</summary>
+        /// <summary>Raw hex of inbound chunks on the tier-def session captured in
+        /// the 5 s window after the most-recent subscription send. The wheel
+        /// answers the tier-def on the session it rode (Form A 0x01 / Form B
+        /// 0x02), so the capture follows <see cref="ResolveTierDefSession"/>.</summary>
         private readonly System.Collections.Generic.List<byte[]> _subscriptionResponseChunks = new();
         private long _subscriptionResponseDeadlineTicks;
+        private volatile byte _subscriptionResponseSession;
         public System.Collections.Generic.IReadOnlyList<byte[]> LastSubscriptionResponse
         {
             get { lock (_subscriptionResponseChunks) return _subscriptionResponseChunks.ToArray(); }
         }
+        public byte LastSubscriptionResponseSession => _subscriptionResponseSession;
 
         /// <summary>Per-session chunk counters (in/out). Keyed by session id.
         /// Useful for diag tab to see which sessions are alive.</summary>

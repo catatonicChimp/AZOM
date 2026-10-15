@@ -25,7 +25,7 @@ namespace MozaPlugin.Telemetry.Frames
     ///                                         4,721,866 / 4,716,730 on Imola/Spa)
     /// </code>
     /// The Y (elevation) field is 16-bit and secondary to the 2-D map.
-    /// Falls back to a SCALE_FACTOR=1.2 transform when no map.ini is found.
+    /// Games without a map.ini use <see cref="FromBounds"/> (SimHub's recorded map), else <see cref="Fallback"/>.
     /// </summary>
     internal sealed class TrackMapTransform
     {
@@ -55,6 +55,42 @@ namespace MozaPlugin.Telemetry.Frames
 
         public static TrackMapTransform Fallback() => FromMapIni(1.2, 0.0, 0.0, "fallback(SCALE=1.2)");
 
+        // The wheel normalises X by its low 20 bits (centre 0x480000, PitHouse's top
+        // nibble is always 4) and Z by the full 24 bits, so one scale S puts both
+        // axes on the same footing: X = 0x480000 + S·dx, Z = 2^23 + 16·S·dz. PitHouse
+        // spans the outline's larger dimension E with 10^6 counts: S·E = 999,900 /
+        // 999,875 / 1,000,246 on Imola / Spa / Zandvoort (E from the .mztrack bounds).
+        private const double TrackCounts = 1000000.0;
+        private const double FieldY = 65536.0;     // 2^16, Y field span
+        private const double FillY = 0.9;
+        private const int BoundsCenterX = 0x480000;
+        private const int BoundsCenterZ = 0x800000;
+
+        /// <summary>Fit a track bounding box (the wheel outline's, else SimHub's recorded
+        /// map) into the wheel's window, centred. For tracks without an AC map.ini.
+        /// <paramref name="invertZ"/>: SimHub's lap-relative (iRacing) maps run Z
+        /// opposite to the outline.</summary>
+        public static TrackMapTransform FromBounds(double minX, double maxX, double minY, double maxY,
+            double minZ, double maxZ, bool invertZ, string source)
+        {
+            double ext = Math.Max(maxX - minX, maxZ - minZ);
+            double s = TrackCounts / ext;
+            double sz = invertZ ? -16.0 * s : 16.0 * s;
+            // Elevation shares S unless the track's height range overflows the 16-bit
+            // field (Bathurst: 191 m × 442/m), which would clamp the low end to 0.
+            double sy = maxY - minY > 0.0 ? Math.Min(s, FillY * FieldY / (maxY - minY)) : s;
+            return new TrackMapTransform
+            {
+                ScaleX = (float)s,
+                ScaleZ = (float)sz,
+                ScaleY = (float)sy,
+                CenterX = (int)Math.Round(BoundsCenterX - s * (minX + maxX) / 2.0),
+                CenterZ = (int)Math.Round(BoundsCenterZ - sz * (minZ + maxZ) / 2.0),
+                CenterY = (int)Math.Round(CenterYConst - sy * (minY + maxY) / 2.0),
+                Source = $"{source}:{(int)(maxX - minX)}x{(int)(maxZ - minZ)}m{(invertZ ? ",-Z" : "")}",
+            };
+        }
+
         private static TrackMapTransform FromMapIni(double scaleFactor, double width, double height, string src)
         {
             double sx = PixelK / scaleFactor;
@@ -75,11 +111,11 @@ namespace MozaPlugin.Telemetry.Frames
             };
         }
 
-        /// <summary>Resolve the transform for a track folder (e.g. "ks_zandvoort").
-        /// Reads SCALE_FACTOR from AC's map.ini; falls back when unavailable.</summary>
-        public static TrackMapTransform Resolve(string? trackFolder)
+        /// <summary>Resolve the transform for an AC track folder (e.g. "ks_zandvoort")
+        /// from its map.ini; null when there is none (other games).</summary>
+        public static TrackMapTransform? ResolveMapIni(string? trackFolder)
         {
-            if (string.IsNullOrEmpty(trackFolder)) return Fallback();
+            if (string.IsNullOrEmpty(trackFolder)) return null;
             // TEST (temporary): exact PitHouse-fitted transform for ks_zandvoort
             // (R^2 ~1.0 against the radar6 capture). Confirms whether the radar's
             // static is the Location transform before generalising the formula.
@@ -98,8 +134,8 @@ namespace MozaPlugin.Telemetry.Frames
                 string? ini = FindMapIni(trackFolder!);
                 if (ini == null)
                 {
-                    MozaLog.Info($"[AZOM] track transform: no map.ini for '{trackFolder}' — using fallback");
-                    return Fallback();
+                    MozaLog.Info($"[AZOM] track transform: no map.ini for '{trackFolder}'");
+                    return null;
                 }
                 double? scale = null, width = null, height = null;
                 foreach (var line in File.ReadAllLines(ini))
@@ -123,13 +159,13 @@ namespace MozaPlugin.Telemetry.Frames
                         $"-> X_scale={t.ScaleX:F1} X_center={t.CenterX} Z_scale={t.ScaleZ:F0} (from {ini})");
                     return t;
                 }
-                MozaLog.Info($"[AZOM] track transform: map.ini for '{trackFolder}' has no SCALE_FACTOR — fallback");
-                return Fallback();
+                MozaLog.Info($"[AZOM] track transform: map.ini for '{trackFolder}' has no SCALE_FACTOR");
+                return null;
             }
             catch (Exception e)
             {
                 MozaLog.Info($"[AZOM] track transform resolve failed for '{trackFolder}': {e.Message}");
-                return Fallback();
+                return null;
             }
         }
 

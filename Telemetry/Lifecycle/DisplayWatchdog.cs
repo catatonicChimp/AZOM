@@ -173,19 +173,26 @@ namespace MozaPlugin.Telemetry.Lifecycle
         private readonly int[] _closeStormRestartCount = new int[CloseStormSessionMax];
 
         // ── tier-def reject detector (single-close wedge, no storm) ───────
-        // Cold-start wedge (CS-Pro bundle 2026-06-10): the wheel routes its
-        // catalog + END marker to sess=0x02 and gives the tier-def session
-        // (0x01) only a value-less END stub, so every tier-def goes out with
-        // end=0; the wheel rejects the first one and CLOSEs the tier-def
-        // session ONCE — no storm follows, Context A stays green (catalog +
-        // configJson both present on 0x02), and the slot rule never restarts.
-        // The reject is one wheel-initiated CLOSE of the tier-def session
-        // within this window of an emission whose echoed END was 0 while the
-        // wheel's END demonstrably lives elsewhere (LastWheelEndMarker != 0).
-        // Recovery = the empirically-proven telemetry off/on cycle:
+        // The wheel rejects a tier-def it won't bind with ONE wheel-initiated
+        // CLOSE of the session it rode — no storm follows, Context A stays
+        // green (catalog + configJson present), and the slot rule never
+        // restarts. Two observed shapes:
+        //   • CS-Pro bundle 2026-06-10: catalog + END routed to sess=0x02, the
+        //     tier-def session (0x01) given only a value-less END stub, so the
+        //     tier-def went out with end=0 and the wheel closed 0x01.
+        //   • bundle 5NDCADWR (W17/CS-Pro 2026-10-11): after a rim hot-swap the
+        //     tier-def went to 0x02 on the previous cycle's session roles with
+        //     a stale but non-zero END (23); the wheel pushed its catalog on
+        //     0x01, closed 0x02 1.8 s after the emission, then re-sent END=23
+        //     on 0x01 at 1 Hz for the rest of the capture and never echoed
+        //     kind=4. The END==0 precondition this detector used to carry let
+        //     that one through.
+        // So the rule is the close itself: a wheel-initiated CLOSE of the
+        // session our most recent tier-def rode, within this window of that
+        // emission. Recovery = the empirically-proven telemetry off/on cycle:
         // RequestRestart → Stop() (close 0x01..0x03) → SilenceGate (~11 s
-        // host quiet) → fresh opens, after which the wheel re-advertises
-        // WITH a valid END on the tier-def session (verified 2026-06-10
+        // host quiet) → fresh opens; StartInner then re-learns the session
+        // roles from the wheel's fresh advertisement (verified 2026-06-10
         // 12:13 log: first post-cycle tier-def echoed end=12 and bound).
         // One-shot per Start cycle; RecoveryDispatcher's debounce + restart
         // cap bound the retry loop if the wheel re-wedges.
@@ -268,14 +275,14 @@ namespace MozaPlugin.Telemetry.Lifecycle
             int now = Environment.TickCount;
 
             // Revoke liveness on the affected session.
-            if (session == _sender.MgmtPort)
+            if (session == _sender.EffectiveMgmtPort)
                 Interlocked.Exchange(ref _session01EngagedUtcTicks, 0);
             if (session == _sender.FlagByte && Interlocked.Read(ref _session02FirstInboundUtcTicks) != 0)
                 Interlocked.Exchange(ref _session02FirstInboundUtcTicks, 0);
             // Stamp the mgmt close time unconditionally. No consumer today —
             // the post-close settle window it fed was removed with the rest of
             // the unread threshold constants; kept as a cheap observation point.
-            if (session == _sender.MgmtPort)
+            if (session == _sender.EffectiveMgmtPort)
                 Interlocked.Exchange(ref _session01LastCloseUtcTicks, DateTime.UtcNow.Ticks);
 
             // Tier-def reject wedge — see the field block for the full story.
@@ -284,18 +291,18 @@ namespace MozaPlugin.Telemetry.Lifecycle
             if (_tierDefRejectRestartRequested == 0
                 && emitTicks != 0
                 && session == emitter.LastTierDefSession
-                && emitter.LastTierDefEndMarker == 0
-                && _sender.CatalogParser.LastWheelEndMarker != 0
                 && (DateTime.UtcNow.Ticks - emitTicks) / TimeSpan.TicksPerMillisecond
                     <= TierDefRejectWindowMs)
             {
                 _tierDefRejectRestartRequested = 1;
+                byte catalogSes = _sender.ResolveTierDefSession();
                 _sender.Recovery.RequestRestart(
-                    $"sess=0x{session:X2} tier-def REJECT: wheel closed the tier-def session " +
-                    $"after an emission with end=0 while its END marker " +
-                    $"({_sender.CatalogParser.LastWheelEndMarker}) lives on another session — " +
-                    "cycling the pipeline so the wheel re-advertises with a valid END " +
-                    "(catalog-on-wrong-session cold-start wedge).");
+                    $"sess=0x{session:X2} tier-def REJECT: wheel closed the session our tier-def " +
+                    $"rode {(DateTime.UtcNow.Ticks - emitTicks) / TimeSpan.TicksPerMillisecond} ms " +
+                    $"after the emission (echoed end={emitter.LastTierDefEndMarker}, wheel END=" +
+                    $"{_sender.CatalogParser.LastWheelEndMarker}, catalog now on 0x{catalogSes:X2}) — " +
+                    "cycling the pipeline so the session roles are re-learned from the wheel's " +
+                    "fresh advertisement.");
             }
 
             // Restart-escalation accounting on its own 30 s window.
@@ -504,7 +511,7 @@ namespace MozaPlugin.Telemetry.Lifecycle
             {
                 byte tierDefSes = _sender.ResolveTierDefSession();
                 bool tierDefIsFlag = tierDefSes == _sender.FlagByte
-                    && _sender.FlagByte != _sender.MgmtPort;
+                    && _sender.FlagByte != _sender.EffectiveMgmtPort;
                 // Both lanes are measured the same way: newest of (pushed data,
                 // ack). _session01LastInboundUtcTicks is already fed by both.
                 long s01 = Interlocked.Read(ref _session01LastInboundUtcTicks);
@@ -542,7 +549,7 @@ namespace MozaPlugin.Telemetry.Lifecycle
                     int hostSends = _sender.SessionOutboundCount(tierDefSes);
                     if (deadStamp != 0 || hostSends > 0)
                     {
-                        byte mirrorSes = tierDefIsFlag ? _sender.MgmtPort : _sender.FlagByte;
+                        byte mirrorSes = tierDefIsFlag ? _sender.EffectiveMgmtPort : _sender.FlagByte;
                         string span = deadStamp != 0
                             ? $"for {deadAgeMs / 1000}s"
                             : $"at all this Start cycle ({deadAgeMs / 1000}s since Active)";
@@ -908,8 +915,8 @@ namespace MozaPlugin.Telemetry.Lifecycle
             // ResolveTierDefSession(), so name it here — otherwise the s01/s02
             // ages below can't be read against the restart verdict.
             byte tierDefSes = _sender.ResolveTierDefSession();
-            byte mirrorSes = tierDefSes == _sender.FlagByte && _sender.FlagByte != _sender.MgmtPort
-                ? _sender.MgmtPort
+            byte mirrorSes = tierDefSes == _sender.FlagByte && _sender.FlagByte != _sender.EffectiveMgmtPort
+                ? _sender.EffectiveMgmtPort
                 : _sender.FlagByte;
             return $"{(engaged ? "yes" : "no")} (catalog={catalog} state={state} slotRoundTrip={roundTrip} " +
                    $"s09devinit={(_sender.WheelReadyObserved ? "yes" : "no")} " +

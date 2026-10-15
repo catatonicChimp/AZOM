@@ -36,7 +36,8 @@ namespace MozaPlugin.Protocol
         private delegate void WineGetHostVersionDelegate(out IntPtr sysname, out IntPtr release);
 
         // kernel32!wine_get_unix_file_name — DOS path to unix path. Returns a
-        // heap pointer Wine owns; we only read it.
+        // heap pointer Wine owns; we only read it. The export is CDECL.
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr WineGetUnixFileNameDelegate([MarshalAs(UnmanagedType.LPWStr)] string dos);
 
         private static readonly object s_gate = new object();
@@ -93,6 +94,24 @@ namespace MozaPlugin.Protocol
             string rel = unixPath.Replace('/', sep);
             if (rel.Length == 0 || rel[0] != sep) rel = sep + rel;
             return root + rel;
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="UnixPath"/>: <c>Z:\dev\ttyACM2</c> →
+        /// <c>/dev/ttyACM2</c>. Null when the path is not under
+        /// <see cref="UnixRoot"/>. Use this, not <see cref="ToUnixPath"/>, for
+        /// device nodes: Wine (since c8fdffbf7c5) answers NULL for character
+        /// devices, and the lookup itself opens the node.
+        /// </summary>
+        public static string? UnixPathOf(string dosPath)
+        {
+            string? root = UnixRoot;
+            if (root == null || string.IsNullOrEmpty(dosPath)) return null;
+            char sep = System.IO.Path.DirectorySeparatorChar;
+            string prefix = root + sep;
+            if (!dosPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return null;
+            string rel = dosPath.Substring(prefix.Length);
+            return rel.Length == 0 ? null : "/" + rel.Replace(sep, '/');
         }
 
         /// <summary>
