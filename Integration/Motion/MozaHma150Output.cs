@@ -174,18 +174,20 @@ namespace MozaPlugin.Integration.Motion
                 Fail(Strings.Motion_Error_NotConnected);
                 return false;
             }
-            if (!lane.IsConnected || lane.Phase == MotionLanePhase.Enrolling)
+            var phase = lane.Phase;
+            if (!lane.IsConnected || phase == MotionLanePhase.Enrolling || phase == MotionLanePhase.Disconnected)
             {
-                // Started with the port closed: the lane is opening and enrolling it.
+                // Started with the port closed: the lane is opening and enrolling it. The port
+                // can read open a tick before the phase leaves Disconnected.
                 if (lane.EngagePending) return false;
                 Fail(lane.FaultReason != null
                     ? string.Format(Strings.Motion_Error_FaultFmt, lane.FaultReason)
                     : Strings.Motion_Error_NotConnected);
                 return false;
             }
-            if (lane.Phase == MotionLanePhase.Faulted || lane.Phase == MotionLanePhase.Disconnected)
+            if (phase == MotionLanePhase.Faulted)
             {
-                Fail(string.Format(Strings.Motion_Error_FaultFmt, lane.FaultReason ?? lane.Phase.ToString()));
+                Fail(string.Format(Strings.Motion_Error_FaultFmt, lane.FaultReason ?? phase.ToString()));
                 return false;
             }
             return true;

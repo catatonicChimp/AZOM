@@ -484,7 +484,11 @@ namespace MozaPlugin.Devices.Motion
             _lastConnectAttemptMs = now;
             if (!IsPresent) return;
             if (_connection.Connect())
+            {
+                // Leave Disconnected now; the next tick resets state and starts the enrol.
+                _phase = MotionLanePhase.Enrolling;
                 MozaLog.Info($"[AZOM/Motion] Connected to MOZA Motion Controller on {_connection.LastPortName}");
+            }
         }
 
         private void StartSequence(IEnumerator<int> sequence)
