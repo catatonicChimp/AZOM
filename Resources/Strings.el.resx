@@ -476,7 +476,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>ΑΚΥΡΩΣΗ</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>ΕΠΟΜΕΝΟ</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>ΠΙΣΩ</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Επιλέξτε ένα αρχείο JSON preset PitHouse από οπουδήποτε στο σύστημά σας.</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Επιλέξτε ένα αρχείο JSON preset PitHouse ή Motion Manager από οπουδήποτε στο σύστημά σας.</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>Το αρχείο δεν είναι έγκυρο JSON: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Μη υποστηριζόμενος τύπος preset "{0}". Υποστηρίζονται μόνο presets Βάσης και Πεντάλ.</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Συνδεδεμένο</value></data>

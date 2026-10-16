@@ -477,7 +477,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>HỦY</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>TIẾP</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>QUAY LẠI</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Chọn một tệp JSON cài đặt PitHouse từ bất kỳ vị trí nào.</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Chọn một tệp JSON cài đặt PitHouse hoặc Motion Manager từ bất kỳ vị trí nào.</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>Tệp không phải JSON hợp lệ: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Loại cài đặt không hỗ trợ "{0}". Chỉ hỗ trợ cài đặt Motor và Pedals.</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Đã kết nối</value></data>

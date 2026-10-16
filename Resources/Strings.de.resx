@@ -477,7 +477,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>ABBRECHEN</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>WEITER</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>ZURÜCK</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Wählen Sie eine PitHouse-Voreinstellungsdatei (JSON) von einem beliebigen Ort.</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Wählen Sie eine PitHouse- oder Motion-Manager-Voreinstellungsdatei (JSON) von einem beliebigen Ort.</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>Datei ist kein gültiges JSON: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Nicht unterstützter Preset-Typ "{0}". Es werden nur Motor- und Pedale-Presets unterstützt.</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Verbunden</value></data>

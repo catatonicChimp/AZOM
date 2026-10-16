@@ -9,6 +9,7 @@ All notable changes to the AZOM plugin are documented here.
 - **MOZA HMA150 motion platform in SimHub Motion (preview).** Pick the MOZA HMA150 preset in
   Motion; it streams game telemetry like Motion Manager, and port setup, self-tests, motion
   effects, stroke and lighting are in its settings. The COM port is free while motion is off.
+  Motion effects are saved per profile, and Motion Manager presets import from the Import tab.
 
 ## Fixed
 

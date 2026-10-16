@@ -43,6 +43,8 @@ namespace MozaPlugin.Devices.Motion
         private const int ConnectRetryMs = 1_000;
         private const int EngageConnectTimeoutMs = 15_000;
         private const int StandbyTimeoutMs = 5_000;
+        private const int DesiredCheckMs = 1_000;
+        private const int DesiredPushAttempts = 3;
 
         private readonly MozaSerialConnection _connection;
         private readonly Func<bool> _isShuttingDown;
@@ -75,6 +77,11 @@ namespace MozaPlugin.Devices.Motion
         private readonly float[] _effectIntensity = new float[MozaMotionProtocol.EffectSlots.Length];
         private readonly float[] _effectSmoothness = new float[MozaMotionProtocol.EffectSlots.Length];
         private float _roadIntensity = float.NaN, _roadSmoothness = float.NaN;
+        private MotionEffect?[]? _desiredEffects;
+        private int _desiredPushes;
+        private long _lastDesiredCheckMs;
+        private readonly ConcurrentQueue<byte[]> _paced = new ConcurrentQueue<byte[]>();
+        private long _nextPacedMs;
         private readonly ConcurrentDictionary<int, byte> _activeErrors = new ConcurrentDictionary<int, byte>();
         private readonly ConcurrentQueue<string> _logRing = new ConcurrentQueue<string>();
         private readonly ConcurrentDictionary<byte, string> _logPartial = new ConcurrentDictionary<byte, string>();
@@ -244,21 +251,54 @@ namespace MozaPlugin.Devices.Motion
                 Send(MozaMotionProtocol.BuildRigDimensionsRead());
             });
 
+        /// <summary>
+        /// The active profile's effect values, per <see cref="MozaMotionProtocol.EffectSlots"/>
+        /// entry then road detail; null entries are left as the controller holds them. Written
+        /// now if enrolled, otherwise once the next enrol has read the current values.
+        /// </summary>
+        public void SetDesiredEffects(MotionEffect?[] desired)
+        {
+            if (desired == null || desired.Length != MozaMotionProtocol.EffectSlots.Length + 1)
+                throw new ArgumentException("one entry per effect slot plus road detail", nameof(desired));
+            Volatile.Write(ref _desiredEffects, (MotionEffect?[])desired.Clone());
+            _requests.Enqueue(() => { _desiredPushes = 0; PushDesiredEffects(); });
+        }
+
+        /// <summary>
+        /// Queue a write + readback for every desired value the controller doesn't hold.
+        /// Re-run each second from the tick (capped) so a write the controller dropped is retried.
+        /// </summary>
+        private void PushDesiredEffects()
+        {
+            var desired = Volatile.Read(ref _desiredEffects);
+            if (desired == null || !_connection.IsConnected) return;
+            if (_phase == MotionLanePhase.Enrolling || _phase == MotionLanePhase.Disconnected) return;
+            if (_desiredPushes >= DesiredPushAttempts) return;
+            int slots = MozaMotionProtocol.EffectSlots.Length;
+            bool any = false;
+            for (int i = 0; i <= slots; i++)
+            {
+                if (!desired[i].HasValue) continue;
+                var want = desired[i]!.Value;
+                float curI = i < slots ? Volatile.Read(ref _effectIntensity[i]) : Volatile.Read(ref _roadIntensity);
+                float curS = i < slots ? Volatile.Read(ref _effectSmoothness[i]) : Volatile.Read(ref _roadSmoothness);
+                if (Math.Abs(curI - want.Intensity) < 0.001f && Math.Abs(curS - want.Smoothness) < 0.001f) continue;
+                any = true;
+                if (i < slots)
+                {
+                    _paced.Enqueue(MozaMotionProtocol.BuildEffectSlot(MozaMotionProtocol.EffectSlots[i], want.Intensity, want.Smoothness));
+                    _paced.Enqueue(MozaMotionProtocol.BuildEffectSlotRead(MozaMotionProtocol.EffectSlots[i]));
+                }
+                else
+                {
+                    _paced.Enqueue(MozaMotionProtocol.BuildRoadDetail(want.Intensity, want.Smoothness));
+                    _paced.Enqueue(MozaMotionProtocol.BuildRoadDetailRead());
+                }
+            }
+            if (any) _desiredPushes++;
+        }
+
         /// <summary>Motion Effects slider pair (0..1 each); the controller keeps it across power cycles. Read back.</summary>
-        public void WriteEffect(byte slot, float intensity, float smoothness)
-            => _requests.Enqueue(() =>
-            {
-                Send(MozaMotionProtocol.BuildEffectSlot(slot, intensity, smoothness));
-                Send(MozaMotionProtocol.BuildEffectSlotRead(slot));
-            });
-
-        public void WriteRoadDetail(float intensity, float smoothness)
-            => _requests.Enqueue(() =>
-            {
-                Send(MozaMotionProtocol.BuildRoadDetail(intensity, smoothness));
-                Send(MozaMotionProtocol.BuildRoadDetailRead());
-            });
-
         public void WriteLighting(byte zone, byte param, byte[] value)
             => _requests.Enqueue(() =>
             {
@@ -441,6 +481,18 @@ namespace MozaPlugin.Devices.Motion
                 catch (Exception ex) { MozaLog.Debug($"[AZOM/Motion] Request: {ex.Message}"); }
             }
 
+            // The controller drops requests that arrive faster than ~13 ms apart.
+            if (now >= _nextPacedMs && _paced.TryDequeue(out var paced))
+            {
+                Send(paced);
+                _nextPacedMs = now + EnrolReadSpacingMs;
+            }
+            if (_paced.IsEmpty && now - _lastDesiredCheckMs >= DesiredCheckMs)
+            {
+                _lastDesiredCheckMs = now;
+                PushDesiredEffects();
+            }
+
             if (_sequence != null && now >= _sequenceWakeMs)
             {
                 bool more;
@@ -569,6 +621,8 @@ namespace MozaPlugin.Devices.Motion
                 Interlocked.Exchange(ref _portWord[p], 0);
             }
             ResetEffects();
+            _desiredPushes = 0;
+            while (_paced.TryDequeue(out _)) { }
             _activeErrors.Clear();
             _logPartial.Clear();
             _gameLostSinceMs = -1;
@@ -645,6 +699,7 @@ namespace MozaPlugin.Devices.Motion
             _phase = MotionLanePhase.Ready;
             MozaLog.Info($"[AZOM/Motion] Enrolled {_model} fw {_fw}, mode {_modeCurrent}, "
                 + $"{CountPresent()} actuators");
+            PushDesiredEffects();
         }
 
         private static bool AllAnswered(List<(byte[] Frame, Func<bool>? Answered)> reads)

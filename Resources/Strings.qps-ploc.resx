@@ -503,7 +503,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>ARF!!</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>BORK!!</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>WOOF!!</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Woof Yip Wan Boof!</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Woof Yip Wan Arf Boof!</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>Yip Grrowl {0}!</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Wan Rrrf Yowl Yowff {0} Yowff Yip Grr Wan!</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Barff!</value></data>

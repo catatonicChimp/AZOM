@@ -54,6 +54,23 @@ The other haptic effects (Engine Vibration, ABS Trigger, Gear Shift, Traction Co
 Slip) are rendered on the host and arrive as oscillators/events on group `0x22` — see
 [`game-stream-0x22.md`](game-stream-0x22.md). Their sliders produce no `0x1E` write.
 
+## Motion Manager preset files
+
+Exported presets are JSON in the Pit House preset shape, with `deviceType` / `devices` under
+`tags` (`"deviceType": "GMotion"`, `"devices": ["G01"]`) and the sliders under `deviceParams`:
+
+| Section | Wire |
+|---------|------|
+| `Pitch`, `Roll`, `Heave`, `AccToPitch`, `AccToRoll` | `0x1E/05` slot `00`, `01`, `03`, `07`, `08`: `Strength` → intensity, `Flatness` → smoothness (÷ 100) |
+| `RoadDetail` | `0x1E/06`, same two fields |
+| `platform.tactileFeedbackValue` | matches the Haptic Feedback Intensity writes (`0x1E/04 01`, 0.50 / 0.40) |
+| `Sensitivity`, `AccWeight`, `GearShiftIsolation`, `layout`, `platform.maxMotionAngle` | no write in any capture |
+| `ABSTrigger`, `EngineVibration`, `GearShift`, `TractionControl`, `WheelSlip` | host-rendered `0x22` oscillators |
+
+Verified field for field: "iRacing gt3-pcupcar" against the 0.28/0.90 … 0.79/0.40 set above,
+"iRacing caterham" against the `nurburgring` 19.9 s set. What a disabled section (`"enabled":
+false`) writes is not captured; the plugin's import writes intensity 0.
+
 ## Global sliders — `0x1E/04 [idx] [f32]` / `0x1F/04 [idx]`
 
 | idx | Slider (home page) | Evidence |

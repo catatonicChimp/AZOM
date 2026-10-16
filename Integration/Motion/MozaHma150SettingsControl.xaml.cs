@@ -116,9 +116,14 @@ namespace MozaPlugin.Integration.Motion
             }
             if (s != null && connected && !_effectsLoaded && s.RoadDetail.HasValue && s.Effects.All(e => e.HasValue))
             {
+                // The active profile's values where it has them, else what the controller holds.
                 _effectsLoaded = true;
-                for (int i = 0; i < s.Effects.Length; i++) ShowEffect(_effectBoxes[i], s.Effects[i]!.Value);
-                ShowEffect(_effectBoxes[s.Effects.Length], s.RoadDetail.Value);
+                var desired = MozaPlugin.ToDesiredEffects(MozaPlugin.Instance?.Settings?.ProfileStore?.CurrentProfile?.MotionEffects);
+                for (int i = 0; i < _effectBoxes.Count; i++)
+                {
+                    var held = i < s.Effects.Length ? s.Effects[i]!.Value : s.RoadDetail.Value;
+                    ShowEffect(_effectBoxes[i], desired[i] ?? held);
+                }
             }
             RefreshLighting(lane);
         }
@@ -154,26 +159,18 @@ namespace MozaPlugin.Integration.Motion
             boxes.Smoothness.Text = (e.Smoothness * 100).ToString("0", CultureInfo.CurrentCulture);
         }
 
+        /// <summary>Saves every valid row into the active profile, which pushes it to the controller.</summary>
         private void EffectsApply_Click(object sender, RoutedEventArgs e)
         {
-            var lane = Lane;
-            var s = lane?.Snapshot();
-            if (lane == null || s == null) return;
-            int slots = MozaMotionProtocol.EffectSlots.Length;
+            var values = new Dictionary<int, (int Intensity, int Smoothness)>();
             for (int i = 0; i < _effectBoxes.Count; i++)
             {
                 if (!TryParse(_effectBoxes[i].Intensity.Text, out double ip) || ip < 0 || ip > 100) continue;
                 if (!TryParse(_effectBoxes[i].Smoothness.Text, out double sp) || sp < 0 || sp > 100) continue;
-                var value = new MotionEffect((float)(ip / 100.0), (float)(sp / 100.0));
-                var current = i < slots ? s.Effects[i] : s.RoadDetail;
-                if (current.HasValue && Same(current.Value, value)) continue;
-                if (i < slots) lane.WriteEffect(MozaMotionProtocol.EffectSlots[i], value.Intensity, value.Smoothness);
-                else lane.WriteRoadDetail(value.Intensity, value.Smoothness);
+                values[i] = ((int)Math.Round(ip), (int)Math.Round(sp));
             }
+            if (values.Count > 0) MozaPlugin.Instance?.SetMotionEffects(values);
         }
-
-        private static bool Same(MotionEffect a, MotionEffect b)
-            => Math.Abs(a.Intensity - b.Intensity) < 0.001f && Math.Abs(a.Smoothness - b.Smoothness) < 0.001f;
 
         private void RefreshPorts(MotionControllerSnapshot? s, bool idle)
         {

@@ -482,7 +482,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>AVBRYT</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>NESTE</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>TILBAKE</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Velg en PitHouse-forhåndsinnstillings-JSON-fil fra et sted på systemet ditt.</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Velg en PitHouse- eller Motion Manager-forhåndsinnstillings-JSON-fil fra et sted på systemet ditt.</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>Filen er ikke gyldig JSON: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Forhåndsinnstillings-typen «{0}» støttes ikke. Bare Motor- og Pedaler-forhåndsinnstillinger støttes.</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Tilkoblet</value></data>

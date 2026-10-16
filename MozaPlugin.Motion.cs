@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using MozaPlugin.Devices.Motion;
+using MozaPlugin.Settings;
 
 namespace MozaPlugin
 {
@@ -30,8 +32,7 @@ namespace MozaPlugin
             if (!string.IsNullOrEmpty(_settings.LastMotionPort))
                 _motionController.LastPortName = _settings.LastMotionPort;
             if (!string.IsNullOrEmpty(_settings.LastMotionDeviceId))
-                _motionController.LastDeviceId = _settings.LastMotionDeviceId;
-        }
+                _motionController.LastDeviceId = _settings.LastMotionDeviceId;        }
 
         /// <summary>Reconnect-tick hook; same authoritative-device-source gate as the other dedicated lanes.</summary>
         private void TryConnectMotion()
@@ -53,6 +54,31 @@ namespace MozaPlugin
             string id = lane.LastDeviceId ?? "";
             if (_settings.LastMotionDeviceId != id) { _settings.LastMotionDeviceId = id; dirty = true; }
             if (dirty) ScheduleSave();
+        }
+
+        /// <summary>Profile effect percentages → the lane's desired values (null = leave the controller's).</summary>
+        internal static MotionEffect?[] ToDesiredEffects(MotionEffectsSettings? s)
+        {
+            var desired = new MotionEffect?[MotionEffectsSettings.Count];
+            if (s == null) return desired;
+            for (int i = 0; i < desired.Length; i++)
+            {
+                var (intensity, smoothness) = s.Get(i);
+                if (intensity >= 0 && smoothness >= 0)
+                    desired[i] = new MotionEffect(intensity / 100f, smoothness / 100f);
+            }
+            return desired;
+        }
+
+        /// <summary>Store effect values in the active profile and push them to the controller.</summary>
+        internal void SetMotionEffects(IReadOnlyDictionary<int, (int Intensity, int Smoothness)> values)
+        {
+            var profile = _settings?.ProfileStore?.CurrentProfile;
+            if (profile == null) return;
+            var effects = profile.MotionEffects ??= new MotionEffectsSettings();
+            foreach (var kv in values) effects.Set(kv.Key, kv.Value.Intensity, kv.Value.Smoothness);
+            SaveSettings();
+            _motionController?.SetDesiredEffects(ToDesiredEffects(effects));
         }
 
         private void DisposeMotionLane()

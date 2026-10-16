@@ -476,7 +476,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>취소</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>다음</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>뒤로</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>시스템 어디에서든 PitHouse 프리셋 JSON 파일을 선택하세요.</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>시스템 어디에서든 PitHouse 또는 Motion Manager 프리셋 JSON 파일을 선택하세요.</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>파일이 유효한 JSON이 아닙니다: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>지원되지 않는 프리셋 유형 "{0}". 모터와 페달 프리셋만 지원됩니다.</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>연결됨</value></data>

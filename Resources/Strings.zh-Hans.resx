@@ -477,7 +477,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>取消</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>下一步</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>返回</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>从系统任意位置选择 PitHouse 预设 JSON 文件。</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>从系统任意位置选择 PitHouse 或 Motion Manager 预设 JSON 文件。</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>文件不是有效的 JSON: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>不支持的预设类型 "{0}"。仅支持 Motor 和 Pedals 预设。</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>已连接</value></data>
