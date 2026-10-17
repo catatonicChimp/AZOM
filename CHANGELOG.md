@@ -14,6 +14,7 @@ All notable changes to the AZOM plugin are documented here.
 ## Fixed
 
 - **The MOZA Motion Controller is no longer probed as a wheelbase or AB9.**
+- **Dashboard channel mappings show at launch,** not only after switching dashboards.
 
 ## [1.6.4]
 
