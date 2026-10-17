@@ -149,8 +149,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Σκληρότητα εμπρός ορίου</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Σκληρότητα τελικού ορίου</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Προσομοιώνει μια δύναμη τριβής ανεξάρτητη από την έξοδο του παιχνιδιού.</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>ΤΜΗΜΑΤΟΠΟΙΗΜΕΝΗ ΑΠΟΣΒΕΣΗ</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Δύναμη απόσβεσης ανεξάρτητη από την έξοδο του παιχνιδιού, ανά τμήμα διαδρομής πεντάλ</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Προσομοιώνει μια δύναμη απόσβεσης ανεξάρτητη από την έξοδο του παιχνιδιού εντός του παιχνιδιού. Η διαδρομή του πεντάλ χωρίζεται σε πολλά τμήματα, το καθένα με ρυθμιζόμενο εύρος και τη δική του φυσική απόσβεση. Σύρετε ένα διαχωριστικό για να αλλάξετε το μέγεθος ενός τμήματος· σύρετε μέσα σε ένα τμήμα για να ορίσετε την ποσότητα απόσβεσής του.</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>Κατά το Πάτημα</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>Κατά την Απελευθέρωση</value></data>
@@ -860,4 +858,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Πρόνευση επιτάχυνσης</value></data>
   <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Διατοιχισμός επιτάχυνσης</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Λεπτομέρεια δρόμου</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Ενεργοποίηση τμηματοποιημένης απόσβεσης</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>ΑΠΟΣΒΕΣΗ ΠΕΝΤΑΛ</value></data>
 </root>

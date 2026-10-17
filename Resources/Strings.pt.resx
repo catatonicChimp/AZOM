@@ -152,8 +152,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Rigidez do limite frontal</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Rigidez do limite final</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Simula uma força de atrito independente da saída do jogo.</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>AMORTECIMENTO SEGMENTADO</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Força de amortecimento independente da saída do jogo, por segmento de curso do pedal</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Simula uma força de amortecimento independente da saída do jogo. O curso do pedal é dividido em vários segmentos, cada um com um intervalo ajustável e o seu próprio amortecimento natural. Arraste um divisor para redimensionar um segmento; arraste dentro de um segmento para definir a sua quantidade de amortecimento.</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>Ao Pressionar</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>Ao Soltar</value></data>
@@ -860,4 +858,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Arfagem por aceleração</value></data>
   <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Rolagem por aceleração</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Detalhe da estrada</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Ativar amortecimento segmentado</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>AMORTECIMENTO DO PEDAL</value></data>
 </root>

@@ -793,8 +793,7 @@ namespace MozaPlugin.UI
             var sd = fx?.SegmentedDamping;
             bool dampingEnabled = sd?.DampingEnabled ?? true;
             MBoosterSegDampEnable.IsChecked = dampingEnabled;
-            MBoosterSegDampPressedPlot.IsEnabled = dampingEnabled;
-            MBoosterSegDampReleasedPlot.IsEnabled = dampingEnabled;
+            ShowMBoosterDampingMode(dampingEnabled);
             MBoosterSegDampPressedPlot.Divider1 = (sd?.Divider1Pressed ?? -1) >= 0 ? sd!.Divider1Pressed : MBoosterUiConstants.SegDampDivider1PressedDefaultPct;
             MBoosterSegDampPressedPlot.Divider2 = (sd?.Divider2Pressed ?? -1) >= 0 ? sd!.Divider2Pressed : MBoosterUiConstants.SegDampDivider2PressedDefaultPct;
             MBoosterSegDampPressedPlot.Seg1Value = (sd?.Seg1Pressed ?? -1) >= 0 ? sd!.Seg1Pressed : MBoosterUiConstants.SegDampSegDefaultPct;

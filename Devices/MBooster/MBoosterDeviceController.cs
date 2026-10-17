@@ -1287,7 +1287,9 @@ namespace MozaPlugin.Devices.MBooster
 
         /// <summary>Send a Segmented Damping frame unless it matches the last
         /// one sent to that unit since connect (the frame has no named
-        /// read-back to compare against).</summary>
+        /// read-back to compare against) and no plain damping went out since.
+        /// Plain (0xAD) and Segmented (0xB7) damping are latest-wins on the
+        /// unit, so whichever is meant to apply must be written last.</summary>
         public void SendSegmentedDampingIfChanged(byte[] frame, byte device)
         {
             lock (_lastSegDamp)
@@ -1296,12 +1298,32 @@ namespace MozaPlugin.Devices.MBooster
                     && System.Linq.Enumerable.SequenceEqual(last, frame))
                     return;
                 _lastSegDamp[device] = frame;
+                _plainDampingLatest.Remove(device);
             }
             SendOneShot(frame);
         }
 
-        // Last Segmented Damping frame sent, per device id. Cleared on disconnect.
+        /// <summary>Write plain Virtual Damping (0xAD press/release raw). Both
+        /// are forced when a Segmented Damping frame went out after the last
+        /// plain write — see <see cref="SendSegmentedDampingIfChanged"/>.</summary>
+        public void SendPlainDamping(int pressRaw, int releaseRaw, byte device)
+        {
+            if (!_connection.IsConnected) return;
+            bool force;
+            lock (_lastSegDamp)
+            {
+                force = _plainDampingLatest.Add(device);
+                _lastSegDamp.Remove(device);
+            }
+            SendIntWrite("mbooster-brake-damping-press", pressRaw, device, force);
+            SendIntWrite("mbooster-brake-damping-release", releaseRaw, device, force);
+        }
+
+        // Last Segmented Damping frame sent, per device id, while it is the
+        // unit's latest damping write. Cleared on disconnect.
         private readonly Dictionary<byte, byte[]> _lastSegDamp = new Dictionary<byte, byte[]>();
+        // Units whose latest damping write was plain (0xAD). Guarded by _lastSegDamp.
+        private readonly HashSet<byte> _plainDampingLatest = new HashSet<byte>();
 
         /// <summary>Snapshot of the status registers for the diagnostics dump,
         /// keyed "&lt;dev hex&gt;:&lt;command name&gt;".</summary>
@@ -1575,7 +1597,7 @@ namespace MozaPlugin.Devices.MBooster
             lock (_statusLock) _outputRegs.Clear();
             // The next connect-time apply resends every feel-curve X.
             lock (_lastFeelX) _lastFeelX.Clear();
-            lock (_lastSegDamp) _lastSegDamp.Clear();
+            lock (_lastSegDamp) { _lastSegDamp.Clear(); _plainDampingLatest.Clear(); }
         }
 
         private void OnConnectionMessage(byte[] data)
@@ -2310,11 +2332,11 @@ namespace MozaPlugin.Devices.MBooster
         /// unverified" on mBooster firmware — the UI surfaces a warning so
         /// the user knows the request may not be acknowledged.
         /// </summary>
-        public bool SendIntWrite(string commandName, int value, byte? device = null)
+        public bool SendIntWrite(string commandName, int value, byte? device = null, bool force = false)
         {
             if (!_connection.IsConnected) return false;
             byte dev = device ?? HostDeviceId;
-            if (UnitHolds(dev, commandName, value)) return true;
+            if (!force && UnitHolds(dev, commandName, value)) return true;
             var cmd = MozaCommandDatabase.Get(commandName);
             if (cmd == null) return false;
             var msg = cmd.BuildWriteInt(dev, value);

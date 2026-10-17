@@ -152,8 +152,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Rigidità limite anteriore</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Rigidità limite finale</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Simula una forza d'attrito indipendente dall'output di gioco.</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>SMORZAMENTO SEGMENTATO</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Forza di smorzamento indipendente dall'output di gioco, per segmento di corsa del pedale</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Simula una forza di smorzamento indipendente dall'output di gioco. La corsa del pedale è divisa in più segmenti, ciascuno con un intervallo regolabile e il proprio smorzamento naturale. Trascina un divisore per ridimensionare un segmento; trascina all'interno di un segmento per impostarne la quantità di smorzamento.</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>Alla Pressione</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>Al Rilascio</value></data>
@@ -864,4 +862,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Beccheggio da accelerazione</value></data>
   <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Rollio da accelerazione</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Dettaglio strada</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Abilita smorzamento segmentato</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>SMORZAMENTO PEDALE</value></data>
 </root>

@@ -15,6 +15,8 @@ All notable changes to the AZOM plugin are documented here.
 
 ## Fixed
 
+- **mBooster damping no longer flips between the plain and segmented settings;** the plain sliders replace the graphs when segmented damping is off.
+- **mBooster Pedal Feel shows the pedal's own values** when the profile hasn't set them, chained units included.
 - **The MOZA Motion Controller is no longer probed as a wheelbase or AB9.**
 - **Dashboard channel mappings show at launch,** not only after switching dashboards.
 - **Wheel, dash and base LEDs no longer drop to the idle effect** after SimHub pauses the LED

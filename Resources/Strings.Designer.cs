@@ -230,8 +230,6 @@ namespace MozaPlugin.Resources
         public static string SliderLabel_EndstopFrontStiffness => Get("SliderLabel_EndstopFrontStiffness");
         public static string SliderLabel_EndstopEndStiffness => Get("SliderLabel_EndstopEndStiffness");
         public static string Hint_NaturalFrictionPedalFeel => Get("Hint_NaturalFrictionPedalFeel");
-        public static string Section_SegmentedDamping => Get("Section_SegmentedDamping");
-        public static string Subtitle_SegmentedDamping => Get("Subtitle_SegmentedDamping");
         public static string Hint_SegmentedDampingExperimental => Get("Hint_SegmentedDampingExperimental");
         public static string Section_SegmentedDampingPressed => Get("Section_SegmentedDampingPressed");
         public static string Section_SegmentedDampingReleased => Get("Section_SegmentedDampingReleased");
@@ -919,5 +917,7 @@ namespace MozaPlugin.Resources
         public static string Motion_Effect_AccelPitch => Get("Motion_Effect_AccelPitch");
         public static string Motion_Effect_AccelRoll => Get("Motion_Effect_AccelRoll");
         public static string Motion_Effect_RoadDetail => Get("Motion_Effect_RoadDetail");
+        public static string Label_EnableSegmentedDamping => Get("Label_EnableSegmentedDamping");
+        public static string Section_PedalDamping => Get("Section_PedalDamping");
     }
 }

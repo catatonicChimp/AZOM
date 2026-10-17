@@ -158,8 +158,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Woof!</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Boof!</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Wuff Yip Grr!</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>YOWFF!!</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Bork Awoo Ruff!</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Snarf Wroof Boof Yap Grrowl Wan Howl!</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>Barff!</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>Ruff!</value></data>
@@ -851,4 +849,6 @@
   <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Yowl Bark</value></data>
   <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Yowl Arf</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Grr Woof</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Boof yowff!!</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>BOOF YOWF!!</value></data>
 </root>

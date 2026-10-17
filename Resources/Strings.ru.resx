@@ -149,8 +149,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Жёсткость переднего упора</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Жёсткость заднего упора</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Имитирует силу трения, не зависящую от игрового вывода.</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>СЕГМЕНТИРОВАННОЕ ДЕМПФИРОВАНИЕ</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Сила демпфирования, не зависящая от игрового вывода, по сегментам хода педали</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Имитирует силу демпфирования, не зависящую от игрового вывода. Ход педали делится на несколько сегментов, каждый с регулируемым диапазоном и собственным естественным демпфированием. Перетащите разделитель, чтобы изменить размер сегмента; перетащите внутри сегмента, чтобы задать величину демпфирования.</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>При Нажатии</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>При Отпускании</value></data>
@@ -861,4 +859,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Тангаж от ускорения</value></data>
   <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Крен от ускорения</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Детали дороги</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Включить сегментированное демпфирование</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>ДЕМПФИРОВАНИЕ ПЕДАЛИ</value></data>
 </root>
