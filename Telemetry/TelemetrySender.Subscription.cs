@@ -404,6 +404,15 @@ namespace MozaPlugin.Telemetry
             // profile by Profile.Name == CatalogProfileName.
             Profile = synthesised;
 
+            // A wire-equivalent re-synth (forced burst) is no-op'd by the setter,
+            // which keeps the prior instance — carry the bindings resolved above
+            // onto it. Zero changes when the setter adopted synthesised.
+            int rebound = RebindLiveBindingsFrom(synthesised);
+            if (rebound > 0)
+                MozaLog.Debug(
+                    $"[AZOM] Rebound {rebound} live channel binding(s) after a " +
+                    $"wire-equivalent re-synth of \"{CatalogProfileName}\"");
+
             // Re-arm the hot-switch burst ONLY when the catalog genuinely
             // advanced to a new generation. On a dashboard switch the wheel
             // builds its catalog up across several generations (e.g. END
@@ -456,7 +465,9 @@ namespace MozaPlugin.Telemetry
         /// builder reads ch.SimHubProperty live each frame). The dashboard key is
         /// resolved per candidate (wheel:&lt;name&gt; > file:&lt;name&gt;:&lt;sha&gt;
         /// > builtin:&lt;name&gt;), or the fixed <see cref="MappingDashKeys"/> for
-        /// a CM2 sender.
+        /// a CM2 sender. <paramref name="profile"/>'s name is the key fallback: this
+        /// runs before the profile is live, so the resolver can't read it from
+        /// <see cref="Profile"/> yet.
         /// </summary>
         private int ApplyUserChannelMappings(MultiStreamProfile profile)
         {
@@ -465,7 +476,7 @@ namespace MozaPlugin.Telemetry
             if (plugin == null) return 0;
             var channelMap = plugin.GetActiveChannelMappings(MappingPageGuid);
             if (channelMap == null) return 0;
-            var keys = MappingDashKeys ?? plugin.ChannelMapping.GetActiveDashboardKeyCandidates();
+            var keys = MappingDashKeys ?? plugin.ChannelMapping.GetActiveDashboardKeyCandidates(profile.Name);
             foreach (var dashKey in keys)
             {
                 if (channelMap.TryGetValue(dashKey, out var overrides) && overrides != null)
@@ -560,6 +571,25 @@ namespace MozaPlugin.Telemetry
             }
             if (resolved?.Tiers == null || resolved.Tiers.Count == 0) return;
             ApplyUserChannelMappings(resolved);
+            int changed = RebindLiveBindingsFrom(resolved);
+
+            if (onlyIfChanged && changed == 0) return;
+            MozaLog.Debug(
+                $"[AZOM] ReResolveActiveDashboardMappings: rebound {changed} live channel " +
+                $"binding(s) to active dashboard for \"{profile.Name}\" (catalog={catalog.Count})");
+            MozaPlugin.Instance?.RaiseDashboardSelectionChangedInternal();
+        }
+
+        /// <summary>
+        /// Copy <paramref name="resolved"/>'s per-URL SimHubProperty + scale onto the
+        /// live profile's channel objects in place (reference-atomic writes, scale
+        /// first; plugin-locked channels keep their internal sentinel). Wire-neutral.
+        /// Returns the number of channels whose binding changed.
+        /// </summary>
+        private int RebindLiveBindingsFrom(MultiStreamProfile resolved)
+        {
+            var profile = _profile;
+            if (profile == null) return 0;
 
             var byUrl = new System.Collections.Generic.Dictionary<string, (string prop, double scale)>(
                 System.StringComparer.OrdinalIgnoreCase);
@@ -571,10 +601,6 @@ namespace MozaPlugin.Telemetry
                 if (!string.IsNullOrEmpty(sc.Url))
                     byUrl[sc.Url] = (sc.SimHubProperty ?? "", sc.SimHubPropertyScale);
 
-            // Copy resolved bindings onto the LIVE profile's existing channel objects
-            // in place (reference-atomic string writes; same pattern as
-            // ReapplyUserChannelMappingsAfterConfigJson). Plugin-locked channels keep
-            // their internal sentinel.
             int changed = 0;
             foreach (var t in profile.Tiers)
                 foreach (var ch in t.Channels)
@@ -602,12 +628,7 @@ namespace MozaPlugin.Telemetry
                     changed++;
                 }
             }
-
-            if (onlyIfChanged && changed == 0) return;
-            MozaLog.Debug(
-                $"[AZOM] ReResolveActiveDashboardMappings: rebound {changed} live channel " +
-                $"binding(s) to active dashboard for \"{profile.Name}\" (catalog={catalog.Count})");
-            MozaPlugin.Instance?.RaiseDashboardSelectionChangedInternal();
+            return changed;
         }
     }
 }

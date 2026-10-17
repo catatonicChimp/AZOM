@@ -38,8 +38,11 @@ namespace MozaPlugin.Telemetry
         /// The legacy <c>wheel:&lt;id&gt;</c> form trails the name key as a read fallback
         /// until <see cref="MigrateLegacyWheelKeys"/> rewrites stored mappings.
         /// Caller iterates; primary writer uses index 0.
+        /// <paramref name="fallbackProfileName"/> stands in for the running profile's
+        /// name when nothing is selected and no profile is live yet (the catalog synth
+        /// resolves mappings on a profile it has not assigned).
         /// </summary>
-        internal IReadOnlyList<string> GetActiveDashboardKeyCandidates()
+        internal IReadOnlyList<string> GetActiveDashboardKeyCandidates(string? fallbackProfileName = null)
         {
             string profileName = _plugin.ActiveTelemetryProfileName;
             string mzdashPath = _plugin.ActiveTelemetryMzdashPath;
@@ -48,6 +51,7 @@ namespace MozaPlugin.Telemetry
             if (string.IsNullOrEmpty(profileName) && string.IsNullOrEmpty(mzdashPath))
             {
                 profileName = _plugin.TelemetrySender?.Profile?.Name ?? "";
+                if (profileName.Length == 0) profileName = fallbackProfileName ?? "";
             }
 
             if (string.IsNullOrEmpty(profileName) && string.IsNullOrEmpty(mzdashPath))
