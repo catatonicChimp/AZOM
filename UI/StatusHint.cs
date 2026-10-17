@@ -46,6 +46,8 @@ namespace MozaPlugin.UI
         // The motion controller is connected but the active SimHub Motion setup has
         // no MOZA HMA150 output.
         ProfileNotAddedMotion,
+        // Host SimHub is older than the minimum the plugin supports.
+        SimHubOutdated,
     }
 
     /// <summary>

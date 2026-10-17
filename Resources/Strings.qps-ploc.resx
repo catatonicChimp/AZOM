@@ -840,6 +840,8 @@
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>MOZA Woof Bark Grr Arf Yip Rrrf Boof Snarf Howl Woof Bark!</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 Woof Grr SimHub Bark</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>MOZA Woof Bark Grr Arf Yip Rrrf Boof Snarf MOZA HMA150 Howl!</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>SimHub Woof Grr Bark</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>SimHub {0} Woof Bark {1}. Grr Arf Yip Rrrf Boof SimHub Howl!</value></data>
   <data name="Motion_Panel_Effects" xml:space="preserve"><value>Woof Arf</value></data>
   <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Grr (%)</value></data>
   <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Yip (%)</value></data>

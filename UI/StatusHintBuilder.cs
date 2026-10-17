@@ -27,12 +27,42 @@ namespace MozaPlugin.UI
         // race between probe responses and extension Init calls.
         private static readonly TimeSpan ProfileNotAddedSettling = TimeSpan.FromSeconds(5);
 
+        private static readonly Version MinimumSimHubVersion = new Version(9, 12, 0);
+
+        private static bool s_simHubVersionParsed;
+        private static Version? s_simHubVersion;
+
+        // Leading dotted-numeric part of the host version ("9.12.3.0", "9.11.22 beta").
+        private static Version? SimHubVersion
+        {
+            get
+            {
+                if (s_simHubVersionParsed) return s_simHubVersion;
+                var m = System.Text.RegularExpressions.Regex.Match(
+                    DiagnosticsTextBuilder.GetSimHubVersion(), @"^\s*(\d+(?:\.\d+){1,3})");
+                if (m.Success && Version.TryParse(m.Groups[1].Value, out var v)) s_simHubVersion = v;
+                s_simHubVersionParsed = true;
+                return s_simHubVersion;
+            }
+        }
+
         public static IReadOnlyList<StatusHint> Build(MozaPlugin plugin, DateTime nowUtc)
         {
             if (plugin == null) return Array.Empty<StatusHint>();
 
             var list = new List<StatusHint>();
             var elapsed = nowUtc - plugin.StartupUtc;
+
+            // Rule 0: SimHubOutdated. Unparseable version → no banner.
+            var hostVersion = SimHubVersion;
+            if (hostVersion != null && hostVersion < MinimumSimHubVersion)
+            {
+                list.Add(new StatusHint(
+                    StatusHintKind.SimHubOutdated,
+                    Strings.Banner_SimHubOutdated_Title,
+                    string.Format(Strings.Banner_SimHubOutdated_BodyFmt,
+                        DiagnosticsTextBuilder.GetSimHubVersion(), MinimumSimHubVersion.ToString(2))));
+            }
             var detection = plugin.DetectionState;
             var connection = plugin.Connection;
             var data = plugin.Data;

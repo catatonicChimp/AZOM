@@ -849,6 +849,8 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>Ένας MOZA Motion Controller είναι συνδεδεμένος, αλλά το πρόσθετο Motion του SimHub δεν είναι ενεργοποιημένο. Ενεργοποιήστε το στο Settings &gt; Plugins και, στη συνέχεια, προσθέστε τον ελεγκτή MOZA HMA150 στο Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>Το MOZA HMA150 δεν έχει προστεθεί στο SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>Ένας MOZA Motion Controller είναι συνδεδεμένος, αλλά η ενεργή διάταξη του SimHub Motion δεν περιέχει ελεγκτή MOZA HMA150. Στο Motion, προσθέστε έναν ελεγκτή και επιλέξτε την προεπιλογή MOZA HMA150.</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>Απαιτείται ενημέρωση του SimHub</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>Το SimHub {0} είναι παλαιότερο από το {1}. Ορισμένες λειτουργίες του πρόσθετου δεν θα λειτουργούν μέχρι να ενημερώσετε το SimHub.</value></data>
   <data name="Motion_Panel_Effects" xml:space="preserve"><value>Εφέ κίνησης</value></data>
   <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Ένταση (%)</value></data>
   <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Εξομάλυνση (%)</value></data>

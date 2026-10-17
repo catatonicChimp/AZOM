@@ -908,6 +908,8 @@ namespace MozaPlugin.Resources
         public static string Banner_MotionPluginDisabled_Body => Get("Banner_MotionPluginDisabled_Body");
         public static string Banner_ProfileNotAddedMotion_Title => Get("Banner_ProfileNotAddedMotion_Title");
         public static string Banner_ProfileNotAddedMotion_Body => Get("Banner_ProfileNotAddedMotion_Body");
+        public static string Banner_SimHubOutdated_Title => Get("Banner_SimHubOutdated_Title");
+        public static string Banner_SimHubOutdated_BodyFmt => Get("Banner_SimHubOutdated_BodyFmt");
         public static string Motion_Panel_Effects => Get("Motion_Panel_Effects");
         public static string Motion_Panel_Intensity => Get("Motion_Panel_Intensity");
         public static string Motion_Panel_Smoothness => Get("Motion_Panel_Smoothness");

@@ -855,6 +855,8 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>Hay un MOZA Motion Controller conectado, pero el plugin Motion de SimHub no está activado. Actívalo en Settings &gt; Plugins y luego añade el controlador MOZA HMA150 en Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 no añadido en SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>Hay un MOZA Motion Controller conectado, pero la configuración activa de SimHub Motion no tiene ningún controlador MOZA HMA150. En Motion, añade un controlador y elige el preajuste MOZA HMA150.</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>Es necesario actualizar SimHub</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>SimHub {0} es anterior a {1}. Algunas funciones del plugin no funcionarán hasta que actualices SimHub.</value></data>
   <data name="Motion_Panel_Effects" xml:space="preserve"><value>Efectos de movimiento</value></data>
   <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Intensidad (%)</value></data>
   <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Suavizado (%)</value></data>

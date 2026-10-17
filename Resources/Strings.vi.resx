@@ -850,6 +850,8 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>MOZA Motion Controller đã kết nối nhưng plugin Motion của SimHub chưa được bật. Hãy bật trong Settings &gt; Plugins, sau đó thêm bộ điều khiển MOZA HMA150 trong Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>Chưa thêm MOZA HMA150 trong SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>MOZA Motion Controller đã kết nối nhưng thiết lập SimHub Motion hiện tại không có bộ điều khiển MOZA HMA150. Trong Motion, hãy thêm bộ điều khiển và chọn cấu hình sẵn MOZA HMA150.</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>Cần cập nhật SimHub</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>SimHub {0} cũ hơn {1}. Một số tính năng của plugin sẽ không hoạt động cho đến khi bạn cập nhật SimHub.</value></data>
   <data name="Motion_Panel_Effects" xml:space="preserve"><value>Hiệu ứng chuyển động</value></data>
   <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Cường độ (%)</value></data>
   <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Độ mượt (%)</value></data>

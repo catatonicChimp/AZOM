@@ -850,6 +850,8 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>MOZA Motion Controller подключён, но плагин Motion в SimHub не включён. Включите его в Settings &gt; Plugins, затем добавьте контроллер MOZA HMA150 в Motion.</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 не добавлен в SimHub Motion</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>MOZA Motion Controller подключён, но в активной конфигурации SimHub Motion нет контроллера MOZA HMA150. В Motion добавьте контроллер и выберите пресет MOZA HMA150.</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>Требуется обновление SimHub</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>SimHub {0} старше версии {1}. Некоторые функции плагина не будут работать, пока вы не обновите SimHub.</value></data>
   <data name="Motion_Panel_Effects" xml:space="preserve"><value>Эффекты движения</value></data>
   <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Интенсивность (%)</value></data>
   <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Сглаживание (%)</value></data>

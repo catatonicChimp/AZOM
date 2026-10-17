@@ -850,6 +850,8 @@ Id: {2}</value></data>
   <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>已连接 MOZA Motion Controller，但 SimHub 的 Motion 插件未启用。请在 Settings &gt; Plugins 中启用它，然后在 Motion 中添加 MOZA HMA150 控制器。</value></data>
   <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>未在 SimHub Motion 中添加 MOZA HMA150</value></data>
   <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>已连接 MOZA Motion Controller，但当前的 SimHub Motion 配置中没有 MOZA HMA150 控制器。请在 Motion 中添加控制器并选择 MOZA HMA150 预设。</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>需要更新 SimHub</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>SimHub {0} 低于 {1}。在更新 SimHub 之前，部分插件功能将无法使用。</value></data>
   <data name="Motion_Panel_Effects" xml:space="preserve"><value>运动效果</value></data>
   <data name="Motion_Panel_Intensity" xml:space="preserve"><value>强度 (%)</value></data>
   <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>平滑度 (%)</value></data>
