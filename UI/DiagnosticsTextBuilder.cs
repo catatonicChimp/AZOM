@@ -660,7 +660,8 @@ namespace MozaPlugin.UI
                 sb.Append($"LED keepalive:  hold={ka.Value.HoldSec}s srcQuiet={Secs(ka.Value.SrcQuietSec)} "
                           + $"fed rpm={Secs(ka.Value.RpmFedSec)} btn={Secs(ka.Value.BtnFedSec)} "
                           + $"knob={Secs(ka.Value.KnobFedSec)} skips={ka.Value.Skips} "
-                          + $"knobActive={(ka.Value.KnobActiveMask < 0 ? "—" : $"0x{ka.Value.KnobActiveMask:X2}")}");
+                          + $"knobActive={(ka.Value.KnobActiveMask < 0 ? "—" : $"0x{ka.Value.KnobActiveMask:X2}")} "
+                          + $"hostClosed={(ka.Value.HostClosed ? "yes" : "no")} game={(plugin.IsGameActive ? "yes" : "no")}");
             }
 
             // LED lane: frames / colour entries / bitmasks written per zone, and how long

@@ -17,6 +17,8 @@ All notable changes to the AZOM plugin are documented here.
 
 - **The MOZA Motion Controller is no longer probed as a wheelbase or AB9.**
 - **Dashboard channel mappings show at launch,** not only after switching dashboards.
+- **Wheel, dash and base LEDs no longer drop to the idle effect** after SimHub pauses the LED
+  device; knob LEDs also hold through LED pipeline stalls while a game is running.
 
 ## [1.6.4]
 
