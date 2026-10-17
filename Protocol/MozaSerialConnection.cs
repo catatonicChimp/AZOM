@@ -103,6 +103,8 @@ namespace MozaPlugin.Protocol
 
         // MOZA Motion Controller 0x22/00 telemetry frame (~33 Hz, latest-wins).
         MotionTelemetry = 46,
+        // Its 0x22/09 engine vibration frame, sent alongside (latest-wins).
+        MotionEngineVibration = 47,
     }
 
     /// <summary>Device family targeted by the serial probe fallback (registry-empty case).</summary>
@@ -159,12 +161,12 @@ namespace MozaPlugin.Protocol
         //   41..43 — wheelbase LFE lanes (the three summed host-rendered oscillator
         //            streams: engine id1, ABS id2, Osc0 id0).
         //   44..45 — mBooster chained-axis motor lanes (axes 1/2; axis 0 is slot 17).
-        //   46     — motion-controller telemetry frame (its own USB pipe).
+        //   46..47 — motion-controller telemetry + engine vibration frames (its own USB pipe).
         // A CM2 on its own USB connection runs at base 0 on THAT connection, so the
         // second block is only used when two pipelines share one connection.
         // NOTE: keep this >= (highest StreamKind + 1). The static ctor below
         // asserts the regions are disjoint and fit.
-        private const int StreamSlotCount = 47;
+        private const int StreamSlotCount = 48;
 
         // Startup slot-layout invariant: the LED lanes (29+) must not alias the
         // wheel value pipeline (0..10), AB9/mBooster (11..17), or the CM2 second
@@ -193,6 +195,9 @@ namespace MozaPlugin.Protocol
             System.Diagnostics.Debug.Assert((int)StreamKind.MotionTelemetry > mbLast
                 && (int)StreamKind.MotionTelemetry < StreamSlotCount,
                 "motion telemetry stream slot must follow the mBooster lanes and fit StreamSlotCount");
+            System.Diagnostics.Debug.Assert((int)StreamKind.MotionEngineVibration > (int)StreamKind.MotionTelemetry
+                && (int)StreamKind.MotionEngineVibration < StreamSlotCount,
+                "motion engine-vibration stream slot must follow the telemetry slot and fit StreamSlotCount");
         }
 
         // Ports held by a live connection — probe path skips these (Wine pty

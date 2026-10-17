@@ -63,9 +63,10 @@ Exported presets are JSON in the Pit House preset shape, with `deviceType` / `de
 |---------|------|
 | `Pitch`, `Roll`, `Heave`, `AccToPitch`, `AccToRoll` | `0x1E/05` slot `00`, `01`, `03`, `07`, `08`: `Strength` → intensity, `Flatness` → smoothness (÷ 100) |
 | `RoadDetail` | `0x1E/06`, same two fields |
-| `platform.tactileFeedbackValue` | matches the Haptic Feedback Intensity writes (`0x1E/04 01`, 0.50 / 0.40) |
+| `platform.tactileFeedbackValue` | Haptic Feedback Intensity (`0x1E/04 01`, 0.50 / 0.40 writes) and a factor of every `0x22/09` gain |
 | `Sensitivity`, `AccWeight`, `GearShiftIsolation`, `layout`, `platform.maxMotionAngle` | no write in any capture |
-| `ABSTrigger`, `EngineVibration`, `GearShift`, `TractionControl`, `WheelSlip` | host-rendered `0x22` oscillators |
+| `EngineVibration.Strength` | factor of every `0x22/09` gain (gain = base × strength × tactile, [`game-stream-0x22.md`](game-stream-0x22.md)); its `Frequency` (132 in the gt3 preset) does not show in f₀, which fits RPM / 200 + 20 there |
+| `ABSTrigger`, `GearShift`, `TractionControl`, `WheelSlip` | host-rendered `0x22/07`, `0x22/08` and uncaptured oscillators |
 
 Verified field for field: "iRacing gt3-pcupcar" against the 0.28/0.90 … 0.79/0.40 set above,
 "iRacing caterham" against the `nurburgring` 19.9 s set. What a disabled section (`"enabled":

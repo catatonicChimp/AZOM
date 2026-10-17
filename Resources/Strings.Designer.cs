@@ -919,5 +919,7 @@ namespace MozaPlugin.Resources
         public static string Motion_Effect_RoadDetail => Get("Motion_Effect_RoadDetail");
         public static string Label_EnableSegmentedDamping => Get("Label_EnableSegmentedDamping");
         public static string Section_PedalDamping => Get("Section_PedalDamping");
+        public static string Motion_Effect_EngineVibration => Get("Motion_Effect_EngineVibration");
+        public static string Motion_Effect_TactileFeedback => Get("Motion_Effect_TactileFeedback");
     }
 }

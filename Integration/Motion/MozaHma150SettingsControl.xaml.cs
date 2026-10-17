@@ -35,6 +35,7 @@ namespace MozaPlugin.Integration.Motion
         private readonly Dictionary<byte, Border> _zoneSwatches = new Dictionary<byte, Border>();
         private readonly Dictionary<byte, Button> _zoneButtons = new Dictionary<byte, Button>();
         private readonly List<(TextBox Intensity, TextBox Smoothness)> _effectBoxes = new List<(TextBox, TextBox)>();
+        private TextBox? _engineBox, _tactileBox;
         private string _portLayout = string.Empty;
         private bool _setupLoaded;
         private bool _effectsLoaded;
@@ -118,12 +119,19 @@ namespace MozaPlugin.Integration.Motion
             {
                 // The active profile's values where it has them, else what the controller holds.
                 _effectsLoaded = true;
-                var desired = MozaPlugin.ToDesiredEffects(MozaPlugin.Instance?.Settings?.ProfileStore?.CurrentProfile?.MotionEffects);
+                var profileEffects = MozaPlugin.Instance?.Settings?.ProfileStore?.CurrentProfile?.MotionEffects;
+                var desired = MozaPlugin.ToDesiredEffects(profileEffects);
                 for (int i = 0; i < _effectBoxes.Count; i++)
                 {
                     var held = i < s.Effects.Length ? s.Effects[i]!.Value : s.RoadDetail.Value;
                     ShowEffect(_effectBoxes[i], desired[i] ?? held);
                 }
+                int engine = profileEffects?.EngineVibrationStrength ?? -1;
+                int tactile = profileEffects?.TactileIntensity ?? -1;
+                _engineBox!.Text = (engine >= 0 ? engine : MozaMotionController.DefaultEngineStrengthPercent)
+                    .ToString(CultureInfo.CurrentCulture);
+                _tactileBox!.Text = tactile >= 0 ? tactile.ToString(CultureInfo.CurrentCulture)
+                    : s.HapticIntensity.HasValue ? (s.HapticIntensity.Value * 100).ToString("0", CultureInfo.CurrentCulture) : "";
             }
             RefreshLighting(lane);
         }
@@ -151,6 +159,19 @@ namespace MozaPlugin.Integration.Motion
                 EffectRows.Children.Add(row);
                 _effectBoxes.Add((intensity, smoothness));
             }
+            _engineBox = AddSingleRow(Strings.Motion_Effect_EngineVibration);
+            _tactileBox = AddSingleRow(Strings.Motion_Effect_TactileFeedback);
+        }
+
+        /// <summary>A row with only the intensity column.</summary>
+        private TextBox AddSingleRow(string label)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+            row.Children.Add(new TextBlock { Text = label, Width = 260, VerticalAlignment = VerticalAlignment.Center });
+            var box = new TextBox { Width = 80, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+            row.Children.Add(box);
+            EffectRows.Children.Add(row);
+            return box;
         }
 
         private static void ShowEffect((TextBox Intensity, TextBox Smoothness) boxes, MotionEffect e)
@@ -169,8 +190,11 @@ namespace MozaPlugin.Integration.Motion
                 if (!TryParse(_effectBoxes[i].Smoothness.Text, out double sp) || sp < 0 || sp > 100) continue;
                 values[i] = ((int)Math.Round(ip), (int)Math.Round(sp));
             }
-            if (values.Count > 0) MozaPlugin.Instance?.SetMotionEffects(values);
+            MozaPlugin.Instance?.SetMotionEffects(values, Percent(_engineBox), Percent(_tactileBox));
         }
+
+        private static int? Percent(TextBox? box)
+            => box != null && TryParse(box.Text, out double v) && v >= 0 && v <= 100 ? (int)Math.Round(v) : (int?)null;
 
         private void RefreshPorts(MotionControllerSnapshot? s, bool idle)
         {

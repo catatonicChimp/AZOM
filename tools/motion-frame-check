@@ -5,8 +5,10 @@ Mirrors the C# builders in Python and rebuilds every host->controller frame of t
 Motion Manager captures from its decoded fields; any byte difference is reported.
 Covers mode set/poll, status polls, run state, port role read/write, effect slots,
 road detail write/read, global read/write, rig-dimension read, device type, lighting read/write,
-notification ack, presence and the 0x22/00 telemetry frame (including frames whose
-body contains 0x7E, which exercise the doubled-0x7E checksum).
+notification ack, presence, the 0x22/00 telemetry frame (including frames whose
+body contains 0x7E, which exercise the doubled-0x7E checksum) and the 0x22/09 engine
+vibration frame, its gains rebuilt from the session preset's strength × tactile intensity
+(the throttle-driven 4th-harmonic gain is taken as captured and range-checked).
 
 Needs no hardware and no build:
 
@@ -65,6 +67,35 @@ def telemetry(fields, brake, throttle, flags):
     return build(0x22, DEV, p)
 
 
+def f32r(v):
+    return struct.unpack(">f", struct.pack(">f", v))[0]
+
+
+def vib_gains(strength, tactile, throttle):
+    """Float32 at every step, as BuildEngineVibration (and Motion Manager) compute them."""
+    s, t = f32r(strength), f32r(tactile)
+    g0 = f32r(f32r(f32r(0.0009) * s) * t)
+    g1 = f32r(f32r(f32r(0.045) * s) * t)
+    thr = f32r(max(0.0, min(1.0, throttle)))
+    g4 = f32r(g1 * f32r(f32r(0.1) + f32r(f32r(0.15) * thr)))
+    return g0, g1, f32r(g1 * 0.5), g4
+
+
+def engine_vibration(f0, gains):
+    g0, g1, g23, g4 = gains
+    recs = [(0x00, g0, 265.0), (0x59, g1, f0), (0x0F, g23, 2 * f0),
+            (0x00, g23, 3 * f0), (0x0F, g4, 4 * f0)]
+    p = bytes([0x09, 0x00, 0xFF])
+    for rid, gain, hz in recs:
+        p += bytes([rid]) + f32(gain) + f32(f32r(hz))
+    return build(0x22, DEV, p + bytes([0x00, 0x00, 0x64]))
+
+
+# Fundamental-gain bits → (Engine Vibration strength, tactile intensity) of the preset each
+# capture ran: "iRacing gt3" 50 / 40 (Spa, 100_STROKE), "iRacing caterham" 60 / 50 (Nürburgring).
+VIB_LEVELS = {0x3C1374BD: (0.5, 0.4), 0x3C5D2F1C: (0.6, 0.5)}
+
+
 def unf32(b, off):
     return struct.unpack_from(">f", b, off)[0]
 
@@ -99,6 +130,20 @@ def rebuild(fr):
     if g == 0x22 and c == 0x00 and len(p) == 53:
         fields = [unf32(p, 1 + 4 * i) for i in range(12)]
         return telemetry(fields, p[49], p[50], p[52])
+    if g == 0x22 and c == 0x09 and len(p) == 51:
+        f0 = unf32(p, 17)                     # record 1 (record k at 3 + 9k)
+        g1_bits = struct.unpack_from(">I", p, 13)[0]
+        if g1_bits == 0:
+            return engine_vibration(f0, (0.0, 0.0, 0.0, 0.0))
+        if g1_bits not in VIB_LEVELS:
+            return None
+        g0, g1, g23, _ = vib_gains(*VIB_LEVELS[g1_bits], 0.0)
+        # Throttle is not in this frame: the 4th gain is taken as captured and only checked
+        # against the formula's range, g1 × (0.1 .. 0.25).
+        g4 = unf32(p, 40)
+        if not g1 * 0.1 * (1 - 1e-6) <= g4 <= g1 * 0.25 * (1 + 1e-6):
+            return b""
+        return engine_vibration(f0, (g0, g1, g23, g4))
     return None
 
 

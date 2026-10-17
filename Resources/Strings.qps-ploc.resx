@@ -851,4 +851,6 @@
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Grr Woof</value></data>
   <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Boof yowff!!</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>BOOF YOWF!!</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Grr Brrr</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Boop Woof</value></data>
 </root>

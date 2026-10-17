@@ -45,6 +45,10 @@ namespace MozaPlugin.Devices.Motion
         private const int StandbyTimeoutMs = 5_000;
         private const int DesiredCheckMs = 1_000;
         private const int DesiredPushAttempts = 3;
+        private const float DefaultEngineStrength = DefaultEngineStrengthPercent / 100f, DefaultTactile = 0.4f;
+
+        /// <summary>Engine vibration strength used while the profile sets none (the "iRacing gt3" preset's).</summary>
+        public const int DefaultEngineStrengthPercent = 50;
 
         private readonly MozaSerialConnection _connection;
         private readonly Func<bool> _isShuttingDown;
@@ -78,6 +82,7 @@ namespace MozaPlugin.Devices.Motion
         private readonly float[] _effectSmoothness = new float[MozaMotionProtocol.EffectSlots.Length];
         private float _roadIntensity = float.NaN, _roadSmoothness = float.NaN;
         private MotionEffect?[]? _desiredEffects;
+        private float _desiredEngineStrength = float.NaN, _desiredTactile = float.NaN;
         private int _desiredPushes;
         private long _lastDesiredCheckMs;
         private readonly ConcurrentQueue<byte[]> _paced = new ConcurrentQueue<byte[]>();
@@ -98,6 +103,7 @@ namespace MozaPlugin.Devices.Motion
         private long _nextFrameMs;
         private long _gameLostSinceMs = -1;
         private long _framesSent;
+        private bool _vibrating;
         private int _frameIntervalMs = 30;
         private bool _wasConnected;
         private bool _released;
@@ -255,13 +261,30 @@ namespace MozaPlugin.Devices.Motion
         /// The active profile's effect values, per <see cref="MozaMotionProtocol.EffectSlots"/>
         /// entry then road detail; null entries are left as the controller holds them. Written
         /// now if enrolled, otherwise once the next enrol has read the current values.
+        /// <paramref name="tactile"/> (0..1, null = leave) is also written as the controller's
+        /// Haptic Feedback Intensity; with <paramref name="engineStrength"/> it scales the
+        /// engine vibration gains.
         /// </summary>
-        public void SetDesiredEffects(MotionEffect?[] desired)
+        public void SetDesiredEffects(MotionEffect?[] desired, float? engineStrength, float? tactile)
         {
             if (desired == null || desired.Length != MozaMotionProtocol.EffectSlots.Length + 1)
                 throw new ArgumentException("one entry per effect slot plus road detail", nameof(desired));
             Volatile.Write(ref _desiredEffects, (MotionEffect?[])desired.Clone());
+            Volatile.Write(ref _desiredEngineStrength, engineStrength ?? float.NaN);
+            Volatile.Write(ref _desiredTactile, tactile ?? float.NaN);
             _requests.Enqueue(() => { _desiredPushes = 0; PushDesiredEffects(); });
+        }
+
+        /// <summary>
+        /// Engine vibration scale: the profile's values, else the controller's haptic intensity
+        /// and the strength of the "iRacing gt3" preset the base gains were captured with.
+        /// </summary>
+        private (float Strength, float Tactile) VibrationScale()
+        {
+            float s = Volatile.Read(ref _desiredEngineStrength);
+            float t = Volatile.Read(ref _desiredTactile);
+            if (float.IsNaN(t)) t = Volatile.Read(ref _hapticIntensity);
+            return (float.IsNaN(s) ? DefaultEngineStrength : s, float.IsNaN(t) ? DefaultTactile : t);
         }
 
         /// <summary>
@@ -294,6 +317,13 @@ namespace MozaPlugin.Devices.Motion
                     _paced.Enqueue(MozaMotionProtocol.BuildRoadDetail(want.Intensity, want.Smoothness));
                     _paced.Enqueue(MozaMotionProtocol.BuildRoadDetailRead());
                 }
+            }
+            float tactile = Volatile.Read(ref _desiredTactile);
+            if (!float.IsNaN(tactile) && !(Math.Abs(Volatile.Read(ref _hapticIntensity) - tactile) < 0.001f))
+            {
+                any = true;
+                _paced.Enqueue(MozaMotionProtocol.BuildGlobalWrite(MozaMotionProtocol.GlobalHapticIntensity, tactile));
+                _paced.Enqueue(MozaMotionProtocol.BuildGlobalRead(MozaMotionProtocol.GlobalHapticIntensity));
             }
             if (any) _desiredPushes++;
         }
@@ -566,6 +596,25 @@ namespace MozaPlugin.Devices.Motion
                 frame = posted;
             _connection.SendStream(StreamKind.MotionTelemetry, MozaMotionProtocol.BuildTelemetryFrame(frame));
             Interlocked.Increment(ref _framesSent);
+
+            // Engine vibration rides along with live frames; when it stops, one zero-gain
+            // frame silences the last tone.
+            if (frame.EngineRpm >= 0)
+            {
+                var (strength, tactile) = VibrationScale();
+                _connection.SendStream(StreamKind.MotionEngineVibration, MozaMotionProtocol.BuildEngineVibration(
+                    MozaMotionProtocol.EngineVibrationHz(frame.EngineRpm), frame.Throttle, strength, tactile));
+                _vibrating = true;
+            }
+            else if (_vibrating)
+                SilenceVibration();
+        }
+
+        private void SilenceVibration()
+        {
+            _vibrating = false;
+            _connection.SendStream(StreamKind.MotionEngineVibration,
+                MozaMotionProtocol.BuildEngineVibrationSilent());
         }
 
         private void WatchGameMode(long now)
@@ -622,6 +671,7 @@ namespace MozaPlugin.Devices.Motion
             }
             ResetEffects();
             _desiredPushes = 0;
+            _vibrating = false;
             while (_paced.TryDequeue(out _)) { }
             _activeErrors.Clear();
             _logPartial.Clear();
@@ -781,7 +831,13 @@ namespace MozaPlugin.Devices.Motion
         private IEnumerator<int> DisengageSequence()
         {
             _phase = MotionLanePhase.Disengaging;
-            _connection.ClearStreamSlots((int)StreamKind.MotionTelemetry, 1);
+            _connection.ClearStreamSlots((int)StreamKind.MotionTelemetry, 2);
+            // Motion Manager's last 0x22/09 when it leaves game mode has every gain at zero.
+            if (_vibrating)
+            {
+                _vibrating = false;
+                Send(MozaMotionProtocol.BuildEngineVibrationSilent());
+            }
             SendRunState(MotionRunState.Stop);
             yield return 50;
             Send(MozaMotionProtocol.BuildSetMode(MotionMode.Standby));
@@ -1015,7 +1071,8 @@ namespace MozaPlugin.Devices.Motion
             {
                 try
                 {
-                    _connection.ClearStreamSlots((int)StreamKind.MotionTelemetry, 1);
+                    _connection.ClearStreamSlots((int)StreamKind.MotionTelemetry, 2);
+                    _connection.Send(MozaMotionProtocol.BuildEngineVibrationSilent());
                     _connection.Send(MozaMotionProtocol.BuildRunState(MotionRunState.Stop));
                     _connection.Send(MozaMotionProtocol.BuildSetMode(MotionMode.Standby));
                     Thread.Sleep(150);

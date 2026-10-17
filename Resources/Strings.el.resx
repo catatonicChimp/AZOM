@@ -860,4 +860,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Λεπτομέρεια δρόμου</value></data>
   <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Ενεργοποίηση τμηματοποιημένης απόσβεσης</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>ΑΠΟΣΒΕΣΗ ΠΕΝΤΑΛ</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Δόνηση κινητήρα</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Απτική ανάδραση</value></data>
 </root>

@@ -1811,7 +1811,7 @@ namespace MozaPlugin.Hardware
         public void ApplyMotionToHardware(MozaProfile? profile)
         {
             if (!ProfileWritesAllowed) return;
-            _plugin.MotionController?.SetDesiredEffects(MozaPlugin.ToDesiredEffects(profile?.MotionEffects));
+            MozaPlugin.PushMotionEffects(_plugin.MotionController, profile?.MotionEffects);
         }
 
         /// <summary>

@@ -23,6 +23,11 @@ namespace MozaPlugin.Settings
         public int RoadDetailIntensity { get; set; } = -1;
         public int RoadDetailSmoothness { get; set; } = -1;
 
+        // Engine vibration (0x22/09): its gains scale with both, as Motion Manager's do.
+        // Tactile intensity is also the controller's Haptic Feedback Intensity (0x1E/04 01).
+        public int EngineVibrationStrength { get; set; } = -1;
+        public int TactileIntensity { get; set; } = -1;
+
         public (int Intensity, int Smoothness) Get(int index) => index switch
         {
             0 => (PitchIntensity, PitchSmoothness),

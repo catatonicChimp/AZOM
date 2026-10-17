@@ -56,6 +56,11 @@ namespace MozaPlugin.Protocol
         public byte ThrottlePercent;
         public byte Flags;
 
+        /// <summary>Engine speed for the <c>0x22/09</c> engine vibration; negative = send none.</summary>
+        public float EngineRpm = -1f;
+        /// <summary>Unrounded throttle (0..1) for the vibration's 4th harmonic.</summary>
+        public float Throttle;
+
         /// <summary>Car on track, all inputs at rest, flag bit0 set.</summary>
         public static MotionTelemetryFrame Neutral(bool inGame)
         {
@@ -106,6 +111,7 @@ namespace MozaPlugin.Protocol
         public const byte StatusRunState = 0x03;
 
         public const byte StreamTelemetry = 0x00;
+        public const byte StreamEngineVibration = 0x09;
 
         public const byte GlobalMaxStroke = 0x00;
         public const byte GlobalHapticIntensity = 0x01;
@@ -333,6 +339,58 @@ namespace MozaPlugin.Protocol
             p[50] = f.ThrottlePercent;
             p[51] = 0;
             p[52] = f.Flags;
+            return Build(GroupStream, DeviceController, p);
+        }
+
+        /// <summary>Engine vibration fundamental (Hz) for an engine speed, as Motion Manager streams it.</summary>
+        public static float EngineVibrationHz(double rpm) => (float)Math.Max(25.0, rpm / 200.0 + 20.0);
+
+        /// <summary>
+        /// <c>7E 33 22 12 09 00 FF [id][gain f32][freq f32] × 5 00 00 64</c>, engine vibration sent
+        /// next to each <c>0x22/00</c>: a fixed 265 Hz carrier, then f₀…4f₀. Gains scale with the
+        /// preset's Engine Vibration strength and the tactile (haptic) intensity, both 0..1, in
+        /// float32 exactly as Motion Manager computes them; the 4th harmonic also follows
+        /// throttle (0..1).
+        /// </summary>
+        public static byte[] BuildEngineVibration(float f0Hz, float throttle, float strength, float tactile)
+        {
+            float t = Math.Max(0f, Math.Min(1f, throttle));
+            // (float) casts force float32 rounding at each step, matching the captured bits.
+            float g0 = (float)((float)(0.0009f * strength) * tactile);
+            float g1 = (float)((float)(0.045f * strength) * tactile);
+            float g23 = g1 * 0.5f;
+            float g4 = (float)(g1 * (float)(0.1f + (float)(0.15f * t)));
+            return EngineVibrationFrame(f0Hz, g0, g1, g23, g4);
+        }
+
+        /// <summary>Every gain zero, as Motion Manager's last <c>0x22/09</c> when it leaves game mode.</summary>
+        public static byte[] BuildEngineVibrationSilent()
+            => EngineVibrationFrame(EngineVibrationHz(0), 0f, 0f, 0f, 0f);
+
+        private static byte[] EngineVibrationFrame(float f0Hz, float g0, float g1, float g23, float g4)
+        {
+            var p = new byte[51];
+            p[0] = StreamEngineVibration;
+            p[1] = 0x00;
+            p[2] = 0xFF;
+            var records = new (byte Id, float Gain, float Hz)[]
+            {
+                (0x00, g0, 265f),
+                (0x59, g1, f0Hz),
+                (0x0F, g23, 2 * f0Hz),
+                (0x00, g23, 3 * f0Hz),
+                (0x0F, g4, 4 * f0Hz),
+            };
+            for (int k = 0; k < records.Length; k++)
+            {
+                int off = 3 + 9 * k;
+                p[off] = records[k].Id;
+                PutF32(p, off + 1, records[k].Gain);
+                PutF32(p, off + 5, records[k].Hz);
+            }
+            p[48] = 0x00;
+            p[49] = 0x00;
+            p[50] = 0x64;
             return Build(GroupStream, DeviceController, p);
         }
 

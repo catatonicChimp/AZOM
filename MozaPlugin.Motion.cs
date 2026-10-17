@@ -70,15 +70,28 @@ namespace MozaPlugin
             return desired;
         }
 
-        /// <summary>Store effect values in the active profile and push them to the controller.</summary>
-        internal void SetMotionEffects(IReadOnlyDictionary<int, (int Intensity, int Smoothness)> values)
+        private static float? Fraction(int percent) => percent >= 0 ? percent / 100f : (float?)null;
+
+        /// <summary>Hand a profile's motion effects to the lane (null fields leave the controller's).</summary>
+        internal static void PushMotionEffects(MozaMotionController? lane, MotionEffectsSettings? s)
+            => lane?.SetDesiredEffects(ToDesiredEffects(s),
+                Fraction(s?.EngineVibrationStrength ?? -1), Fraction(s?.TactileIntensity ?? -1));
+
+        /// <summary>
+        /// Store effect values (index → intensity/smoothness %) and the engine vibration /
+        /// tactile percentages (null = unchanged) in the active profile, then push them.
+        /// </summary>
+        internal void SetMotionEffects(IReadOnlyDictionary<int, (int Intensity, int Smoothness)> values,
+            int? engineStrength, int? tactile)
         {
             var profile = _settings?.ProfileStore?.CurrentProfile;
             if (profile == null) return;
             var effects = profile.MotionEffects ??= new MotionEffectsSettings();
             foreach (var kv in values) effects.Set(kv.Key, kv.Value.Intensity, kv.Value.Smoothness);
+            if (engineStrength.HasValue) effects.EngineVibrationStrength = engineStrength.Value;
+            if (tactile.HasValue) effects.TactileIntensity = tactile.Value;
             SaveSettings();
-            _motionController?.SetDesiredEffects(ToDesiredEffects(effects));
+            PushMotionEffects(_motionController, effects);
         }
 
         private void DisposeMotionLane()

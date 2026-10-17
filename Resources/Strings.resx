@@ -868,4 +868,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Road detail</value></data>
   <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Enable segmented damping</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>PEDAL DAMPING</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Engine vibration</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Tactile feedback</value></data>
 </root>

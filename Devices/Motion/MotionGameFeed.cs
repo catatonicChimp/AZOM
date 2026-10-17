@@ -68,7 +68,9 @@ namespace MozaPlugin.Devices.Motion
 
             long now = _clock.ElapsedMilliseconds;
             double surge = d.AccelerationSurge ?? 0.0;   // m/s², braking positive
-            double sway = d.AccelerationSway ?? 0.0;
+            // SimHub's sway is opposite to Motion Manager's lateral field (MM capture,
+            // iRacing slow turns, bridge v31).
+            double sway = -(d.AccelerationSway ?? 0.0);
             double heave = d.AccelerationHeave ?? 0.0;
             double speed = d.SpeedKmh / 3.6;
 
@@ -89,6 +91,8 @@ namespace MozaPlugin.Devices.Motion
             }
             f.BrakePercent = Percent(d.Brake);
             f.ThrottlePercent = Percent(d.Throttle);
+            f.EngineRpm = (float)Math.Max(0.0, d.Rpms);
+            f.Throttle = (float)(d.Throttle / 100.0);
 
             string gear = d.Gear ?? string.Empty;
             if (_lastGear != null && gear != _lastGear) _shiftUntilMs = now + GearPulseMs;

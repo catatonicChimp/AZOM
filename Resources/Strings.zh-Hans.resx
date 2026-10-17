@@ -861,4 +861,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>路面细节</value></data>
   <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>启用分段阻尼</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>踏板阻尼</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>引擎振动</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>触觉反馈</value></data>
 </root>

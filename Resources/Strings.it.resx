@@ -864,4 +864,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Dettaglio strada</value></data>
   <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Abilita smorzamento segmentato</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>SMORZAMENTO PEDALE</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibrazione motore</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Feedback tattile</value></data>
 </root>

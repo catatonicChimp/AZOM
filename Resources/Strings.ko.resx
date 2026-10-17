@@ -860,4 +860,6 @@ Id: {2}</value></data>
   <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>노면 디테일</value></data>
   <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>구간별 댐핑 사용</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>페달 댐핑</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>엔진 진동</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>촉각 피드백</value></data>
 </root>

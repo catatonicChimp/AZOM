@@ -57,15 +57,41 @@ namespace MozaPlugin.UI.Import
                 }
             }
 
-            foreach (var haptic in new[] { "ABSTrigger", "EngineVibration", "GearShift", "TractionControl", "WheelSlip" })
+            foreach (var haptic in new[] { "ABSTrigger", "GearShift", "TractionControl", "WheelSlip" })
             {
                 plan.ConsideredKeys.Add(haptic);
-                if (dp[haptic] != null) plan.NotImported.Add($"{haptic}    (haptic effects are not sent)");
+                if (dp[haptic] != null) plan.NotImported.Add($"{haptic}    (haptic effect not sent)");
+            }
+            // Engine vibration gains = base × Strength × tactileFeedbackValue (both sessions'
+            // captured gains match their presets bit for bit).
+            plan.ConsideredKeys.Add("EngineVibration");
+            if (dp["EngineVibration"] is JObject engine && IntOrNull(engine, "Strength") is int engineStrength)
+            {
+                bool enabled = (bool?)engine["enabled"] ?? true;
+                int value = enabled ? Clamp(engineStrength) : 0;
+                int old = profile.MotionEffects?.EngineVibrationStrength ?? -1;
+                plan.Diffs.Add(new FieldDiff(Strings.Motion_Effect_EngineVibration, Display(old), Display(value),
+                    () => (profile.MotionEffects ??= new MotionEffectsSettings()).EngineVibrationStrength = value));
+                foreach (var p in engine.Properties())
+                    if (p.Name != "Strength" && p.Name != "enabled")
+                        plan.NotImported.Add($"EngineVibration.{p.Name} = {p.Value}    (no known effect)");
             }
             plan.ConsideredKeys.Add("platform");
             if (dp["platform"] is JObject platform)
+            {
                 foreach (var p in platform.Properties())
-                    plan.NotImported.Add($"platform.{p.Name} = {p.Value}");
+                {
+                    if (p.Name == "tactileFeedbackValue" && IntOrNull(platform, p.Name) is int tactile)
+                    {
+                        int value = Clamp(tactile);
+                        int old = profile.MotionEffects?.TactileIntensity ?? -1;
+                        plan.Diffs.Add(new FieldDiff(Strings.Motion_Effect_TactileFeedback, Display(old), Display(value),
+                            () => (profile.MotionEffects ??= new MotionEffectsSettings()).TactileIntensity = value));
+                    }
+                    else
+                        plan.NotImported.Add($"platform.{p.Name} = {p.Value}");
+                }
+            }
 
             PitHouseMotorMapper.SweepUnhandled(plan, dp);
             return plan;

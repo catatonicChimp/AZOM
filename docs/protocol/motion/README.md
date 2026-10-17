@@ -11,7 +11,7 @@ taken from vendor documentation.
 | [`identity-and-ports.md`](identity-and-ports.md) | Enumeration of the controller and of each actuator port, identity strings, presence poll, port → axis-role table, re-seating behaviour |
 | [`modes-and-control.md`](modes-and-control.md) | Mode state machine (`0x1E/03` + `0x1F/03`), run-state and identify-port (`0x20/02`), status records (`0x21`), the observed start-up / power-up / game / shutdown sequences, error codes |
 | [`effect-parameters.md`](effect-parameters.md) | Motion-effect intensity/smoothness slots (`0x1E/05`), road detail (`0x1E/06`), global sliders (`0x1E/04`), rig dimensions (`0x1F/08`), lighting table (`0x1E/0B`) |
-| [`game-stream-0x22.md`](game-stream-0x22.md) | The game-mode streams: raw vehicle telemetry frame (`0x22/00`), haptic oscillators (`0x22/09`), ABS (`0x22/07`) and gear-shift (`0x22/08`) events; the manual-test setpoint (`0x1E/07`) |
+| [`game-stream-0x22.md`](game-stream-0x22.md) | The game-mode streams: raw vehicle telemetry frame (`0x22/00`), engine vibration (`0x22/09`), ABS (`0x22/07`) and gear-shift (`0x22/08`) events; the manual-test setpoint (`0x1E/07`) |
 | [`firmware-log-0x0E.md`](firmware-log-0x0E.md) | Firmware log lines and register sweeps on group `0x0E` — the controller narrates every mode change, port map and fault in plain ASCII |
 
 Wire framing is the standard MOZA `7E len group dev payload chk` frame with `0x7E` stuffing and
@@ -78,7 +78,7 @@ Interface map in [`../transport/usb-topology.md`](../transport/usb-topology.md).
 | Register sweep, actuators | h2b | `0x0E/00 00 [idx 1..9]` to each port | ~1 Hz | always | firmware-log |
 | Firmware log | b2h | `0x0E/05 <ascii>` from controller and actuators | bursty | always | firmware-log |
 | **Telemetry frame** | h2b | `0x22/00` 53 B | **~33 Hz** (p50 27 ms) | mode 1 | game-stream |
-| Haptic oscillators | h2b | `0x22/09` 51 B | ~30 Hz | mode 1 | game-stream |
+| Engine vibration | h2b | `0x22/09` 51 B | ~30 Hz | mode 1 | game-stream |
 | ABS oscillator | h2b | `0x22/07` 14 B | ~31 Hz while ABS active | mode 1 | game-stream |
 | Gear-shift pulse | h2b | `0x22/08` 13 B | per shift | mode 1 | game-stream |
 | Manual setpoint | h2b | `0x1E/07 [axis][f32]` | per slider move | mode 2 | game-stream |
