@@ -135,6 +135,18 @@ namespace MozaPlugin.UI
             return field => haveDev ? c!.OutputRegisterValue(dev, $"mbooster-{prefix}-{field}") : -1;
         }
 
+        /// <summary>The selected pedal's Pedal Feel register (full command
+        /// name) as its unit reports it; -1 unknown, or when this pedal
+        /// doesn't own the unit's singleton registers.</summary>
+        private Func<string, int> MBoosterReportedPedalFeel()
+        {
+            var c = CurrentMBoosterController();
+            byte dev = 0;
+            bool haveDev = c != null && c.OwnsSingletonRegisters(_mboosterEffectPedalIndex)
+                && TryMBoosterCalibDevice(c, _mboosterEffectPedalIndex, out dev);
+            return name => haveDev ? c!.OutputRegisterValue(dev, name) : -1;
+        }
+
         private void MBoosterRangeStartSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => SetMBoosterRangeEnd(true, e.NewValue);
         private void MBoosterRangeEndSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => SetMBoosterRangeEnd(false, e.NewValue);
 

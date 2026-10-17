@@ -2755,6 +2755,13 @@ namespace MozaPlugin.Devices.MBooster
             ReadRoleCalibration("throttle", 0);
             ReadRoleCalibration("brake", 1);
             ReadRoleCalibration("clutch", 2);
+            // Singleton registers once per unit, brake's first.
+            var units = new List<byte>(3);
+            foreach (int role in new[] { 1, 0, 2 })
+            {
+                byte dev = MotorDeviceForRole(role);
+                if (!units.Contains(dev)) { units.Add(dev); ReadUnitRegisters(dev); }
+            }
         }
 
         private void ReadRoleCalibration(string prefix, int roleIndex)
@@ -2764,34 +2771,33 @@ namespace MozaPlugin.Devices.MBooster
             SendRead($"mbooster-{prefix}-min", dev);
             SendRead($"mbooster-{prefix}-max", dev);
             for (int i = 1; i <= 5; i++) SendRead($"mbooster-{prefix}-y{i}", dev);
-            // Load-cell-only settings live under the brake-named command set.
-            // Everything below is a brake-named SINGLETON register (no
-            // per-pedal selector), so it is read once, for the brake role, on
-            // that role's own device — reading it per role would just re-read
-            // the same hardware three times. This is Pit House's own per-cycle
-            // read set; the plugin had been reading only angle-ratio and
-            // threshold out of it, so Travel / End Stop / Friction / Damping /
-            // Deadzone and the whole status block were never seeded from the
-            // device. See docs/protocol/devices/mbooster.md.
-            if (roleIndex == 1)
-            {
-                SendRead("mbooster-brake-angle-ratio", dev);
-                SendRead("mbooster-brake-threshold", dev);
-                SendRead("mbooster-brake-travel-start", dev);
-                SendRead("mbooster-brake-travel-end", dev);
-                SendRead("mbooster-brake-deadzone", dev);
-                SendRead("mbooster-brake-damping-press", dev);
-                SendRead("mbooster-brake-damping-release", dev);
-                SendRead("mbooster-brake-friction-0", dev);
-                SendRead("mbooster-brake-friction-1", dev);
-                SendRead("mbooster-brake-endstop-front", dev);
-                SendRead("mbooster-brake-endstop-end", dev);
-                // Sleep timeout, role map + the constants Pit House also polls;
-                // the undecoded ones ride along so a support bundle carries
-                // them.
-                foreach (var name in StatusReadNames)
-                    SendRead(name, dev);
-            }
+        }
+
+        /// <summary>
+        /// The brake-named SINGLETON registers (no per-pedal selector — they
+        /// belong to the unit's motor pedal) plus the status block, read from
+        /// one unit. Pit House's own per-cycle read set; every unit in a chain
+        /// carries its own copy, addressed like any other chained read. See
+        /// docs/protocol/devices/mbooster.md.
+        /// </summary>
+        private void ReadUnitRegisters(byte dev)
+        {
+            SendRead("mbooster-brake-angle-ratio", dev);
+            SendRead("mbooster-brake-threshold", dev);
+            SendRead("mbooster-brake-travel-start", dev);
+            SendRead("mbooster-brake-travel-end", dev);
+            SendRead("mbooster-brake-deadzone", dev);
+            SendRead("mbooster-brake-damping-press", dev);
+            SendRead("mbooster-brake-damping-release", dev);
+            SendRead("mbooster-brake-friction-0", dev);
+            SendRead("mbooster-brake-friction-1", dev);
+            SendRead("mbooster-brake-endstop-front", dev);
+            SendRead("mbooster-brake-endstop-end", dev);
+            // Sleep timeout, role map + the constants Pit House also polls;
+            // the undecoded ones ride along so a support bundle carries
+            // them.
+            foreach (var name in StatusReadNames)
+                SendRead(name, dev);
         }
 
         /// <summary>Status registers Pit House polls, decoded or not. Surfaced

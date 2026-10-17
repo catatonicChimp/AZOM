@@ -1768,7 +1768,15 @@ Threshold's effect is applied host-side.
 
 Every calibration here uses the shared `-1`/`null` "not yet set / no
 override" sentinel, so a fresh profile never overwrites what is already
-on the device; the editor then shows the unit's own read-back.
+on the device; the editor then shows the unit's own read-back. Pedal Feel
+does the same (`SeedMBoosterPedalFeelRegisters`) for Travel, End Stop,
+Friction, plain Damping (`0xAD`) and Deadzone, re-checked every tab tick
+since the read-backs can land after the seed. It reads the cache of the
+unit the selected pedal writes to, and only when that pedal owns the
+singleton registers. Max Force, the feel-curve nodes and Segmented Damping
+(`0xB7`) are not in the read set, so they still show defaults. The singleton
+set and status block are read from every unit the roles map to
+(`ReadUnitRegisters`), so a chained unit seeds from its own read-back.
 
 ## Pedal Feel
 
