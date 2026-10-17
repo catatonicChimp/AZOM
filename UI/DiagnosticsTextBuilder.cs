@@ -52,22 +52,24 @@ namespace MozaPlugin.UI
             catch { return "unknown"; }
         }
 
-        /// <summary>Host SimHub version (SimHubWPF.exe file version); "—" when unavailable.</summary>
-        public static string GetSimHubVersion() => s_simHubVersion ??= ComputeSimHubVersion();
+        /// <summary>Host SimHub version (SimHub.Plugins.Configuration.SimHubVersion); "—" when unavailable.</summary>
+        public static string GetSimHubVersion()
+        {
+            if (s_simHubVersion != null) return s_simHubVersion;
+            string v = ComputeSimHubVersion();
+            if (v != "—") s_simHubVersion = v;
+            return v;
+        }
 
         private static string? s_simHubVersion;
 
         private static string ComputeSimHubVersion()
         {
+            // SimHubWPF.exe's PE version resource is always 1.0.0.0; the real
+            // release string is published by the host at startup.
             try
             {
-                string? path = Assembly.GetEntryAssembly()?.Location;
-                if (string.IsNullOrEmpty(path))
-                    path = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-                if (string.IsNullOrEmpty(path)) return "—";
-                var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(path!);
-                string? v = fvi.ProductVersion;
-                if (string.IsNullOrWhiteSpace(v)) v = fvi.FileVersion;
+                string? v = SimHub.Plugins.Configuration.SimHubVersion?.Version;
                 return string.IsNullOrWhiteSpace(v) ? "—" : v!.Trim();
             }
             catch { return "—"; }

@@ -27,22 +27,27 @@ namespace MozaPlugin.UI
         // race between probe responses and extension Init calls.
         private static readonly TimeSpan ProfileNotAddedSettling = TimeSpan.FromSeconds(5);
 
-        private static readonly Version MinimumSimHubVersion = new Version(9, 12, 0);
+        private const string MinimumSimHubVersion = "9.12.0";
 
-        private static bool s_simHubVersionParsed;
-        private static Version? s_simHubVersion;
+        private static bool s_simHubOutdatedChecked;
+        private static bool s_simHubOutdated;
 
-        // Leading dotted-numeric part of the host version ("9.12.3.0", "9.11.22 beta").
-        private static Version? SimHubVersion
+        // Compared with SimHub's own VersionParser so betas sort below their
+        // release, matching how the host gates device-definition minimums.
+        private static bool IsSimHubOutdated
         {
             get
             {
-                if (s_simHubVersionParsed) return s_simHubVersion;
-                var m = System.Text.RegularExpressions.Regex.Match(
-                    DiagnosticsTextBuilder.GetSimHubVersion(), @"^\s*(\d+(?:\.\d+){1,3})");
-                if (m.Success && Version.TryParse(m.Groups[1].Value, out var v)) s_simHubVersion = v;
-                s_simHubVersionParsed = true;
-                return s_simHubVersion;
+                if (s_simHubOutdatedChecked) return s_simHubOutdated;
+                try
+                {
+                    var host = SimHub.Plugins.Configuration.SimHubVersion;
+                    if (host == null) return false;
+                    s_simHubOutdated = host.CompareToVersion(MinimumSimHubVersion) < 0;
+                }
+                catch { s_simHubOutdated = false; }
+                s_simHubOutdatedChecked = true;
+                return s_simHubOutdated;
             }
         }
 
@@ -53,15 +58,14 @@ namespace MozaPlugin.UI
             var list = new List<StatusHint>();
             var elapsed = nowUtc - plugin.StartupUtc;
 
-            // Rule 0: SimHubOutdated. Unparseable version → no banner.
-            var hostVersion = SimHubVersion;
-            if (hostVersion != null && hostVersion < MinimumSimHubVersion)
+            // Rule 0: SimHubOutdated. Unknown host version → no banner.
+            if (IsSimHubOutdated)
             {
                 list.Add(new StatusHint(
                     StatusHintKind.SimHubOutdated,
                     Strings.Banner_SimHubOutdated_Title,
                     string.Format(Strings.Banner_SimHubOutdated_BodyFmt,
-                        DiagnosticsTextBuilder.GetSimHubVersion(), MinimumSimHubVersion.ToString(2))));
+                        DiagnosticsTextBuilder.GetSimHubVersion(), MinimumSimHubVersion)));
             }
             var detection = plugin.DetectionState;
             var connection = plugin.Connection;
