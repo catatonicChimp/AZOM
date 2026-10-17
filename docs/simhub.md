@@ -120,7 +120,7 @@ The call raises the **internal** `ApplicationExitRequested` event carrying the `
 
 SimHub also ships an "Automatic restart" user setting (the strings `HasAutomaticRestartEnabled` and "Automatic restart delay (seconds):" are present in the assembly), but its owning type and gating are not on `PluginManager` and were not reverse-engineered — `RequestApplicationExit(true)` is the load-bearing call and works regardless. (Note: `RequestReload` is a method on `DevicesPlugin`, not `PluginManager`; it reloads device/dashboard definitions without a full process restart.)
 
-The MOZA plugin calls `RequestApplicationExit(true)` from `MozaPlugin.RestartSimHub()`, wired to the "Restart SimHub" button the update banner shows after an in-app update is installed.
+The MOZA plugin calls `RequestApplicationExit(true)` from `MozaPlugin.RestartSimHub()`, called automatically once an in-app update install succeeds; the update banner's "Restart SimHub" button is the fallback if that request can't be issued.
 
 ## Profile System (`SimHub.Plugins.ProfilesCommon`)
 

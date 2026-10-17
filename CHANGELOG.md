@@ -11,6 +11,7 @@ All notable changes to the AZOM plugin are documented here.
   effects, stroke and lighting are in its settings. The COM port is free while motion is off.
   Motion effects are saved per profile, and Motion Manager presets import from the Import tab.
 - **Banner warns when SimHub is older than 9.12,** since some plugin features need it.
+- **In-app updates restart SimHub automatically** once the install finishes.
 
 ## Fixed
 
