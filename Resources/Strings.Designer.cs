@@ -921,5 +921,6 @@ namespace MozaPlugin.Resources
         public static string Section_PedalDamping => Get("Section_PedalDamping");
         public static string Motion_Effect_EngineVibration => Get("Motion_Effect_EngineVibration");
         public static string Motion_Effect_TactileFeedback => Get("Motion_Effect_TactileFeedback");
+        public static string SliderLabel_StalkDebounce => Get("SliderLabel_StalkDebounce");
     }
 }

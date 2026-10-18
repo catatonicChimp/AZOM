@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using MozaPlugin.Settings;
 
@@ -40,11 +42,23 @@ namespace MozaPlugin.Devices.StalksTruckSim
         private int _pendingCancelSide;
         private readonly Timer _cancelTimer;
 
+        // Per-button press lockout (guarded by _lock). An accepted press freezes that
+        // button for DebounceMs so contact chatter can't re-fire the action; a release
+        // that lands inside the window is delivered when it closes.
+        private readonly bool[] _raw = new bool[MozaData.MaxStalksButtons];
+        private readonly long[] _lockoutEnd = new long[MozaData.MaxStalksButtons];   // Stopwatch ticks, 0 = none
+        private volatile int _debounceMs;
+        private readonly Timer _lockoutTimer;
+        // Serialises edge delivery between the HID thread and the lockout timer.
+        // Taken before _lock, never inside it.
+        private readonly object _edgeLock = new object();
+
         public StalksTruckSimController()
         {
             // Only inject keys when a truck game is the foreground window.
             _kb.SetForegroundProcesses("eurotrucks2", "amtrucks");
             _cancelTimer = new Timer(OnCancelTimer, null, Timeout.Infinite, Timeout.Infinite);
+            _lockoutTimer = new Timer(OnLockoutTimer, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         private bool Active => _truckSimEnabled && _truckGameRunning;
@@ -58,9 +72,12 @@ namespace MozaPlugin.Devices.StalksTruckSim
                 _cfg = cfg ?? new StalkTruckSimSettings();
                 _kb.HoldMs = Math.Max(1, _cfg.KeyHoldMs);
                 _kb.GapMs = Math.Max(0, _cfg.KeyGapMs);
+                _debounceMs = Math.Max(0, _cfg.DebounceMs);
             }
             _truckSimEnabled = mode == StalkMode.TruckSim;
-            if (mode != StalkMode.TruckSim) { ResetIndicator(); _kb.ReleaseAll(); _kb.Flush(); }
+            // Flush first: ReleaseAll enqueues the key-ups, and a Flush after it would
+            // drain them before the worker wakes.
+            if (mode != StalkMode.TruckSim) { ResetIndicator(); _kb.Flush(); _kb.ReleaseAll(); }
         }
 
         /// <summary>Push the current game context each DataUpdate tick.</summary>
@@ -75,8 +92,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
                 // the game — unlike the wiper/light stages below, it is reset here.
                 // Only on the edge: this runs at DataUpdate rate.
                 if (wasTruck) ResetIndicator();
-                _kb.ReleaseAll();
                 _kb.Flush();
+                _kb.ReleaseAll();
             }
             // Do NOT re-home the tracked stages when the game re-enters focus. Alt-
             // tabbing flips GameRunning while the truck keeps its lights/wipers, so
@@ -87,6 +104,68 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
         /// <summary>Handle a stalk button edge (from the HID read thread).</summary>
         public void OnStalkButton(int index, bool pressed)
+        {
+            if (index < 0 || index >= MozaData.MaxStalksButtons) return;
+            lock (_edgeLock)
+            {
+                bool owedRelease = false;
+                lock (_lock)
+                {
+                    _raw[index] = pressed;
+                    long now = Stopwatch.GetTimestamp();
+                    long end = _lockoutEnd[index];
+                    if (end != 0 && now < end) return;   // frozen
+                    // Window over but not swept by the timer yet: a release that landed
+                    // inside it is still owed ahead of this press.
+                    if (end != 0) { _lockoutEnd[index] = 0; owedRelease = pressed; }
+                    int debounce = _debounceMs;
+                    if (pressed && debounce > 0)
+                    {
+                        _lockoutEnd[index] = now + debounce * Stopwatch.Frequency / 1000;
+                        ArmLockoutTimer(now);
+                    }
+                }
+                if (owedRelease) ProcessEdge(index, false);
+                ProcessEdge(index, pressed);
+            }
+        }
+
+        // A lockout window closed: deliver the release for any button let go while frozen.
+        private void OnLockoutTimer(object? _)
+        {
+            lock (_edgeLock)
+            {
+                var released = new List<int>();
+                lock (_lock)
+                {
+                    long now = Stopwatch.GetTimestamp();
+                    for (int i = 0; i < _lockoutEnd.Length; i++)
+                    {
+                        if (_lockoutEnd[i] == 0 || _lockoutEnd[i] > now) continue;
+                        _lockoutEnd[i] = 0;
+                        if (!_raw[i]) released.Add(i);
+                    }
+                    ArmLockoutTimer(now);
+                }
+                foreach (int i in released) ProcessEdge(i, false);
+            }
+        }
+
+        /// <summary>Re-arm the lockout timer for the earliest open window, or park it.
+        /// Caller holds <see cref="_lock"/>.</summary>
+        private void ArmLockoutTimer(long now)
+        {
+            long earliest = 0;
+            for (int i = 0; i < _lockoutEnd.Length; i++)
+                if (_lockoutEnd[i] != 0 && (earliest == 0 || _lockoutEnd[i] < earliest)) earliest = _lockoutEnd[i];
+            long dueMs = earliest == 0 ? Timeout.Infinite
+                : Math.Max(1, (earliest - now) * 1000 / Stopwatch.Frequency);
+            try { _lockoutTimer.Change(dueMs, Timeout.Infinite); }
+            catch (ObjectDisposedException) { }
+        }
+
+        /// <summary>Act on an accepted edge. Runs under <see cref="_edgeLock"/>.</summary>
+        private void ProcessEdge(int index, bool pressed)
         {
             StalkAction? action = null;
             StalkTruckSimSettings cfg;
@@ -165,6 +244,13 @@ namespace MozaPlugin.Devices.StalksTruckSim
             bool turnOn;
             lock (_lock)
             {
+                // Same side again inside the minimum blink time: the lever came back
+                // from neutral (or the contact chattered) — keep it lit, don't toggle.
+                if (_activeIndicator == side && (_pendingCancelSide == side || RemainingBlinkMs(cfg) > 0))
+                {
+                    ClearPendingCancel();
+                    return;
+                }
                 ClearPendingCancel();
                 turnOn = _activeIndicator != side;
                 if (_activeIndicator != 0 && _activeIndicator != side)
@@ -223,6 +309,10 @@ namespace MozaPlugin.Devices.StalksTruckSim
                     catch (ObjectDisposedException) { _pendingCancelSide = 0; }
                     return;
                 }
+
+                // Lever is back at the lit side (its re-press fell inside the lockout
+                // window): the cancel is stale — keep signalling.
+                if (SideHeld(cfg, side)) { _pendingCancelSide = 0; return; }
             }
 
             // The foreground query is a process lookup — never held under _lock.
@@ -251,6 +341,18 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
         private static string SideKey(StalkTruckSimSettings cfg, int side)
             => side == 1 ? cfg.IndicatorLeftKey : cfg.IndicatorRightKey;
+
+        /// <summary>True when a button mapped to this side's indicator is physically
+        /// down. Caller holds <see cref="_lock"/>.</summary>
+        private bool SideHeld(StalkTruckSimSettings cfg, int side)
+        {
+            if (cfg.ButtonActions == null) return false;
+            var kind = side == 1 ? StalkActionKind.IndicatorLeft : StalkActionKind.IndicatorRight;
+            foreach (var kv in cfg.ButtonActions)
+                if (kv.Value?.Kind == kind && kv.Key >= 0 && kv.Key < _raw.Length && _raw[kv.Key])
+                    return true;
+            return false;
+        }
 
         /// <summary>Drop any armed cancel. Caller holds <see cref="_lock"/>.</summary>
         private void ClearPendingCancel()
@@ -327,6 +429,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
         public void Dispose()
         {
+            try { _lockoutTimer.Dispose(); } catch { }
             try { _cancelTimer.Dispose(); } catch { }
             try { _kb.Dispose(); } catch { }
         }

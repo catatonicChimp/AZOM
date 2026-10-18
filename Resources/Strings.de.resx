@@ -863,4 +863,5 @@ Id: {2}</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>PEDALDÄMPFUNG</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Motorvibration</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Taktiles Feedback</value></data>
+  <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Tasten-Entprellung (ms)</value></data>
 </root>

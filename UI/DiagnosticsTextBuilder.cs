@@ -484,7 +484,7 @@ namespace MozaPlugin.UI
             sb.AppendLine(
                 $"Stages:         wipers={cfg.WiperStageCount} (wrap={cfg.WiperForwardWraps}) " +
                 $"lights={cfg.LightStageCount}  minBlink={cfg.IndicatorMinBlinkSeconds}s  " +
-                $"keyHold={cfg.KeyHoldMs}ms gap={cfg.KeyGapMs}ms");
+                $"keyHold={cfg.KeyHoldMs}ms gap={cfg.KeyGapMs}ms debounce={cfg.DebounceMs}ms");
 
             var map = cfg.ButtonActions;
             if (map == null || map.Count == 0)

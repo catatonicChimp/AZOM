@@ -823,6 +823,10 @@ namespace MozaPlugin.Settings
         public int KeyHoldMs { get; set; } = 30;
         public int KeyGapMs { get; set; } = 40;
 
+        /// <summary>Per-button press lockout (ms): after a press, that button's edges are
+        /// ignored for this long so contact chatter can't re-fire the action. 0 = off.</summary>
+        public int DebounceMs { get; set; } = 20;
+
         public StalkTruckSimSettings Clone()
         {
             var c = new StalkTruckSimSettings
@@ -838,6 +842,7 @@ namespace MozaPlugin.Settings
                 LightStageCount = LightStageCount,
                 KeyHoldMs = KeyHoldMs,
                 KeyGapMs = KeyGapMs,
+                DebounceMs = DebounceMs,
                 ButtonActions = new Dictionary<int, StalkAction>(),
             };
             if (ButtonActions != null)

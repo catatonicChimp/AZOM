@@ -868,4 +868,5 @@ Id: {2}</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>AMORTIGUACIÓN DEL PEDAL</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibración del motor</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Respuesta táctil</value></data>
+  <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Antirrebote de botones (ms)</value></data>
 </root>

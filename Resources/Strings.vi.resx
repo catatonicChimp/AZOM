@@ -863,4 +863,5 @@ Id: {2}</value></data>
   <data name="Section_PedalDamping" xml:space="preserve"><value>GIẢM CHẤN BÀN ĐẠP</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Rung động cơ</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Phản hồi xúc giác</value></data>
+  <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Chống dội nút (ms)</value></data>
 </root>

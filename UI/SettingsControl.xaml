@@ -3461,6 +3461,18 @@
                                 </ctrl:SegmentedControl>
                                 <TextBlock Text="{x:Static res:Strings.Hint_StalksTruckSim}"
                                            Style="{StaticResource MutedHintText}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                <Grid Margin="0,8,0,0" Visibility="{Binding Visibility, ElementName=StalksTruckSimPanel}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Static res:Strings.SliderLabel_StalkDebounce}" Style="{StaticResource SliderLabel}"/>
+                                    <Slider Grid.Column="1" x:Name="StalksDebounceSlider" Style="{StaticResource SettingSlider}" Minimum="0" Maximum="150" TickFrequency="5" SmallChange="5" LargeChange="10" IsSnapToTickEnabled="True" ValueChanged="StalksDebounceSlider_ValueChanged"/>
+                                    <TextBox Grid.Column="2" x:Name="StalksDebounceValue" Style="{StaticResource SliderValueEditBox}"
+                                             Tag="{Binding ElementName=StalksDebounceSlider}"
+                                             KeyDown="SliderValueBox_KeyDown" LostFocus="SliderValueBox_LostFocus" Text="20"/>
+                                </Grid>
                             </StackPanel>
                         </ctrl:SectionCard>
 

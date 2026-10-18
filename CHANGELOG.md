@@ -13,6 +13,7 @@ All notable changes to the AZOM plugin are documented here.
   Motion effects are saved per profile, and Motion Manager presets import from the Import tab.
 - **Banner warns when SimHub is older than 9.12,** since some plugin features need it.
 - **In-app updates restart SimHub automatically** once the install finishes.
+- **Stalk button debounce slider** in truck-sim mode, for levers whose contacts bounce.
 
 ## Fixed
 
@@ -20,6 +21,8 @@ All notable changes to the AZOM plugin are documented here.
 - **mBooster Pedal Feel shows the pedal's own values** when the profile hasn't set them, chained units included.
 - **The MOZA Motion Controller is no longer probed as a wheelbase or AB9.**
 - **Dashboard channel mappings show at launch,** not only after switching dashboards.
+- **Minimum blinker time holds through a same-side re-press,** and the deferred cancel no longer fires while the lever is still at that side.
+- **Stalk held keys are released on mode change and game exit.**
 - **iRacing opponents show on the track map;** only the player's dot was drawn once
   drivers had come and gone.
 - **Wheel, dash and base LEDs no longer drop to the idle effect** after SimHub pauses the LED
