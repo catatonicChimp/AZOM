@@ -16,7 +16,12 @@ of the same session (the replay is the game-side ground truth — see
 
 Both are gated behind `EnableRadarTrackMapChannels`; `OpponentCount` /
 `PlayerIndex` are not (ordinary dashboards read them). The wheel masks unused
-`Location_N` / `ri_N` slots via `OpponentCount`.
+`Location_N` / `ri_N` slots via `OpponentCount`: it draws `Location_0..OpponentCount`,
+so a car in a higher slot is invisible even with a valid position (bundle XMVWAYC1:
+`OpponentCount` 22, opponents sent in `Location_33+`, only the player drawn).
+AC slots are carIds (dense); for list-only games (iRacing, replays) the plugin
+assigns dense slots `1..opponents` per driver Id (`AssignOpponentSlots`): kept while
+present, a new car takes the lowest slot no present car holds.
 
 ## Track map — `location_t` (64-bit) — SOLVED
 
