@@ -25,6 +25,8 @@ All notable changes to the AZOM plugin are documented here.
 - **Stalk held keys are released on mode change and game exit.**
 - **iRacing opponents show on the track map;** only the player's dot was drawn once
   drivers had come and gone.
+- **The iRacing track map highlights your car while you spectate it,** e.g. a team-mate's stint
+  watched from the pit wall.
 - **Wheel, dash and base LEDs no longer drop to the idle effect** after SimHub pauses the LED
   device; knob LEDs also hold through LED pipeline stalls while a game is running.
 

@@ -134,6 +134,10 @@ wheel showed one dot dead centre), so the plugin prefers the outline line:
   (0.5–30 km) the map still fits but the radar is skipped.
   `tools/outline_line_check.py`: Daytona 2011 road 1.5 m median / 9.6 m max vs
   SimHub's map; Road Atlanta 2–8 m outside the replay map's broken S/F stretch.
+- **The player** (`patch/Location`) comes from the player's own opponent entry
+  (`CarIdxLapDistPct[PlayerCarIdx]`), not `CarCoordinates`: iRacing's player-car
+  `LapDistPct` is 0 (`IsOnTrack` false) while spectating — team race watched from
+  the pit wall — which put the player marker on the S/F line.
 - **SimHub's map** otherwise; with neither there is nothing to plot (raw pct
   would collapse every car onto one point) and the plugin sends empty slots.
 - The map's own points are already in the resolved space — they must not be run

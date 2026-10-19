@@ -233,11 +233,12 @@ namespace MozaPlugin.Telemetry.Frames
             // iRacing reports every car as [LapDistPct, 0, 0]. The wheel's own outline
             // line places it exactly on the drawn track; else SimHub's recorded map
             // resolves it. Without either there is nothing to plot.
-            var line = data.RelativeCarCoordinates != null && snap.Outline != null && snap.Outline.HasLine
-                ? snap.Outline : null;
+            // Only normalised (iRacing) outlines carry a line.
+            var line = snap.Outline != null && snap.Outline.HasLine ? snap.Outline : null;
+            bool lapRelative = line != null || data.RelativeCarCoordinates != null;
             bool lineMetres = false;
             double lineScale = line != null ? LineMetresPerUnit(data, line, out lineMetres) : 0.0;
-            if (line == null && map == null && data.RelativeCarCoordinates != null)
+            if (line == null && map == null && lapRelative)
                 return;
 
             if (line != null)
@@ -264,16 +265,24 @@ namespace MozaPlugin.Telemetry.Frames
                 }
             }
 
+            var opps = data.Opponents;
+
+            // iRacing's player-car telemetry (LapDistPct → CarCoordinates) is 0 while
+            // spectating, e.g. watching a team-mate from the pit wall; the player's
+            // own entry (CarIdxLapDistPct[PlayerCarIdx]) is valid driving or not.
             var pc = data.CarCoordinates;
+            if (lapRelative && opps != null)
+                foreach (var o in opps)
+                    if (o != null && o.IsPlayer && o.Coordinates != null && o.Coordinates.Length >= 3)
+                    { pc = o.Coordinates; break; }
             float px = 0f, py = 0f, pz = 0f; bool havePlayer = false;
-            if (pc != null && pc.Length >= 3)
+            if (pc != null && pc.Length >= 3 && (!lapRelative || pc[0] != 0.0 || pc[2] != 0.0))
             {
                 (px, py, pz) = ResolveXyz(map, line, lineScale, pc);
                 havePlayer = px != 0f || pz != 0f || line == null;
                 if (havePlayer) snap.PlayerLocation = (px, py, pz);
             }
 
-            var opps = data.Opponents;
             if (opps == null || opps.Count == 0) return;
             int count = opps.Count;
 
