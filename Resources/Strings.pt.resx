@@ -236,7 +236,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Ativar servidor CoAP SDK</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Ativar servidor de controle UDP</value></data>
   <data name="Section_About" xml:space="preserve"><value>SOBRE</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// plugin de código aberto para SimHub</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>versão —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Um plugin não oficial do SimHub que se comunica diretamente com o hardware MOZA Racing via serial — configuração de hardware, pipeline de efeitos de LED e streaming de painel. Sem afiliação com a MOZA / Gudsen Technology.</value></data>
@@ -250,6 +249,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Entre no Discord do projeto</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Guias</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Todos os guias</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Primeiros passos</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Instalar o plugin</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Configuração no Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Adicionar seu dispositivo</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Configurar a base</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>Efeitos LFE</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Pedais e freio de mão</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster: sensação do pedal e efeitos</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Háptica dos pedais</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Câmbio ativo AB9</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Câmbios HGP e SGP</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Alavancas multifunção</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Importar um perfil</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>LEDs e botões rotativos do volante</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>LEDs avançados com ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Painel e canais</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Arquivos do volante e envio de painéis</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Controles e ações</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Mapeador de controles</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Referência de propriedades e ações</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK e iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Opções do plugin</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Diagnóstico e relatórios de bugs</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Atualização disponível</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Abrir notas da versão</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Pular esta versão</value></data>

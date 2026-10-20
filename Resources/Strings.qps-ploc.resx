@@ -242,7 +242,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Yap!</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Awoo!</value></data>
   <data name="Section_About" xml:space="preserve"><value>YOWL!!</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>Barff!</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>ARF!!</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>Awoo!</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Wan Grr Wroof Yap Boof Wroof!</value></data>
@@ -256,6 +255,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Yowl!</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>Yowff!</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>Wan!</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Sniff!</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Sniff Sniff!</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Arf Woof!</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Yap Yap Bork!</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Grr Woof!</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Ruff Yip!</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Awoo Arf Bark!</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>WOOF!!</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Bark Arf Grr!</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>Yowff Ruff Arf Woof!</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Yip Bark!</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Woof Awoo Yap!</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Arf Bork Grr!</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Ruff Ruff Yip!</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Bark Woof!</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>Yap Arf Bork!</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>Awoo Yip Grr!</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Bork Woof!</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Arf Ruff Bark Yap!</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Grr Yip!</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Woof Bork!</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Awoo Arf Grr Yap!</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>Yip Woof!</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Ruff Bark!</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Bork Awoo Yip!</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Barff!</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Wroof!</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Howl!</value></data>

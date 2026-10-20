@@ -62,6 +62,8 @@
 
     <Geometry x:Key="IconBolt">M13,2 L4,14 H11 L10,22 L19,10 H12 L13,2 Z</Geometry>
 
+    <Geometry x:Key="IconBook">M2,4 H8 A4,4 0 0 1 12,8 V21 A3,3 0 0 0 9,18 H2 Z M22,4 H16 A4,4 0 0 0 12,8 V21 A3,3 0 0 1 15,18 H22 Z</Geometry>
+
     <!-- Pencil/edit icon for inline-edit affordances (e.g. channel-mapping row). -->
     <Geometry x:Key="IconEdit">M4,20 L4,16 L14,6 L18,10 L8,20 Z M14,6 L17,3 A1.4,1.4 0 0 1 19,3 L21,5 A1.4,1.4 0 0 1 21,7 L18,10</Geometry>
 

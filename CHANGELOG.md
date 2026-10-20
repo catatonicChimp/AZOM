@@ -14,6 +14,7 @@ All notable changes to the AZOM plugin are documented here.
 - **Banner warns when SimHub is older than 9.12,** since some plugin features need it.
 - **In-app updates restart SimHub automatically** once the install finishes.
 - **Stalk button debounce slider** in truck-sim mode, for levers whose contacts bounce.
+- **Guides card on the Help tab** links every online guide.
 
 ## Fixed
 

@@ -215,7 +215,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>启用 CoAP SDK 服务器</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>启用 UDP 控制服务器</value></data>
   <data name="Section_About" xml:space="preserve"><value>关于</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// 开源 SimHub 插件</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>版本 —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>一个非官方 SimHub 插件,通过串口直接与 MOZA Racing 硬件通讯 — 硬件配置、LED 效果管线与仪表盘流式传输。本项目与 MOZA / Gudsen Technology 无关。</value></data>
@@ -229,6 +228,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>加入项目 Discord</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>指南</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>全部指南</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>快速入门</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>安装插件</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Linux 设置</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>添加设备</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>配置基座</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>LFE 效果</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>踏板与手刹</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster 踏板手感与效果</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>踏板触觉反馈</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>AB9 主动换挡器</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>HGP 与 SGP 换挡器</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>多功能拨杆</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>导入配置文件</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>方向盘 LED 与旋钮</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>使用 ATSR 的高级 LED</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>仪表盘与通道</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>方向盘文件与仪表盘上传</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>控制与动作</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>控制映射器</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>属性与动作参考</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK 与 iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>插件选项</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>诊断与错误报告</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>有可用更新</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>打开发布说明</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>跳过此版本</value></data>

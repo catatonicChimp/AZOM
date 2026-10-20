@@ -215,7 +215,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>CoAP SDK 서버 사용</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>UDP 제어 서버 사용</value></data>
   <data name="Section_About" xml:space="preserve"><value>정보</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// 오픈소스 SimHub 플러그인</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>버전 —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>MOZA Racing 하드웨어와 시리얼로 직접 통신하는 비공식 SimHub 플러그인입니다 — 하드웨어 설정, LED 효과 파이프라인, 대시보드 스트리밍을 제공합니다. MOZA / Gudsen Technology와 무관합니다.</value></data>
@@ -229,6 +228,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>프로젝트 Discord에 참여하세요</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>가이드</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>모든 가이드</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>시작하기</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>플러그인 설치</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Linux 설정</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>장치 추가</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>베이스 구성</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>LFE 효과</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>페달 및 핸드브레이크</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster 페달 감각 및 효과</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>페달 햅틱</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>AB9 액티브 시프터</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>HGP 및 SGP 시프터</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>다기능 스토크</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>프로필 가져오기</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>휠 LED 및 노브</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>ATSR 고급 LED</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>대시보드 및 채널</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>휠 파일 및 대시보드 업로드</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>컨트롤 및 액션</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>컨트롤 매퍼</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>속성 및 액션 참조</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK 및 iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>플러그인 옵션</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>진단 및 버그 리포트</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>업데이트 사용 가능</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>릴리스 노트 열기</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>이 버전 건너뛰기</value></data>

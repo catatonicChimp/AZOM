@@ -215,7 +215,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Включить сервер CoAP SDK</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Включить сервер управления по UDP</value></data>
   <data name="Section_About" xml:space="preserve"><value>О ПРОГРАММЕ</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// плагин SimHub с открытым исходным кодом</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>версия —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Неофициальный плагин SimHub, который напрямую общается с оборудованием MOZA Racing по последовательному порту — настройка оборудования, конвейер LED-эффектов и стриминг панели. Не связан с MOZA / Gudsen Technology.</value></data>
@@ -228,6 +227,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Присоединиться к Discord проекта</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Руководства</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Все руководства</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Начало работы</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Установка плагина</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Настройка в Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Добавление устройства</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Настройка базы</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>Эффекты LFE</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Педали и ручник</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster: ощущение педали и эффекты</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Тактильная отдача педалей</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Активный шифтер AB9</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Шифтеры HGP и SGP</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Многофункциональные подрулевые переключатели</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Импорт профиля</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>Светодиоды и энкодеры руля</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>Продвинутые светодиоды с ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Табло и каналы</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Файлы руля и загрузка табло</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Органы управления и действия</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Сопоставление органов управления</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Справочник свойств и действий</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK и iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Параметры плагина</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Диагностика и отчёты об ошибках</value></data>
   <data name="Hint_ThanksToTesters" xml:space="preserve"><value>Огромное спасибо всем первым альфа- и бета-тестировщикам, которые потратили своё время — и нервы — пока я разбирался, как заставить работать протокол MOZA. Без вас этого плагина не существовало бы.</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Доступно обновление</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Открыть заметки о выпуске</value></data>

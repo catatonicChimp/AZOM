@@ -215,7 +215,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Activer le serveur SDK CoAP</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Activer le serveur de contrôle UDP</value></data>
   <data name="Section_About" xml:space="preserve"><value>À PROPOS</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// plugin SimHub open source</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>version —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Plugin SimHub non officiel qui communique directement avec le matériel MOZA Racing par port série — configuration matérielle, pipeline d'effets LED et streaming du tableau de bord. Non affilié à MOZA / Gudsen Technology.</value></data>
@@ -228,6 +227,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Rejoindre le Discord du projet</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Guides</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Tous les guides</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Premiers pas</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Installer le plugin</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Configuration sous Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Ajouter votre périphérique</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Configurer la base</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>Effets LFE</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Pédales &amp; frein à main</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster : sensation &amp; effets</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Haptique des pédales</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Levier de vitesses actif AB9</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Leviers de vitesses HGP &amp; SGP</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Commodos multifonctions</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Importer un profil</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>LEDs &amp; encodeurs du volant</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>LEDs avancées avec ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Tableau de bord &amp; canaux</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Fichiers du volant &amp; envoi de tableaux de bord</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Commandes &amp; actions</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Mappeur de commandes</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Référence des propriétés &amp; actions</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK &amp; iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Options du plugin</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Diagnostics &amp; rapports de bug</value></data>
   <data name="Hint_ThanksToTesters" xml:space="preserve"><value>Un immense merci à tous les premiers testeurs alpha et bêta qui ont mis leur temps et leur santé mentale en jeu pendant que je comprenais comment faire fonctionner le protocole MOZA. Ce plugin n'existerait pas sans vous.</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Mise à jour disponible</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Ouvrir les notes de version</value></data>

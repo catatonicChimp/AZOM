@@ -220,7 +220,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Aktiver CoAP SDK-server</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Aktiver UDP-kontrollserver</value></data>
   <data name="Section_About" xml:space="preserve"><value>OM</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// SimHub-plugin med åpen kildekode</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>versjon —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>En uoffisiell SimHub-plugin som snakker direkte til MOZA Racing-maskinvare over seriell — maskinvarekonfigurasjon, LED-effektpipeline og dashboard-streaming. Ikke tilknyttet MOZA / Gudsen Technology.</value></data>
@@ -234,6 +233,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Bli med på prosjektets Discord</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Veiledninger</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Alle veiledninger</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Kom i gang</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Installer pluginen</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Oppsett på Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Legg til enheten</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Konfigurer rattbasen</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>LFE-effekter</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Pedaler og håndbrekk</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster: pedalfølelse og effekter</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Pedalhaptikk</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>AB9 aktiv girspak</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>HGP- og SGP-girspaker</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Multifunksjonsspaker</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Importer en profil</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>Ratt-LED-er og brytere</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>Avanserte LED-er med ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Dashboard og kanaler</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Rattfiler og dashboard-opplasting</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Kontroller og handlinger</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Kontrollkartlegging</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Referanse for egenskaper og handlinger</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK og iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Plugin-alternativer</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Diagnostikk og feilrapporter</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Oppdatering tilgjengelig</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Åpne utgivelsesnotater</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Hopp over denne versjonen</value></data>

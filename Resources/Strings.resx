@@ -244,7 +244,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Enable CoAP SDK server</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Enable UDP control server</value></data>
   <data name="Section_About" xml:space="preserve"><value>ABOUT</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// Open-source SimHub plugin</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>version —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>An unofficial SimHub plugin that talks directly to MOZA Racing hardware over serial — hardware configuration, LED effects pipeline, and dashboard streaming. Not affiliated with MOZA / Gudsen Technology.</value></data>
@@ -258,6 +257,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Join the project Discord</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Guides</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>All guides</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Getting Started</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Install the Plugin</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Linux Setup</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Add Your Device</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Configure the Wheelbase</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>LFE Effects</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Pedals &amp; Handbrake</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster Pedal Feel &amp; Effects</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Pedal Haptics</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>AB9 Active Shifter</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>HGP &amp; SGP Shifters</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Multi-Function Stalks</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Import a Profile</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>Wheel LEDs &amp; Knobs</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>Advanced LEDs with ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Dashboard &amp; Channels</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Wheel Files &amp; Dashboard Upload</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Controls &amp; Actions</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Control Mapper</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Properties &amp; Actions Reference</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK &amp; iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Plugin Options</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Diagnostics &amp; Bug Reports</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Update available</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Open release notes</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Skip this version</value></data>

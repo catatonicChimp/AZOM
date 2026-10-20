@@ -3896,68 +3896,97 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="22,18,22,8">
                     <StackPanel>
 
-                        <!-- ============ About / Project links ============ -->
-                        <ctrl:SectionCard Title="{x:Static res:Strings.Section_About}"
-                                          Subtitle="{x:Static res:Strings.Subtitle_About}"
-                                          Icon="{StaticResource IconShield}">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{x:Static res:Strings.Label_AzomTitle}"
-                                                   FontFamily="{StaticResource FontUi}"
-                                                   FontSize="22" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextBrush}"/>
-                                        <TextBlock x:Name="AboutVersionText"
-                                                   Text="{x:Static res:Strings.Label_VersionPlaceholder}"
-                                                   FontFamily="{StaticResource FontMono}"
-                                                   FontSize="13"
-                                                   Foreground="{StaticResource CyanBrush}"
-                                                   Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                </Grid>
+                        <!-- ============ About / Project links + Guides ============ -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ctrl:SectionCard Grid.Column="0"
+                                              Title="{x:Static res:Strings.Section_About}"
+                                              Icon="{StaticResource IconShield}">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{x:Static res:Strings.Label_AzomTitle}"
+                                                       FontFamily="{StaticResource FontUi}"
+                                                       FontSize="22" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextBrush}"/>
+                                            <TextBlock x:Name="AboutVersionText"
+                                                       Text="{x:Static res:Strings.Label_VersionPlaceholder}"
+                                                       FontFamily="{StaticResource FontMono}"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource CyanBrush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
 
-                                <TextBlock TextWrapping="Wrap"
-                                           Style="{StaticResource MutedHintText}"
-                                           Margin="0,0,0,16"
-                                           Text="{x:Static res:Strings.Hint_AboutDescription}"/>
-                                <TextBlock TextWrapping="Wrap"
-                                           Style="{StaticResource MutedHintText}"
-                                           FontStyle="Italic"
-                                           Foreground="{StaticResource TextDimBrush}"
-                                           Margin="0,0,0,16"
-                                           Text="{x:Static res:Strings.Hint_ThanksToTesters}"/>
-                                <TextBlock TextWrapping="Wrap"
-                                           Style="{StaticResource MutedHintText}"
-                                           Margin="0,0,0,12"
-                                           Text="{x:Static res:Strings.Hint_SponsorshipsAppreciated}"/>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="{x:Static res:Strings.Button_Github}"
-                                            Click="AboutGitHubButton_Click"
-                                            Margin="0,0,8,0"
-                                            ToolTip="{x:Static res:Strings.Tooltip_Github}"/>
-                                    <Button Content="{x:Static res:Strings.Button_JoinDiscord}"
-                                            Click="AboutDiscordButton_Click"
-                                            Margin="0,0,8,0"
-                                            ToolTip="{x:Static res:Strings.Tooltip_JoinDiscord}"/>
-                                    <Button Content="{x:Static res:Strings.Button_SponsorDevelopment}"
-                                            Click="AboutSponsorButton_Click"
-                                            Foreground="{StaticResource GreenBrush}"
-                                            BorderBrush="#6639FF88"
-                                            Margin="0,0,8,0"
-                                            ToolTip="{x:Static res:Strings.Tooltip_Sponsor}"/>
-                                    <Button Content="{x:Static res:Strings.Button_Kofi}"
-                                            Click="AboutKofiButton_Click"
-                                            Foreground="{StaticResource RedBrush}"
-                                            BorderBrush="#6639FF88"
-                                            Margin="0,0,8,0"
-                                            ToolTip="{x:Static res:Strings.Tooltip_Kofi}"/>
+                                    <TextBlock TextWrapping="Wrap"
+                                               Style="{StaticResource MutedHintText}"
+                                               Margin="0,0,0,16"
+                                               Text="{x:Static res:Strings.Hint_AboutDescription}"/>
+                                    <TextBlock TextWrapping="Wrap"
+                                               Style="{StaticResource MutedHintText}"
+                                               FontStyle="Italic"
+                                               Foreground="{StaticResource TextDimBrush}"
+                                               Margin="0,0,0,16"
+                                               Text="{x:Static res:Strings.Hint_ThanksToTesters}"/>
+                                    <TextBlock TextWrapping="Wrap"
+                                               Style="{StaticResource MutedHintText}"
+                                               Margin="0,0,0,12"
+                                               Text="{x:Static res:Strings.Hint_SponsorshipsAppreciated}"/>
+                                    <WrapPanel Margin="0,0,0,-8">
+                                        <Button Content="{x:Static res:Strings.Button_Github}"
+                                                Click="AboutGitHubButton_Click"
+                                                Margin="0,0,8,8"
+                                                ToolTip="{x:Static res:Strings.Tooltip_Github}"/>
+                                        <Button Content="{x:Static res:Strings.Button_JoinDiscord}"
+                                                Click="AboutDiscordButton_Click"
+                                                Margin="0,0,8,8"
+                                                ToolTip="{x:Static res:Strings.Tooltip_JoinDiscord}"/>
+                                        <Button Content="{x:Static res:Strings.Button_SponsorDevelopment}"
+                                                Click="AboutSponsorButton_Click"
+                                                Foreground="{StaticResource GreenBrush}"
+                                                BorderBrush="#6639FF88"
+                                                Margin="0,0,8,8"
+                                                ToolTip="{x:Static res:Strings.Tooltip_Sponsor}"/>
+                                        <Button Content="{x:Static res:Strings.Button_Kofi}"
+                                                Click="AboutKofiButton_Click"
+                                                Foreground="{StaticResource RedBrush}"
+                                                BorderBrush="#6639FF88"
+                                                Margin="0,0,8,8"
+                                                ToolTip="{x:Static res:Strings.Tooltip_Kofi}"/>
+                                    </WrapPanel>
                                 </StackPanel>
-                            </StackPanel>
-                        </ctrl:SectionCard>
+                            </ctrl:SectionCard>
+
+                            <ctrl:SectionCard Grid.Column="2"
+                                              Title="{x:Static res:Strings.Section_Guides}"
+                                              Icon="{StaticResource IconBook}">
+                                <StackPanel>
+                                    <!-- Filled from AboutGuides (SettingsControl.About.cs). -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="16"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel x:Name="GuidesLeftColumn" Grid.Column="0"/>
+                                        <StackPanel x:Name="GuidesRightColumn" Grid.Column="2"/>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Content="{x:Static res:Strings.Link_AllGuides}"
+                                                Click="AboutGuidesIndexButton_Click"
+                                                ToolTip="giant.orth.cc/guides"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ctrl:SectionCard>
+                        </Grid>
 
                         <!-- Bandwidth visualization was moved to the Base tab's live header
                              (next to the temperature graph) as a single dual-line sparkline. -->

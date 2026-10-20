@@ -215,7 +215,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Bật máy chủ CoAP SDK</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Bật máy chủ điều khiển UDP</value></data>
   <data name="Section_About" xml:space="preserve"><value>GIỚI THIỆU</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// Plugin SimHub mã nguồn mở</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>phiên bản —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Plugin SimHub không chính thức giao tiếp trực tiếp với phần cứng MOZA Racing qua cổng serial — cấu hình phần cứng, pipeline hiệu ứng LED và truyền phát bảng điều khiển. Không liên kết với MOZA / Gudsen Technology.</value></data>
@@ -228,6 +227,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Tham gia Discord của dự án</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Hướng dẫn</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Tất cả hướng dẫn</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Bắt đầu</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Cài đặt plugin</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Thiết lập trên Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Thêm thiết bị</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Cấu hình đế</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>Hiệu ứng LFE</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Bàn đạp &amp; phanh tay</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster: cảm giác bàn đạp &amp; hiệu ứng</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Phản hồi xúc giác bàn đạp</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Cần số chủ động AB9</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Cần số HGP &amp; SGP</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Cần gạt đa năng</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Nhập hồ sơ</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>LED &amp; núm xoay vô lăng</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>LED nâng cao với ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Bảng điều khiển &amp; kênh</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Tệp vô lăng &amp; tải lên bảng điều khiển</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Điều khiển &amp; hành động</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Ánh xạ điều khiển</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Tham chiếu thuộc tính &amp; hành động</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK &amp; iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Tùy chọn plugin</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Chẩn đoán &amp; báo lỗi</value></data>
   <data name="Hint_ThanksToTesters" xml:space="preserve"><value>Xin gửi lời cảm ơn chân thành đến tất cả các tester alpha và beta đầu tiên — những người đã bỏ thời gian và sự kiên nhẫn của mình trong khi tôi tìm ra cách làm cho giao thức MOZA hoạt động. Plugin này sẽ không tồn tại nếu không có các bạn.</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Có bản cập nhật</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Mở ghi chú phát hành</value></data>

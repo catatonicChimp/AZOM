@@ -215,7 +215,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Ενεργοποίηση CoAP SDK server</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Ενεργοποίηση UDP control server</value></data>
   <data name="Section_About" xml:space="preserve"><value>ΣΧΕΤΙΚΑ</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// Πρόσθετο SimHub ανοιχτού κώδικα</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>Έκδοση —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Ένα ανεπίσημο πρόσθετο SimHub που επικοινωνεί απευθείας με υλικό MOZA Racing μέσω σειριακού πρωτοκόλλου, εφφέ LED και streaming οθόνης. Δεν σχετίζεται με τη MOZA / Gudsen Technology.</value></data>
@@ -229,6 +228,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Εγγραφή στο Discord του προσθέτου</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Οδηγοί</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Όλοι οι οδηγοί</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Ξεκινώντας</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Εγκατάσταση του plugin</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Ρύθμιση σε Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Προσθήκη συσκευής</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Ρύθμιση της βάσης</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>Εφέ LFE</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Πεντάλ &amp; χειρόφρενο</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster: αίσθηση πεντάλ &amp; εφέ</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Απτική ανάδραση πεντάλ</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Ενεργός λεβιές AB9</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Λεβιέδες HGP &amp; SGP</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Διακόπτες πολλαπλών λειτουργιών</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Εισαγωγή προφίλ</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>LED &amp; ποτενσιόμετρα τιμονιού</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>Προηγμένα LED με ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Πίνακας &amp; κανάλια</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Αρχεία τιμονιού &amp; μεταφόρτωση πίνακα</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Χειριστήρια &amp; ενέργειες</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Αντιστοίχιση χειριστηρίων</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Αναφορά ιδιοτήτων &amp; ενεργειών</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK &amp; iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Επιλογές plugin</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Διαγνωστικά &amp; αναφορές σφαλμάτων</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Διαθέσιμη ενημέρωση</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Άνοιγμα σημειώσεων έκδοσης</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Παράλειψη αυτής της έκδοσης</value></data>
