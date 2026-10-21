@@ -232,17 +232,26 @@ rather than a tone, so it cannot serve as a general output;
 `BuildRoadTextureFrame` is kept for when there is a telemetry source worth
 wiring to it.
 
-### Emission budget
+### Emission
 
 Three pedals x eight oscillators is 24 addressable outputs, but only live ones
-are sent. Releases go out unbudgeted — a dropped disable leaves a motor buzzing
-for the rest of its duration — and live ones are refreshed round-robin under a
-per-tick frame budget of 8. Even with all 24 live that is a 60 ms refresh
-against a 500 ms duration, and a peak of about 6.8 kB/s.
+are sent. Effect output is latest-state, pulled by the connection's write loop
+through the 4 ms paced gate (`PedalHapticsEffectScheduler`, an
+`IPacedFrameSource` taking turns with the LED lane and the one-shot FIFO). Each
+frame is built from the newest ShakeIt value at the moment it can go out, so a
+busy link lowers the update rate rather than delaying anything.
 
-Frames go on the paced one-shot FIFO rather than latest-wins stream lanes: every
-frame addresses a different pedal+slot, so coalescing by lane would drop one
-slot's update in favour of another's.
+Service order: disables first (a missed one leaves a motor buzzing for the rest
+of its duration), then live slots more than 250 ms unsent, then enables, then
+the longest-unsent live slot. A live slot is re-sent when its strength or
+frequency changes, at most every 20 ms, and otherwise every 100 ms against its
+500 ms duration.
+
+The gate carries at most ~250 frames/s, shared with everything else on the pipe.
+An earlier build pushed up to 8 frames per 20 ms tick (400/s) into the FIFO;
+past about five live slots the queue grew without bound and effects played
+seconds late — bundles `QK7EC6FQ` and `Y2MYEM9E` measured 2–4 s against a
+SimHub replay.
 
 ### Keepalive is mandatory on a dedicated lane
 

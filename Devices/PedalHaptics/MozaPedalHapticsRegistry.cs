@@ -134,7 +134,7 @@ namespace MozaPlugin.Devices.PedalHaptics
                 MozaLog.Debug($"[AZOM] Pedal-haptics routed lane on {portLabel} rebound to a new pipe");
             }
 
-            controller.StartWorker();
+            controller.StartEffects();
             controller.SendPresenceProbe();
             MozaLog.Debug($"[AZOM] Pedal-haptics routed lane registered on {portLabel}");
         }

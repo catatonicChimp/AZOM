@@ -83,7 +83,7 @@ namespace MozaPlugin
             // position-merge path (which writes to _data) doesn't race.
             try { _mboosterRegistry?.Dispose(); _mboosterRegistry = null; } catch { }
             try { DisposeRoutedMBoosterProbes(); } catch { }
-            // Pedal-haptics units — Dispose stops each motor loop, which sends
+            // Pedal-haptics units — Dispose stops each unit's effect output, which queues
             // the disable frames before the pipe goes away.
             try { _pedalHapticsRegistry?.Dispose(); _pedalHapticsRegistry = null; } catch { }
             // Motion controller — drops a running platform to standby before closing.

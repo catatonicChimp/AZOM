@@ -109,7 +109,7 @@ namespace MozaPlugin.Protocol
         // Nominal stuffed size of a live LED frame, for the write budget check.
         internal const int NominalFrameBytes = 28;
         // A zone waiting this long jumps the priority order. A full RPM turn is ~5 frames
-        // (~20 ms at 4 ms pacing), doubled when alternating with the FIFO.
+        // (~20 ms at 4 ms pacing), longer when other paced lanes take turns.
         private const long StarveMs = 50;
 
         private sealed class Zone
