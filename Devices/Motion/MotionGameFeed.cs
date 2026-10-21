@@ -21,6 +21,7 @@ namespace MozaPlugin.Devices.Motion
     {
         private const double DegToRad = Math.PI / 180.0;
         private const int GearPulseMs = 120;
+        private const double EngineOffRpm = 100.0;
 
         // f8..f11 (LF, LR, RR, RF) for games without per-corner suspension:
         // base + long·a + lat·b + vert·c + speed²·d, a least-squares fit to Motion Manager's
@@ -91,7 +92,8 @@ namespace MozaPlugin.Devices.Motion
             }
             f.BrakePercent = Percent(d.Brake);
             f.ThrottlePercent = Percent(d.Throttle);
-            f.EngineRpm = (float)Math.Max(0.0, d.Rpms);
+            // Engine off: no tone. Motion Manager keeps its 25 Hz idle buzz here; testers prefer silence.
+            f.EngineRpm = d.Rpms > EngineOffRpm ? (float)d.Rpms : -1f;
             f.Throttle = (float)(d.Throttle / 100.0);
 
             string gear = d.Gear ?? string.Empty;

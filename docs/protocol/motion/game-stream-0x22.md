@@ -103,8 +103,10 @@ No frame while the game is not running or paused: the lane then sends the neutra
 
 Each live frame is followed by a `0x22/09` engine vibration frame (below) built from SimHub's
 `Rpms` and `Throttle`, scaled by the profile's Engine vibration and Tactile feedback values (else
-50 % and the controller's haptic intensity, i.e. the gt3 level); when live frames stop, and on
-disengage, one zero-gain `0x22/09` follows.
+50 % and the controller's haptic intensity, i.e. the gt3 level). Unlike Motion Manager it sends
+no tone while the engine is off (`Rpms` ≤ 100, the bridge's cut-off): testers found Motion
+Manager's 25 Hz buzz before ignition and after a stall unwanted. When live frames stop, the
+engine stops, and on disengage, one zero-gain `0x22/09` follows.
 
 ## `0x22/09` — engine vibration, 51-byte payload, ~30 Hz
 
