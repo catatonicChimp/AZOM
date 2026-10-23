@@ -3011,26 +3011,33 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="22,18,22,8">
                     <StackPanel>
 
-                        <!-- Input mode + mechanical layout, side by side. The tab
-                             only shows when the AB9 is connected, so the old
-                             status header was redundant and has been dropped. -->
+                        <!-- Input mode + layout pickers (left) · live gate (right). -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <ctrl:SectionCard Grid.Column="0" Margin="0,0,7,14"
-                                              Title="{x:Static res:Strings.Section_Ab9InputMode}" Icon="{StaticResource IconShift}">
-                                <ComboBox x:Name="Ab9InputModeCombo" Margin="0,4" HorizontalAlignment="Stretch"
-                                          SelectionChanged="Ab9InputModeCombo_Changed">
-                                    <ComboBoxItem Content="{x:Static res:Strings.Option_Ab9Shifter}" Tag="1"/>
-                                    <ComboBoxItem Content="{x:Static res:Strings.Option_Ab9FlightSim}" Tag="0"/>
-                                </ComboBox>
-                            </ctrl:SectionCard>
-                            <ctrl:SectionCard Grid.Column="1" Margin="7,0,0,14"
-                                              Title="{x:Static res:Strings.Section_MechanicalLayout}" Icon="{StaticResource IconShift}">
-                                <StackPanel>
-                                    <ComboBox x:Name="Ab9ModeCombo" Margin="0,4" HorizontalAlignment="Stretch"
+                                              Title="{x:Static res:Strings.Section_ShifterSettings}" Icon="{StaticResource IconShift}">
+                                <Grid VerticalAlignment="Top">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static res:Strings.Section_Ab9InputMode}"
+                                               Style="{StaticResource SliderLabel}" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="Ab9InputModeCombo" Grid.Row="0" Grid.Column="1" Margin="0,4"
+                                              SelectionChanged="Ab9InputModeCombo_Changed">
+                                        <ComboBoxItem Content="{x:Static res:Strings.Option_Ab9Shifter}" Tag="1"/>
+                                        <ComboBoxItem Content="{x:Static res:Strings.Option_Ab9FlightSim}" Tag="0"/>
+                                    </ComboBox>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static res:Strings.Label_ShifterType}"
+                                               Style="{StaticResource SliderLabel}" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="Ab9ModeCombo" Grid.Row="1" Grid.Column="1" Margin="0,4"
                                               SelectionChanged="Ab9ModeCombo_Changed">
                                         <!-- Tag = the 0x1F/D3 layout byte. Ordered by that byte,
                                              which interleaves the R+n layouts with the n+R ones. -->
@@ -3045,9 +3052,12 @@
                                         <ComboBoxItem Content="{x:Static res:Strings.Option_Ab9LayoutR8}"  Tag="8"/>
                                         <ComboBoxItem Content="{x:Static res:Strings.Option_Sequential}"   Tag="9"/>
                                     </ComboBox>
-                                    <!-- Live gate for the selected layout; engaged gear from the AB9 HID. -->
-                                    <ctrl:Ab9GateView x:Name="Ab9GateView" Height="130" Margin="0,10,0,4" Visibility="Collapsed"/>
-                                </StackPanel>
+                                </Grid>
+                            </ctrl:SectionCard>
+                            <ctrl:SectionCard Grid.Column="1" Margin="7,0,0,14"
+                                              Title="{x:Static res:Strings.Section_MechanicalLayout}" Icon="{StaticResource IconShift}">
+                                <!-- Live gate for the selected layout; engaged gear from the AB9 HID. -->
+                                <ctrl:Ab9GateView x:Name="Ab9GateView" Height="130" Margin="0,4" Visibility="Collapsed"/>
                             </ctrl:SectionCard>
                         </Grid>
 
