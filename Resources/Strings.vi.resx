@@ -265,6 +265,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Tự động kiểm tra cập nhật</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Kênh phát hành</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Ổn định</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Tiếp tục dùng bản beta</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Kiểm tra ngay</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Chưa từng kiểm tra</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Đang kiểm tra…</value></data>

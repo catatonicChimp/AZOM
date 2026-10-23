@@ -292,6 +292,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Yip!</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Wuff!</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Snarf!</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Arf arf!</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Yap!</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Wroof!</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Barff…</value></data>

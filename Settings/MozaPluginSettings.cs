@@ -451,6 +451,11 @@ namespace MozaPlugin.Settings
         // has been fetched this session. Empty for the stable channel.
         public string UpdateChannelLabel { get; set; } = "";
 
+        // Auto-select the newest open PR channel titled "beta" on every check
+        // (stable while none is open) instead of dropping to stable for good
+        // when the tracked PR closes. See UpdateCheckService.ResolveBetaChannelId.
+        public bool FollowBetaChannel { get; set; } = false;
+
         // Version the user clicked "Skip this version" on — the banner stays
         // hidden as long as the latest published version still equals this
         // string. When a newer version appears the banner re-shows.

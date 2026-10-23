@@ -270,6 +270,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Buscar actualizaciones automáticamente</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Canal de versiones</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Estable</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Permanecer en versiones beta</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Buscar ahora</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Nunca comprobado</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Comprobando…</value></data>

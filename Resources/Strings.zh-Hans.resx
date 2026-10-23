@@ -265,6 +265,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>自动检查更新</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>发布通道</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>稳定版</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>保持使用测试版</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>立即检查</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>从未检查</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>正在检查…</value></data>

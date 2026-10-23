@@ -265,6 +265,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Αυτόματος έλεγχος για ενημερώσεις</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Κανάλι έκδοσης</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Σταθερό</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Παραμονή στις εκδόσεις beta</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Έλεγχος τώρα</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Δεν έγινε ποτέ έλεγχος</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Έλεγχος…</value></data>

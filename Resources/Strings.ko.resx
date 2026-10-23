@@ -265,6 +265,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>자동으로 업데이트 확인</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>릴리스 채널</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>안정</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>베타 릴리스 유지</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>지금 확인</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>확인한 적 없음</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>확인 중…</value></data>

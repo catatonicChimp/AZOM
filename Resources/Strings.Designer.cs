@@ -369,6 +369,7 @@ namespace MozaPlugin.Resources
         public static string Label_CheckForUpdates => Get("Label_CheckForUpdates");
         public static string Label_ReleaseChannel => Get("Label_ReleaseChannel");
         public static string Option_ReleaseChannelStable => Get("Option_ReleaseChannelStable");
+        public static string Label_FollowBetaChannel => Get("Label_FollowBetaChannel");
         public static string Button_CheckNow => Get("Button_CheckNow");
         public static string Status_UpdateNeverChecked => Get("Status_UpdateNeverChecked");
         public static string Status_UpdateChecking => Get("Status_UpdateChecking");

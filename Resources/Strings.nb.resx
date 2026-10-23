@@ -270,6 +270,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Sjekk etter oppdateringer automatisk</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Utgivelseskanal</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Stabil</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Bli på betaversjoner</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Sjekk nå</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Aldri sjekket</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Sjekker…</value></data>

@@ -294,6 +294,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Check for updates automatically</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Release channel</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Stable</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Stay on beta releases</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Check now</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Never checked</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Checking…</value></data>
