@@ -353,7 +353,25 @@ namespace MozaPlugin.Protocol
         // after switch" symptom on issue #43.
         private readonly ConcurrentQueue<byte[]> _priorityQueue = new ConcurrentQueue<byte[]>();
         // One-shot lane: FIFO + 4 ms burst pacing (bases drop unpaced rapid writes).
-        private readonly ConcurrentQueue<byte[]> _oneShotQueue = new ConcurrentQueue<byte[]>();
+        private readonly ConcurrentQueue<OneShotFrame> _oneShotQueue = new ConcurrentQueue<OneShotFrame>();
+        // Enqueue counter for the one-shot lane, and the FlushPendingWrites watermark:
+        // non-device frames enqueued at or below it are discarded by the write loop.
+        private long _oneShotSeq;
+        private long _oneShotFlushSeq;
+
+        private readonly struct OneShotFrame
+        {
+            public readonly byte[] Frame;
+            public readonly long Seq;
+            // Settings reads/writes/probes from MozaDeviceManager. Survive FlushPendingWrites:
+            // the telemetry pipeline's stop must not discard them (bundle TPEA51GB — a
+            // sender start flushed the connect-time profile writes).
+            public readonly bool DeviceCommand;
+            public OneShotFrame(byte[] frame, long seq, bool deviceCommand)
+            {
+                Frame = frame; Seq = seq; DeviceCommand = deviceCommand;
+            }
+        }
         // Stream lane: per-kind latest-wins slots, unpaced. SendStream overwrites pending values.
         private readonly byte[]?[] _streamSlots = new byte[StreamSlotCount][];
 
@@ -1081,7 +1099,17 @@ namespace MozaPlugin.Protocol
             // Nothing drains the lanes while the I/O threads are down (Disconnect);
             // FinishOpen dropped anything queued in that window anyway.
             if (message != null && _running)
-                _oneShotQueue.Enqueue(message);
+                _oneShotQueue.Enqueue(new OneShotFrame(message, Interlocked.Increment(ref _oneShotSeq), false));
+        }
+
+        /// <summary>
+        /// <see cref="Send"/> for device settings commands (reads, writes, probes).
+        /// Same paced FIFO, but kept by <see cref="FlushPendingWrites"/>.
+        /// </summary>
+        public void SendDeviceCommand(byte[] message)
+        {
+            if (message != null && _running)
+                _oneShotQueue.Enqueue(new OneShotFrame(message, Interlocked.Increment(ref _oneShotSeq), true));
         }
 
         /// <summary>
@@ -1123,11 +1151,18 @@ namespace MozaPlugin.Protocol
         // unlocked _port.Write there (SerialPort is not thread-safe).
         private volatile bool _flushRequested;
 
-        /// <summary>Drop priority + one-shot FIFOs + all stream slots + LED zones + the OS write buffer (Stop button halts the wheel instantly).</summary>
+        /// <summary>Drop priority + one-shot FIFOs + all stream slots + LED zones + the OS write buffer (Stop button halts the wheel instantly).
+        /// Queued device commands (<see cref="SendDeviceCommand"/>) are kept.</summary>
         public void FlushPendingWrites()
         {
             while (_priorityQueue.TryDequeue(out _)) { }
-            while (_oneShotQueue.TryDequeue(out _)) { }
+            long seq = Interlocked.Read(ref _oneShotSeq);
+            long prev;
+            do
+            {
+                prev = Interlocked.Read(ref _oneShotFlushSeq);
+                if (seq <= prev) break;
+            } while (Interlocked.CompareExchange(ref _oneShotFlushSeq, seq, prev) != prev);
             for (int k = 0; k < _streamSlots.Length; k++)
                 Interlocked.Exchange(ref _streamSlots[k], null);
             // The OS-buffer discard may eat LED frames already counted as sent.
@@ -1707,6 +1742,11 @@ namespace MozaPlugin.Protocol
             // the source lane.
             int pacedTurn = PacedLaneLed;
             int sourceTurn = 0;
+            // Device commands handed to the port, keyed by the wire-byte offset each
+            // ended at, so a DiscardOutBuffer can re-send the ones it ate; and the
+            // re-send queue, drained ahead of the one-shot FIFO.
+            var recentDeviceWrites = new Queue<KeyValuePair<long, byte[]>>();
+            var resendDeviceFrames = new Queue<byte[]>();
 
             while (_running && gen == Volatile.Read(ref _ioGeneration))
             {
@@ -1717,8 +1757,11 @@ namespace MozaPlugin.Protocol
                 if (_flushRequested)
                 {
                     _flushRequested = false;
+                    int unsent = -1;
+                    try { unsent = _port?.BytesToWrite ?? -1; } catch { }
                     try { _port?.DiscardOutBuffer(); }
                     catch (Exception ex) { MozaLog.Debug($"[AZOM] DiscardOutBuffer: {ex.Message}"); }
+                    RequeueDiscardedDeviceCommands(recentDeviceWrites, resendDeviceFrames, unsent);
                 }
 
                 // 0) Priority lane: drain all queued fc:00 acks first, unpaced.
@@ -1762,7 +1805,7 @@ namespace MozaPlugin.Protocol
                     break;
                 }
                 bool ledReady = Leds.MayHaveWork;
-                bool fifoReady = !_oneShotQueue.IsEmpty;
+                bool fifoReady = resendDeviceFrames.Count > 0 || !_oneShotQueue.IsEmpty;
                 int lane = -1;
                 for (int k = 0; k < PacedLaneCount && lane < 0; k++)
                 {
@@ -1775,7 +1818,8 @@ namespace MozaPlugin.Protocol
 
                 if (lane == PacedLaneFifo)
                 {
-                    if (gen == Volatile.Read(ref _ioGeneration) && _oneShotQueue.TryDequeue(out var msg))
+                    if (gen == Volatile.Read(ref _ioGeneration)
+                        && TryDequeueOneShot(resendDeviceFrames, out var msg, out bool deviceCommand))
                     {
                         pacedTurn = (lane + 1) % PacedLaneCount;
                         int stuffedSize = MozaProtocol.StuffedFrameSize(msg);
@@ -1784,6 +1828,8 @@ namespace MozaPlugin.Protocol
                         int written = WriteFrame(msg, ref stuffBuf, stuffedSize);
                         if (written > 0)
                         {
+                            if (deviceCommand)
+                                RecordDeviceWrite(recentDeviceWrites, msg);
                             writeCount++;
                             if (writeCount <= 5)
                                 MozaLog.Debug($"[AZOM] Sent cmd #{writeCount}: {msg.Length} bytes, group=0x{(msg.Length > 2 ? msg[2] : 0):X2}");
@@ -1861,6 +1907,73 @@ namespace MozaPlugin.Protocol
             }
         }
 
+        /// <summary>Next one-shot frame to write: device commands a DiscardOutBuffer ate
+        /// first, then the FIFO, skipping frames FlushPendingWrites dropped.</summary>
+        private bool TryDequeueOneShot(Queue<byte[]> resend, out byte[] frame, out bool deviceCommand)
+        {
+            deviceCommand = true;
+            if (resend.Count > 0)
+            {
+                frame = resend.Dequeue();
+                return true;
+            }
+            while (_oneShotQueue.TryDequeue(out var entry))
+            {
+                if (entry.DeviceCommand || entry.Seq > Interlocked.Read(ref _oneShotFlushSeq))
+                {
+                    frame = entry.Frame;
+                    deviceCommand = entry.DeviceCommand;
+                    return true;
+                }
+            }
+            frame = null!;
+            return false;
+        }
+
+        // Wire bytes handed to the port by the write thread.
+        private long _txWireBytes;
+
+        // Older device writes than this many wire bytes back have drained: it exceeds
+        // the 16 KB SerialPort write buffer and any driver TX queue we sit on.
+        private const long DeviceWriteResendWindowBytes = 32 * 1024;
+
+        private void RecordDeviceWrite(Queue<KeyValuePair<long, byte[]>> recent, byte[] frame)
+        {
+            recent.Enqueue(new KeyValuePair<long, byte[]>(Interlocked.Read(ref _txWireBytes), frame));
+            PruneDeviceWrites(recent);
+        }
+
+        private void PruneDeviceWrites(Queue<KeyValuePair<long, byte[]>> recent)
+        {
+            while (recent.Count > 0 && Interlocked.Read(ref _txWireBytes) - recent.Peek().Key > DeviceWriteResendWindowBytes)
+                recent.Dequeue();
+        }
+
+        /// <summary>
+        /// After a DiscardOutBuffer, queue for re-send every device command that may
+        /// not have fully left: those ending inside the <paramref name="unsentBytes"/>
+        /// the driver still held, or — when the port can't say — every one inside the
+        /// resend window. A re-sent command that had in fact gone out is a repeat of the
+        /// same read or write, which is harmless; a lost one is a silently dropped setting.
+        /// </summary>
+        private void RequeueDiscardedDeviceCommands(Queue<KeyValuePair<long, byte[]>> recent,
+                                                    Queue<byte[]> resend, int unsentBytes)
+        {
+            PruneDeviceWrites(recent);
+            long cutoff = unsentBytes >= 0 ? Interlocked.Read(ref _txWireBytes) - unsentBytes : long.MinValue;
+            int n = 0;
+            foreach (var kv in recent)
+            {
+                if (kv.Key <= cutoff) continue;
+                resend.Enqueue(kv.Value);
+                n++;
+            }
+            recent.Clear();
+            if (n > 0)
+                MozaLog.Debug($"[AZOM] Re-sending {n} device command(s) discarded from the OS write buffer "
+                              + $"(unsent={(unsentBytes >= 0 ? unsentBytes.ToString() : "unknown")})");
+        }
+
         // Paced-lane round-robin order.
         private const int PacedLaneLed = 0;
         private const int PacedLaneSource = 1;
@@ -1903,6 +2016,7 @@ namespace MozaPlugin.Protocol
                     return -1;
                 }
                 port.Write(stuffBuf, 0, len);
+                Interlocked.Add(ref _txWireBytes, len);
                 Interlocked.Exchange(ref _consecutiveIoErrors, 0);
                 SerialTrafficCapture.Instance.RecordTx(CaptureLabel, msg);
                 _budget.Record(len);

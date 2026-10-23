@@ -14,6 +14,8 @@ namespace MozaPlugin.Protocol
     {
         bool IsOpen { get; }
         int BytesToRead { get; }
+        /// <summary>Bytes the driver still holds for transmission; -1 when unknown.</summary>
+        int BytesToWrite { get; }
         /// <summary>True when <see cref="Read"/> returns whatever is buffered
         /// right now (possibly zero bytes) instead of blocking until the
         /// requested count arrives or a timeout expires. Ports that return

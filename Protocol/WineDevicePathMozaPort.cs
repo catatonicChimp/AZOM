@@ -199,6 +199,19 @@ namespace MozaPlugin.Protocol
             }
         }
 
+        public int BytesToWrite
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    if (_closed) return 0;
+                    if (!ClearCommError(_handle, out _, out COMSTAT st)) return -1;
+                    return (int)st.cbOutQue;
+                }
+            }
+        }
+
         public int Read(byte[] buffer, int offset, int count)
         {
             if (count <= 0) return 0;

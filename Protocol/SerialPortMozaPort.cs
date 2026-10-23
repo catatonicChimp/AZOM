@@ -33,6 +33,14 @@ namespace MozaPlugin.Protocol
         // BytesToRead gate in ReadLoop.
         public bool ReadReturnsImmediately => false;
         public int BytesToRead => _sp.BytesToRead;
+        public int BytesToWrite
+        {
+            get
+            {
+                try { return _sp.BytesToWrite; }
+                catch { return -1; }
+            }
+        }
         public int Read(byte[] buffer, int offset, int count) => _sp.Read(buffer, offset, count);
         public void Write(byte[] buffer, int offset, int count) => _sp.Write(buffer, offset, count);
         public void DiscardInBuffer() => _sp.DiscardInBuffer();

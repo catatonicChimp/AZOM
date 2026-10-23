@@ -647,22 +647,22 @@ namespace MozaPlugin
                     var conn = _connection;
                     if (conn != null && conn.IsConnected)
                     {
-                        try { PendingResponses.TickRetransmits(conn.Send); }
+                        try { PendingResponses.TickRetransmits(conn.SendDeviceCommand); }
                         catch (Exception ex) { MozaLog.Warn($"[AZOM] PendingResponseTracker tick failed: {ex.Message}"); }
                     }
                     if (_hubManager != null && _hubManager.IsConnected)
                     {
-                        try { _hubManager.PendingResponses?.TickRetransmits(_hubManager.Connection.Send); }
+                        try { _hubManager.PendingResponses?.TickRetransmits(_hubManager.Connection.SendDeviceCommand); }
                         catch (Exception ex) { MozaLog.Warn($"[AZOM] Hub PendingResponseTracker tick failed: {ex.Message}"); }
                     }
                     if (_baseManager != null && _baseManager.IsConnected)
                     {
-                        try { _baseManager.PendingResponses?.TickRetransmits(_baseManager.Connection.Send); }
+                        try { _baseManager.PendingResponses?.TickRetransmits(_baseManager.Connection.SendDeviceCommand); }
                         catch (Exception ex) { MozaLog.Warn($"[AZOM] Base-aux PendingResponseTracker tick failed: {ex.Message}"); }
                     }
                     if (_dashboardManager != null && _dashboardManager.IsConnected)
                     {
-                        try { _dashboardManager.PendingResponses.TickRetransmits(_dashboardManager.Connection.Send); }
+                        try { _dashboardManager.PendingResponses.TickRetransmits(_dashboardManager.Connection.SendDeviceCommand); }
                         catch (Exception ex) { MozaLog.Warn($"[AZOM] Dashboard PendingResponseTracker tick failed: {ex.Message}"); }
                     }
                     // Each standalone-peripheral pipe retransmits its own tracked

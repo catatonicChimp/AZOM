@@ -258,7 +258,7 @@ namespace MozaPlugin.Devices
             if (payload != null)
                 System.Buffer.BlockCopy(payload, 0, frame, 4, payloadLen);
             frame[frame.Length - 1] = MozaProtocol.CalculateWireChecksum(frame, frame.Length - 1);
-            _connection.Send(frame);
+            _connection.SendDeviceCommand(frame);
         }
 
         /// <summary>
@@ -391,7 +391,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildReadMessage(deviceId);
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             Tracker?.Track(
                 cmd.Name, msg, ReadRetryBackoffMs, ReadRetryMaxAttempts);
             return true;
@@ -404,7 +404,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildReadMessage(GetDeviceId(cmd.DeviceType));
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             Tracker?.Track(
                 cmd.Name, msg, ReadRetryBackoffMs, ReadRetryMaxAttempts);
             return true;
@@ -425,7 +425,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildReadMessage(GetDeviceId(cmd.DeviceType));
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             return true;
         }
 
@@ -436,7 +436,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildWriteInt(GetDeviceId(cmd.DeviceType), value);
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             return true;
         }
 
@@ -447,7 +447,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildWriteFloat(GetDeviceId(cmd.DeviceType), value);
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             return true;
         }
 
@@ -458,7 +458,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildWriteMessage(GetDeviceId(cmd.DeviceType), payload);
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             return true;
         }
 
@@ -483,7 +483,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildWriteInt(deviceId, value);
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             return true;
         }
 
@@ -494,7 +494,7 @@ namespace MozaPlugin.Devices
             if (cmd == null) return false;
             var msg = cmd.BuildWriteMessage(deviceId, payload);
             if (msg == null) return false;
-            _connection.Send(msg);
+            _connection.SendDeviceCommand(msg);
             return true;
         }
 
