@@ -15,6 +15,7 @@ All notable changes to the AZOM plugin are documented here.
 - **In-app updates restart SimHub automatically** once the install finishes.
 - **Stalk button debounce slider** in truck-sim mode, for levers whose contacts bounce.
 - **Guides card on the Help tab** links every online guide.
+- **First RPM LED pulses blue while dashboard channels negotiate;** wheel LEDs are no longer throttled meanwhile.
 
 ## Fixed
 
