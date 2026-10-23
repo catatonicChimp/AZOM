@@ -527,7 +527,7 @@ Built inline by [`MozaMBoosterProtocol.BuildMotorFrame`](../../../Protocol/MozaM
 | ID  | Name      | ParamK | Trigger condition (host-side, doc § 4)                                                                   |
 | --- | --------- | ------ | -------------------------------------------------------------------------------------------------------- |
 | `1` | ABS       | 2000   | `absActive > 0.1` from SimHub                                                                            |
-| `2` | Lockup    | 2640   | Heavy brake (>0.8) + wheels < 30 % of vehicle speed (fallback: brake > 0.9 when wheel speed unavailable) |
+| `2` | Lockup    | 2640   | Heavy brake (>0.8) + slowest wheel < 30 % of ground speed; off when the game has no per-wheel speed      |
 | `3` | Threshold | 3080   | Rising edge on brake > 0.6; release at < 0.3 (hysteresis)                                                |
 | `4` | Engine    | 1000   | `rpm > 0.8 × idleRpm` — runs continuously                                                                |
 
@@ -1099,9 +1099,8 @@ verified.
 
 Unlike ABS/Engine/Road Texture, Lockup's *activation* gate is
 untouched — it's the most sophisticated of the four (wheel-slip
-detection: `brake > 0.8 && vehicleSpeed > 5 && avgWheelSpeed <
-vehicleSpeed * 0.3`, with a fallback for games that don't expose
-per-wheel speeds). Only the frequency computation changed; the
+detection: `brake > 0.8 && groundSpeed > 5 && minWheelSpeed <
+groundSpeed * 0.3`; see "Wheel-speed source" under Wheel Spin). Only the frequency computation changed; the
 detection heuristic that decides *whether* to fire is exactly what it
 was before. The sustained Test toggle bypasses that heuristic entirely
 (same substitution the old 1s pulse used — live brake position stands
@@ -2421,18 +2420,29 @@ acceleration-side counterpart to Lockup's braking-side heuristic (see
 "Lockup rebuild" above):
 
 ```text
-isSpinning = throttle > 0.8 && vehicleSpeed < 40 && avgWheelSpeed > vehicleSpeed * 1.3
+isSpinning = throttle > 0.8 && groundSpeed < 40
+          && maxWheelSpeed > groundSpeed * 1.3 && maxWheelSpeed - groundSpeed > 2
 ```
 
-gated to `vehicleSpeed < 40` m/s (~144 km/h) since wheelspin is a
+gated to `groundSpeed < 40` m/s (~144 km/h) since wheelspin is a
 low/mid-speed launch or corner-exit phenomenon, not something that
-should fire from flooring the throttle at speed in a tall gear. Same
-fallback rationale as Lockup: `AvgWheelSpeedMs` is currently always 0
-in this plugin (`MozaPlugin.DataUpdate` hardcodes it — no per-wheel
-speed telemetry is wired up yet), so the primary condition never
-actually fires yet; a fallback (`avgWheelSpeed <= 0 && throttle > 0.9 &&
-vehicleSpeed < 40`) carries the real behavior today, same as Lockup's
-own fallback does. The sustained Test toggle substitutes live throttle
+should fire from flooring the throttle at speed in a tall gear. The
+2 m/s absolute margin keeps ordinary launch slip near standstill out.
+
+**Wheel-speed source.** `MozaPlugin.DataUpdate` reads SimHub's
+`NewData.FeedbackData.WheelSpeed[4]` (km/h, written by the game reader)
+and passes the fastest/slowest wheel plus `FeedbackData.GroundSpeed`
+(falling back to `SpeedKmh`, which some readers derive from wheel
+speed). The arrays are only trusted when
+`GameManager.GetFeedbackCapabilities().WheelsSpeed` is true (cached per
+manager, refreshed once a second). SimHub 9.13 declares it for
+the Codemasters reader (F1 2017–25, EA WRC), rFactor 2 / LMU, RaceRoom, GT7, BeamNG, RBR,
+Project Motor Racing and Wreckfest 2, but not iRacing or AC/ACC. Without
+it, Wheel Spin and Lockup stay off: an earlier fallback fired from pedal
+position alone (throttle > 0.9 / brake > 0.9) and buzzed on every
+launch and hard stop (ticket BRE60X3R). `FeedbackData.WheelSlip` is not
+used; its scale differs per reader (AC slip magnitude, rF2
+`1 - gripFract`, F1 signed slip ratio). The sustained Test toggle substitutes live throttle
 position (via the same `EffectiveThrottle` helper Traction Control
 uses), gated at 80% throttle.
 

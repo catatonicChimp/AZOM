@@ -57,6 +57,7 @@ namespace MozaPlugin.Devices.MBooster
         // Wheel Spin shares Engine's wire shape too (see
         // ProcessWheelSpinEffect) — same cap as ABS/Traction Control.
         private const double WheelSpinScaleMax = 0.10;
+        private const double WheelSpinMinSlipMs = 2.0;
         // Gear Shift shares Engine's wire shape too (see
         // ProcessGearShiftEffect) — same cap as the other Engine-slot
         // reusers.
@@ -886,20 +887,16 @@ namespace MozaPlugin.Devices.MBooster
             }
 
             double throttle = Clamp01(snap.Throttle);
-            double vehicleSpeed = Math.Abs(snap.VehicleSpeedMs);
-            double avgWheelSpeed = Math.Abs(snap.AvgWheelSpeedMs);
+            double groundSpeed = Math.Abs(snap.GroundSpeedMs);
 
-            bool isSpinning = throttle > 0.8
-                           && vehicleSpeed < 40
-                           && avgWheelSpeed > vehicleSpeed * 1.3;
-
-            // Fallback path: many games don't expose per-wheel speeds (see
-            // UpdateLockupRequest's identical fallback rationale). If
-            // avgWheelSpeedMs is zero AND the driver is flooring the
-            // throttle at low/mid speed, treat as probable wheelspin so the
-            // effect still fires meaningfully.
-            if (!isSpinning && avgWheelSpeed <= 0 && throttle > 0.9 && vehicleSpeed < 40)
-                isSpinning = true;
+            // Fastest wheel (the driven one) well above ground speed; the
+            // absolute margin keeps normal launch slip near standstill out.
+            // No wheel-speed data → no effect.
+            bool isSpinning = snap.HasWheelSpeeds
+                           && throttle > 0.8
+                           && groundSpeed < 40
+                           && snap.MaxWheelSpeedMs > groundSpeed * 1.3
+                           && snap.MaxWheelSpeedMs - groundSpeed > WheelSpinMinSlipMs;
 
             if (!isSpinning)
             {
@@ -1049,18 +1046,14 @@ namespace MozaPlugin.Devices.MBooster
             }
 
             double brake = Clamp01(snap.Brake);
-            double vehicleSpeed = Math.Abs(snap.VehicleSpeedMs);
-            double avgWheelSpeed = Math.Abs(snap.AvgWheelSpeedMs);
+            double groundSpeed = Math.Abs(snap.GroundSpeedMs);
 
-            bool isLocking = brake > 0.8
-                          && vehicleSpeed > 5
-                          && avgWheelSpeed < vehicleSpeed * 0.3;
-
-            // Fallback path: many games don't expose per-wheel speeds. If
-            // avgWheelSpeedMs is zero AND vehicle is moving heavily braked,
-            // treat as a probable lockup so the effect still fires meaningfully.
-            if (!isLocking && avgWheelSpeed <= 0 && brake > 0.9 && vehicleSpeed > 5)
-                isLocking = true;
+            // Any one wheel well below ground speed. No wheel-speed data → no
+            // effect; guessing from pedal position alone fires on every hard stop.
+            bool isLocking = snap.HasWheelSpeeds
+                          && brake > 0.8
+                          && groundSpeed > 5
+                          && snap.MinWheelSpeedMs < groundSpeed * 0.3;
 
             if (!isLocking)
             {
