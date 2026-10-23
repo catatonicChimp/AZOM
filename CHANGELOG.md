@@ -19,6 +19,7 @@ All notable changes to the AZOM plugin are documented here.
 ## Fixed
 
 - **Pedal haptics no longer lag seconds behind the game** with several ShakeIt effects active.
+- **GS V2 Pro wheels reporting "GS" show as MOZA GS V2 Pro again;** the leftover "MOZA GS" definition that hid it is removed, existing devices carry over.
 - **mBooster Wheel Spin and Lockup no longer fire on every full throttle or hard stop;** they need per-wheel speed from the game and stay off without it (e.g. iRacing).
 - **No false "not added in SimHub" banner after switching games** for pedal haptics, wheelbase and dash devices.
 - **mBooster damping no longer flips between the plain and segmented settings;** the plain sliders replace the graphs when segmented damping is off.
