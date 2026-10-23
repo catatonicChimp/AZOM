@@ -34,6 +34,13 @@ namespace MozaPlugin.Protocol
         /// them without colliding with the wheel's own button indices.
         /// </summary>
         Stalks = 3,
+        /// <summary>
+        /// AB9 / AB6 active shifter (PID 0x1000 / 0x1002). Only its buttons are
+        /// read — one per gear (see docs/protocol/devices/ab9-shifter.md § HID
+        /// input report) — into <c>MozaData.Ab9ButtonStates</c>, never the wheel
+        /// button array. Its axes are idle and not consumed.
+        /// </summary>
+        Ab9 = 4,
     }
 
     /// <summary>Reads physical input positions from Moza HID devices (VID 0x346E).</summary>
@@ -149,6 +156,7 @@ namespace MozaPlugin.Protocol
             try { _thread?.Join(2000); } catch { }
             _thread = null;
             _data.IsHidConnected = false;
+            _data.IsAb9HidConnected = false;
         }
 
         /// <summary>
@@ -195,6 +203,7 @@ namespace MozaPlugin.Protocol
             {
                 var devices = FindMozaDevices();
                 _data.IsStalksConnected = devices.Any(d => d.Item3 == MozaHidClass.Stalks);
+                _data.IsAb9HidConnected = false;
                 if (devices.Count == 0)
                 {
                     _data.IsHidConnected = false;
@@ -223,6 +232,7 @@ namespace MozaPlugin.Protocol
                         TrackStream(stream, (ushort)device.ProductID);
                         openPaths.Add(DevicePathOf(device));
                         if (deviceClass == MozaHidClass.Stalks) _data.IsStalksConnected = true;
+                        if (deviceClass == MozaHidClass.Ab9) _data.IsAb9HidConnected = true;
 
                         bool isHandbrake = MozaUsbIds.IsHandbrakePid((ushort)device.ProductID);
                         string idCapture = identity;
@@ -310,6 +320,7 @@ namespace MozaPlugin.Protocol
                 }
 
                 _data.IsHidConnected = false;
+                _data.IsAb9HidConnected = false;
                 SleepInterruptible(1000);
             }
         }
@@ -344,8 +355,9 @@ namespace MozaPlugin.Protocol
         /// treated as <see cref="MozaHidClass.Standard"/>; mBooster (PID 0x0008)
         /// is tagged with <see cref="MozaHidClass.MBooster"/> + a stable identity
         /// extracted from <see cref="HidDevice.DevicePath"/> so the registry
-        /// can pair the HID device with its serial-port sibling. AB9 / shifter
-        /// PIDs are skipped (no axes we consume). Unknown Moza PIDs are admitted
+        /// can pair the HID device with its serial-port sibling. The AB9 / AB6 is
+        /// <see cref="MozaHidClass.Ab9"/> (gear buttons only); passive shifter
+        /// PIDs are skipped. Unknown Moza PIDs are admitted
         /// optimistically so future hardware works without a code change.
         ///
         /// VID-based matching replaces an earlier friendly-name regex, which
@@ -356,11 +368,12 @@ namespace MozaPlugin.Protocol
         /// handbrake bars stayed blank.
         /// </summary>
         /// <summary>Whether the reader consumes this PID's HID (unknown PIDs
-        /// admitted for forward-compat; AB9 / shifter / dashboard skipped).</summary>
+        /// admitted for forward-compat; passive shifter / dashboard skipped).</summary>
         internal static bool ReadsPid(ushort pid)
         {
             switch (MozaUsbIds.Categorize(pid))
             {
+                case MozaDeviceCategory.Ab9:
                 case MozaDeviceCategory.Wheelbase:
                 case MozaDeviceCategory.Pedals:
                 case MozaDeviceCategory.Handbrake:
@@ -394,6 +407,7 @@ namespace MozaPlugin.Protocol
                     if (!ReadsPid(pid)) continue;
                     var category = MozaUsbIds.Categorize(pid);
                     bool isMBooster = category == MozaDeviceCategory.MBooster;
+                    bool isAb9 = category == MozaDeviceCategory.Ab9;
 
                     var usages = new Dictionary<uint, (int min, int max)>();
                     // Usages the filter below rejects, logged so a support bundle
@@ -408,7 +422,8 @@ namespace MozaPlugin.Protocol
                         // first one that streams data at runtime.
                         bool isAxis = (usage >> 16) == 0x0001 && (usage & 0xFFFF) >= 0x30 && (usage & 0xFFFF) <= 0x37;
                         bool isButton = (usage >> 16) == 0x0009;
-                        bool tracked = Array.IndexOf(TrackedUsages, usage) >= 0;
+                        // The AB9's X axis would otherwise land on the steering angle.
+                        bool tracked = !isAb9 && Array.IndexOf(TrackedUsages, usage) >= 0;
                         if (tracked || isButton || (isMBooster && isAxis))
                             usages[usage] = (min, max);
                         else
@@ -432,6 +447,7 @@ namespace MozaPlugin.Protocol
                         var kind = isMBooster ? MozaHidClass.MBooster
                                  : category == MozaDeviceCategory.Pedals ? MozaHidClass.Pedals
                                  : category == MozaDeviceCategory.Stalks ? MozaHidClass.Stalks
+                                 : isAb9 ? MozaHidClass.Ab9
                                  : MozaHidClass.Standard;
                         string identity = isMBooster ? ExtractUsbParentInstance(dev) : "";
                         if (isMBooster)
@@ -622,6 +638,14 @@ namespace MozaPlugin.Protocol
                                         try { StalksButtonChanged?.Invoke(stalkIndex, pressed); } catch { }
                                     }
                                 }
+                                return;
+                            }
+
+                            if (kind == MozaHidClass.Ab9)
+                            {
+                                int ab9Index = (int)(usage & 0xFFFF) - 1;
+                                if (ab9Index >= 0 && ab9Index < MozaData.MaxAb9Buttons)
+                                    _data.Ab9ButtonStates[ab9Index] = pressed;
                                 return;
                             }
 

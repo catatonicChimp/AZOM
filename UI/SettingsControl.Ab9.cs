@@ -92,7 +92,32 @@ namespace MozaPlugin.UI
                 Ab9GearShiftDebounceValue.Text = $"{ab9DbMs} ms";
             }
 
+            RefreshAb9GateView(ab9);
             RefreshAb9StatusProbe();
+        }
+
+        // ===== AB9 live gate =====
+
+        private static readonly Ab9Mode DefaultAb9Mode = new Ab9Settings().Mode;
+
+        // In flight-sim mode the buttons aren't gears, so the gate is hidden.
+        private void RefreshAb9GateView(Ab9Settings ab9)
+        {
+            var data = _data;
+            if (data == null) return;
+
+            if (Ab9GateView.Poll == null)
+            {
+                Ab9GateView.Poll = () =>
+                {
+                    var mode = _plugin.Settings?.ProfileStore?.CurrentProfile?.Ab9?.Mode ?? DefaultAb9Mode;
+                    var b = data.Ab9ButtonStates;
+                    return (mode, Ab9Gear.FromButtons(b), Ab9Gear.SeqUp(b), Ab9Gear.SeqDown(b));
+                };
+            }
+
+            Ab9GateView.Visibility = data.IsAb9HidConnected && ab9.InputMode == Ab9InputMode.Shifter
+                ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // ===== AB9 status probe (diagnostic) =====
