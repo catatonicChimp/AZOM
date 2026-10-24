@@ -35,7 +35,8 @@ namespace MozaPlugin.Telemetry
         /// a catalog chunk landed within the last <see cref="CatalogActiveWindowMs"/>.
         /// The half-duplex 115200 link is contended in that window (our tier-def burst
         /// + the wheel's inbound catalog chunks). The wheel LED keepalive drops to
-        /// bitmask-only re-feeds and the first RPM LED pulses blue as a status indicator.
+        /// bitmask-only re-feeds; see <see cref="WheelInInitialCatalogNegotiation"/> for
+        /// the status LED.
         ///
         /// SELF-CLEARING (falls false ~1.2 s after chunks stop). The prior
         /// phase/_coldStartWheelGatePending version was wrong in both directions: it
@@ -52,6 +53,35 @@ namespace MozaPlugin.Telemetry
                 int since = unchecked(Environment.TickCount - last);
                 return since >= 0 && since < CatalogActiveWindowMs;
             }
+        }
+
+        // Armed per Start cycle; closed for good once that cycle's first catalog
+        // advertisement goes quiet, so later upkeep chunks don't reopen it.
+        private volatile bool _initialNegotiationOpen;
+        private int _initialNegotiationArmMs;
+
+        /// <summary>
+        /// <see cref="WheelInCatalogNegotiation"/> limited to the first advertisement
+        /// after a Start. Drives the wheel's negotiation status LED.
+        /// </summary>
+        internal bool WheelInInitialCatalogNegotiation
+        {
+            get
+            {
+                if (!_initialNegotiationOpen) return false;
+                int last = _catalogParser.LastActivityMs;
+                if (last == 0 || unchecked(last - Volatile.Read(ref _initialNegotiationArmMs)) < 0)
+                    return false;   // nothing advertised yet this cycle
+                if (WheelInCatalogNegotiation) return true;
+                _initialNegotiationOpen = false;
+                return false;
+            }
+        }
+
+        private void ArmInitialNegotiation()
+        {
+            Volatile.Write(ref _initialNegotiationArmMs, Environment.TickCount);
+            _initialNegotiationOpen = true;
         }
 
         private readonly Display.WheelSlotTracker _slotTracker;

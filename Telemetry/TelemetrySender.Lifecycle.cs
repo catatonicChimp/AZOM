@@ -434,6 +434,7 @@ namespace MozaPlugin.Telemetry
         private void InitTickStateAndTransitionToStarting()
         {
             TransitionTo(TelemetryState.Starting, "StartInner: begin");
+            ArmInitialNegotiation();
             _tickCounter = 0;
             _framesSent = 0;
             _frames.ResetSequenceCounter();

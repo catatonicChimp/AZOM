@@ -67,14 +67,14 @@ namespace MozaPlugin.Devices.Led
         internal static readonly TimeSpan LivePathActiveWindow = TimeSpan.FromMilliseconds(750);
 
         // Catalog-negotiation indicator: the first RPM LED pulses blue over the live
-        // frame while the wheel (re)advertises its channel catalog.
+        // frame during the channel catalog advertisement after a telemetry Start or dashboard switch.
         private static readonly int[] NegotiationPulseBlue = { 24, 58, 140, 221, 255, 221, 140, 58 };
         private const int NegotiationPulseStepMs = 150;
         // Display() quiet this long = no live RPM frames; the keepalive timer draws instead.
         private const double NegotiationDisplayIdleMs = 250.0;
-        // Timer-drawn indicator is on the strip (Display() idle). Under _emitLock.
-        private bool _indicatorIdleDrawn;
-        private int _indicatorIdlePhase = -1;
+        // Pulse level on the wire (-1 = none). Kept out of _lastLeds so the keepalive's
+        // lit/hold check never sees it. Under _emitLock.
+        private int _indicatorShown = -1;
 
         /// <summary>
         /// True if any live LED frame went out within <see cref="LivePathActiveWindow"/>.
@@ -466,8 +466,7 @@ namespace MozaPlugin.Devices.Led
             Volatile.Write(ref _flagResend, 0);
             _ledsAwake = false;
             _uploadPaused = false;
-            _indicatorIdleDrawn = false;
-            _indicatorIdlePhase = -1;
+            _indicatorShown = -1;
             // The lane must not replay this state to whatever wheel attaches next.
             var leds = MozaPlugin.Instance?.DeviceManager?.Leds;
             if (leds != null)
@@ -932,13 +931,12 @@ namespace MozaPlugin.Devices.Led
                     ZoneCompensated(rpmBrightness,
                         plugin.WheelLedAppliedBrightnessRpm, plugin.WheelLedMasterBrightness));
 
-                if (isNewWheel && rpmN > 0 && plugin.TelemetrySender?.WheelInCatalogNegotiation == true)
-                    rpmColors = OverlayNegotiationPulse(rpmColors, rpmN);
+                int indicator = isNewWheel && rpmN > 0 ? NegotiationIndicatorLevel(plugin) : -1;
 
                 // --- RPM LEDs ---
-                // A timer-drawn indicator isn't in _lastLeds, so repaint over it.
-                bool rpmResend = Volatile.Read(ref _rpmResend) != 0 || _indicatorIdleDrawn;
-                bool rpmChanged = rpmResend || !ColorsEqual(rpmColors, _lastLeds);
+                bool rpmResend = Volatile.Read(ref _rpmResend) != 0;
+                bool rpmChanged = rpmResend || !ColorsEqual(rpmColors, _lastLeds)
+                                  || indicator != _indicatorShown;
                 // forceRefresh resends only when something is lit: an all-off frame
                 // is sent once via rpmChanged (lit->off) and then left quiet, so
                 // forceRefresh can't re-flood the wheel with all-black frames at idle.
@@ -947,18 +945,27 @@ namespace MozaPlugin.Devices.Led
                 if (shouldSendRpm)
                 {
                     if (rpmResend) Volatile.Write(ref _rpmResend, 0);
-                    _indicatorIdleDrawn = false;
-                    _indicatorIdlePhase = -1;
                     _lastLeds = (Color[])rpmColors.Clone();
                     Interlocked.Exchange(ref _rpmChangedUtcTicks, DateTime.UtcNow.Ticks);
+                    // The mask alone leaves the pulse colour lit (bundle 25ZJMM08), so the
+                    // end edge rewrites LED 0's real colour.
+                    bool indicatorEnded = indicator < 0 && _indicatorShown >= 0;
+                    _indicatorShown = indicator;
+                    var wire = WithIndicator(rpmColors, rpmN, indicator);
+                    if (indicatorEnded && wire.Length < rpmN)
+                    {
+                        var padded = new Color[rpmN];
+                        Array.Copy(wire, padded, wire.Length);
+                        wire = padded;
+                    }
 
-                    int count = Math.Min(rpmColors.Length, rpmN);
+                    int count = Math.Min(wire.Length, rpmN);
 
                     // Build bitmask: bit i set if LED i has any color
                     int bitmask = 0;
                     for (int i = 0; i < count; i++)
                     {
-                        if (rpmColors[i].R > 0 || rpmColors[i].G > 0 || rpmColors[i].B > 0)
+                        if (wire[i].R > 0 || wire[i].G > 0 || wire[i].B > 0)
                             bitmask |= (1 << i);
                     }
 
@@ -973,8 +980,8 @@ namespace MozaPlugin.Devices.Led
                         if (layout != null)
                         {
                             plugin.DeviceManager.Leds.Publish(LedZone.WheelRpm, layout,
-                                ToRgb(rpmColors, count), bitmask, (1 << rpmN) - 1,
-                                forceColors: rpmResend, forceMask: rpmResend);
+                                ToRgb(wire, count), bitmask, (1 << rpmN) - 1,
+                                forceColors: rpmResend || indicatorEnded, forceMask: rpmResend);
                             _lastRpmBitmask = bitmask;
                         }
                         anySent = true;
@@ -1372,14 +1379,13 @@ namespace MozaPlugin.Devices.Led
             // bitmask alone — it is what holds ownership, at a few bytes a second.
             // Going silent would let a steady frame lapse for the whole negotiation,
             // which can run for tens of seconds after a dashboard switch.
-            bool negotiating = plugin.TelemetrySender?.WheelInCatalogNegotiation == true;
-            bool bitmaskOnly = negotiating;
+            bool bitmaskOnly = plugin.TelemetrySender?.WheelInCatalogNegotiation == true;
 
             bool isOldWheel = plugin.IsOldWheelDetected;
             bool isNewWheel = !isOldWheel && plugin.IsNewWheelDetected;
             if (!isNewWheel && !isOldWheel) return;
 
-            if (isNewWheel) TickNegotiationIndicator(plugin, negotiating);
+            if (isNewWheel) TickNegotiationIndicator(plugin);
 
             // Cheap pre-check outside the lock, so a tick with nothing due never contends
             // with SimHub's LED thread. The authoritative snapshot is retaken under the
@@ -1404,8 +1410,7 @@ namespace MozaPlugin.Devices.Led
             // steadily-black section time out) applies only when no game is active.
             bool gameActive = plugin.IsGameActive;
 
-            // A timer-drawn indicator feeds the strip itself; replaying _lastLeds would wipe it.
-            bool rpmDue = leds != null && !_indicatorIdleDrawn
+            bool rpmDue = leds != null
                 && (gameActive || AnyLit(leds) || WithinHold(kaNow, Interlocked.Read(ref _rpmChangedUtcTicks), holdSec))
                 && DueAfter(kaNow, Interlocked.Read(ref _rpmFedUtcTicks), KeepaliveIntervalSeconds);
             // Mode predicate here too: a group in Off/Static renders its stored palette
@@ -1484,69 +1489,57 @@ namespace MozaPlugin.Devices.Led
             }
         }
 
-        private static Color NegotiationPulseColor()
+        /// <summary>Blue level of the negotiation pulse right now, or -1 when the
+        /// initial catalog negotiation isn't running.</summary>
+        private static int NegotiationIndicatorLevel(MozaPlugin plugin)
         {
+            if (plugin.TelemetrySender?.WheelInInitialCatalogNegotiation != true) return -1;
             int step = (Environment.TickCount & int.MaxValue) / NegotiationPulseStepMs;
-            return Color.FromArgb(0, 0, NegotiationPulseBlue[step % NegotiationPulseBlue.Length]);
+            return NegotiationPulseBlue[step % NegotiationPulseBlue.Length];
         }
 
-        /// <summary>Copy of the RPM frame (padded to <paramref name="rpmN"/>) with the
-        /// first LED replaced by the negotiation pulse.</summary>
-        private static Color[] OverlayNegotiationPulse(Color[] rpm, int rpmN)
+        /// <summary>The RPM frame as sent: with <paramref name="level"/> &gt;= 0, a copy
+        /// padded to <paramref name="rpmN"/> with the first LED replaced by the pulse.</summary>
+        private static Color[] WithIndicator(Color[] rpm, int rpmN, int level)
         {
+            if (level < 0) return rpm;
             var o = new Color[Math.Max(rpm.Length, rpmN)];
             Array.Copy(rpm, o, rpm.Length);
-            o[0] = NegotiationPulseColor();
+            o[0] = Color.FromArgb(0, 0, level);
             return o;
         }
 
         /// <summary>
-        /// Draws the negotiation indicator when Display() isn't feeding the RPM strip
-        /// (no game, SimHub idle), over the last live frame, and restores that frame
-        /// once negotiation ends. While Display() runs, it overlays the pulse itself.
+        /// Steps the negotiation indicator while Display() isn't feeding the RPM strip
+        /// (no game, SimHub idle), over the last live frame, and puts that frame back
+        /// once negotiation ends. While Display() runs, it draws the pulse itself.
         /// </summary>
-        private void TickNegotiationIndicator(MozaPlugin plugin, bool negotiating)
+        private void TickNegotiationIndicator(MozaPlugin plugin)
         {
-            if (!negotiating && !_indicatorIdleDrawn) return;
             var modelInfo = plugin.WheelModelInfo;
             int rpmN = modelInfo?.RpmLedCount ?? 0;
             if (rpmN <= 0) return;
-            bool legacy = modelInfo!.UsesLegacyRpmTelemetry;
+            int want = NegotiationIndicatorLevel(plugin);
+            if (want == Volatile.Read(ref _indicatorShown)) return;
+            if (MsSince(Interlocked.Read(ref _lastDisplayUtcTicks)) <= NegotiationDisplayIdleMs) return;
 
             if (!Monitor.TryEnter(_emitLock)) return;
             try
             {
-                bool displayIdle = MsSince(Interlocked.Read(ref _lastDisplayUtcTicks)) > NegotiationDisplayIdleMs;
-                var layout = RpmLayout(plugin, rpmN, legacy);
+                if (want == _indicatorShown) return;
+                var layout = RpmLayout(plugin, rpmN, modelInfo!.UsesLegacyRpmTelemetry);
                 if (layout == null) return;
-                int window = (1 << rpmN) - 1;
-
-                if (negotiating && displayIdle)
-                {
-                    var frame = OverlayNegotiationPulse(_lastLeds ?? Array.Empty<Color>(), rpmN);
-                    int phase = frame[0].B;
-                    if (_indicatorIdleDrawn && phase == _indicatorIdlePhase) return;
-                    int mask = 0;
-                    for (int i = 0; i < rpmN; i++)
-                        if (frame[i].R > 0 || frame[i].G > 0 || frame[i].B > 0) mask |= 1 << i;
-                    plugin.DeviceManager.Leds.Publish(LedZone.WheelRpm, layout, ToRgb(frame, rpmN),
-                        mask, window, forceColors: !_indicatorIdleDrawn, forceMask: true);
-                    _indicatorIdleDrawn = true;
-                    _indicatorIdlePhase = phase;
-                    NoteLiveSend();
-                }
-                // Negotiation over. A running Display() repaints over it (rpmResend).
-                else if (!negotiating && _indicatorIdleDrawn && displayIdle)
-                {
-                    var leds = _lastLeds;
-                    int mask = leds != null && _lastRpmBitmask >= 0 ? _lastRpmBitmask : 0;
-                    plugin.DeviceManager.Leds.Publish(LedZone.WheelRpm, layout,
-                        ToRgb(leds ?? Array.Empty<Color>(), rpmN), mask, window,
-                        forceColors: true, forceMask: true);
-                    Interlocked.Exchange(ref _rpmFedUtcTicks, DateTime.UtcNow.Ticks);
-                    _indicatorIdleDrawn = false;
-                    _indicatorIdlePhase = -1;
-                }
+                var wire = WithIndicator(_lastLeds ?? Array.Empty<Color>(), rpmN, want);
+                int mask = LitMask(wire, 0, rpmN);
+                // Full colour rewrite on the engage and release edges only.
+                bool edge = _indicatorShown < 0 || want < 0;
+                plugin.DeviceManager.Leds.Publish(LedZone.WheelRpm, layout, ToRgb(wire, rpmN),
+                    mask, (1 << rpmN) - 1, forceColors: edge, forceMask: true);
+                _indicatorShown = want;
+                // The keepalive replays _lastLeds with this mask.
+                _lastRpmBitmask = mask;
+                Interlocked.Exchange(ref _rpmFedUtcTicks, DateTime.UtcNow.Ticks);
+                NoteLiveSend();
             }
             finally
             {
@@ -1581,9 +1574,11 @@ namespace MozaPlugin.Devices.Led
             {
                 // Publishing (not just flagging a refresh) also restores the lane's
                 // state after a flush or reset dropped it.
+                var wire = WithIndicator(leds, rpmN, _indicatorShown);
+                count = Math.Min(wire.Length, rpmN);
                 var layout = RpmLayout(plugin, count, modelInfo?.UsesLegacyRpmTelemetry == true);
                 if (layout != null && _lastRpmBitmask >= 0)
-                    plugin.DeviceManager.Leds.Publish(LedZone.WheelRpm, layout, ToRgb(leds, count),
+                    plugin.DeviceManager.Leds.Publish(LedZone.WheelRpm, layout, ToRgb(wire, count),
                         _lastRpmBitmask, (1 << rpmN) - 1, forceColors: !bitmaskOnly, forceMask: true);
 
                 // Flag colours stay on the one-shot lane (low-rate, change-gated, and
