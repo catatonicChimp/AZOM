@@ -33,7 +33,7 @@ namespace MozaPlugin.UI
     /// SimHub's control driving that store, so these sets are created, named, cloned,
     /// switched and exported here, and picking one has no effect on the device profile
     /// (no ApplyProfile, no hardware writes). SimHub still switches the set for the
-    /// running game on its own; either source raises <c>CurrentProfileChanged</c> and
+    /// running game on its own; either source raises <c>ActiveProfileChanged</c> and
     /// rebuilds the rows.</para>
     ///
     /// Rows reuse <see cref="ChannelMappingRow"/>, so the pencil (simple property
@@ -80,13 +80,13 @@ namespace MozaPlugin.UI
             ApplyFilter();
 
             // Subscribe only after the first build: binding the combo above can settle
-            // its SelectedItem back onto the store, and a CurrentProfileChanged landing
+            // its SelectedItem back onto the store, and an ActiveProfileChanged landing
             // mid-construction would run RebuildRows against a half-built list — then
             // BuildRows here would append a second copy of all ~450 rows. Follows the
             // active profile from both directions afterwards: this combo, and a game
             // switch behind our back.
             if (_profileStore != null)
-                _profileStore.CurrentProfileChanged += OnCurrentProfileChanged;
+                _profileStore.ActiveProfileChanged += OnCurrentProfileChanged;
 
             // Owner isn't assigned until after the ctor returns, so resolve the
             // backdrop once the window is realized but before it first renders.
@@ -424,7 +424,7 @@ namespace MozaPlugin.UI
         private void OnClosed(object? sender, EventArgs e)
         {
             if (_profileStore != null)
-                _profileStore.CurrentProfileChanged -= OnCurrentProfileChanged;
+                _profileStore.ActiveProfileChanged -= OnCurrentProfileChanged;
             foreach (var r in _allRows) r.PropertyChanged -= OnRowPropertyChanged;
             // Land any edit made inside the debounce window before the dialog goes away.
             if (_reResolveDebounce != null && _reResolveDebounce.IsEnabled) FlushReResolve();

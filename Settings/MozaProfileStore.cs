@@ -6,7 +6,7 @@ namespace MozaPlugin.Settings
     /// Manages Moza device profiles using SimHub's native profile system.
     /// Handles per-game profile switching, profile creation/deletion, and persistence.
     /// </summary>
-    public class MozaProfileStore : ProfileSettingsBase<MozaProfile, MozaProfileStore>, IProfileSettings<MozaProfile>, IProfileSettings
+    public class MozaProfileStore : ActiveProfileTrackingStore<MozaProfile, MozaProfileStore>, IProfileSettings<MozaProfile>, IProfileSettings
     {
         public override string FileFilter => "Moza profile (*.shmozaprofile)|*.shmozaprofile";
 

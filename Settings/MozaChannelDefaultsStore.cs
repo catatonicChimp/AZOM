@@ -10,12 +10,12 @@ namespace MozaPlugin.Settings
     /// <para>Being a real SimHub store (not a homegrown named list) it gets the whole
     /// profile machinery for free: the master mapper's <c>ProfileList</c> renders the
     /// dropdown plus New / Clone / Edit / Manage, <c>Init()</c> picks the profile
-    /// matching the running game, <c>CurrentProfileChanged</c> reports switches from
+    /// matching the running game, <c>ActiveProfileChanged</c> reports switches from
     /// either source, and the manager dialog handles import/export and the switching
     /// mode. None of it touches the device-profile store.</para>
     /// </summary>
     public class MozaChannelDefaultsStore
-        : ProfileSettingsBase<MozaChannelDefaultsProfile, MozaChannelDefaultsStore>,
+        : ActiveProfileTrackingStore<MozaChannelDefaultsProfile, MozaChannelDefaultsStore>,
           IProfileSettings<MozaChannelDefaultsProfile>, IProfileSettings
     {
         // Distinct extension from the device store's .shmozaprofile so the two can't

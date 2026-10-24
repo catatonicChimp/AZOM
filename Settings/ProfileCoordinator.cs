@@ -148,14 +148,14 @@ namespace MozaPlugin.Settings
             InitProfileSystem();
         }
 
-        // Tracks the ProfileStore we subscribed CurrentProfileChanged on, so we can
+        // Tracks the ProfileStore we subscribed ActiveProfileChanged on, so we can
         // detach when ClearSettings replaces _settings (orphaned subscription would
         // otherwise mutate plugin state via captured `this` from a dead store).
         private MozaProfileStore? _subscribedProfileStore;
 
         /// <summary>
         /// Initialize the native SimHub profile system.
-        /// ProfileSettingsBase.Init() reads the current game from PluginManager and selects the right profile.
+        /// ProfileSettingsBase.Init() records the current game; SimHub selects its profile on GameLoaded.
         /// </summary>
         internal void InitProfileSystem()
         {
@@ -173,15 +173,17 @@ namespace MozaPlugin.Settings
                 store.Profiles.Add(defaultProfile);
             }
 
-            // Init reads PluginManager.Instance.GameName and selects the matching profile
+            // Init only records the game; the profile matching it is selected later,
+            // on SimHub's GameLoaded, and arrives through ActiveProfileChanged.
             store.Init();
+            store.ResetActiveProfileBaseline();
 
             // Detach prior subscription before re-subscribing (ClearSettings replaces _settings).
             if (_subscribedProfileStore != null && !ReferenceEquals(_subscribedProfileStore, store))
-                _subscribedProfileStore.CurrentProfileChanged -= OnProfileChanged;
+                _subscribedProfileStore.ActiveProfileChanged -= OnProfileChanged;
 
             // Subscribe to profile changes (game switch, manual selection)
-            store.CurrentProfileChanged += OnProfileChanged;
+            store.ActiveProfileChanged += OnProfileChanged;
             _subscribedProfileStore = store;
 
             // The master mapper's channel defaults ride a store of their own. Bring it
@@ -223,11 +225,12 @@ namespace MozaPlugin.Settings
             MigrateMasterDefaultsToProfiles(store);
 
             store.Init();
+            store.ResetActiveProfileBaseline();
 
             if (_subscribedChannelDefaultsStore != null
                 && !ReferenceEquals(_subscribedChannelDefaultsStore, store))
-                _subscribedChannelDefaultsStore.CurrentProfileChanged -= OnChannelDefaultsProfileChanged;
-            store.CurrentProfileChanged += OnChannelDefaultsProfileChanged;
+                _subscribedChannelDefaultsStore.ActiveProfileChanged -= OnChannelDefaultsProfileChanged;
+            store.ActiveProfileChanged += OnChannelDefaultsProfileChanged;
             _subscribedChannelDefaultsStore = store;
 
             // Publish before anything can build a telemetry profile, so the first
@@ -302,16 +305,16 @@ namespace MozaPlugin.Settings
             ScheduleSave();
         }
 
-        /// <summary>End()/CleanupPartialInit teardown: detach the CurrentProfileChanged
+        /// <summary>End()/CleanupPartialInit teardown: detach the ActiveProfileChanged
         /// subscription so an in-flight profile-change callback cannot reach the
         /// plugin during teardown.</summary>
         internal void DetachProfileStore()
         {
             if (_subscribedProfileStore != null)
-                _subscribedProfileStore.CurrentProfileChanged -= OnProfileChanged;
+                _subscribedProfileStore.ActiveProfileChanged -= OnProfileChanged;
             _subscribedProfileStore = null;
             if (_subscribedChannelDefaultsStore != null)
-                _subscribedChannelDefaultsStore.CurrentProfileChanged -= OnChannelDefaultsProfileChanged;
+                _subscribedChannelDefaultsStore.ActiveProfileChanged -= OnChannelDefaultsProfileChanged;
             _subscribedChannelDefaultsStore = null;
         }
 
