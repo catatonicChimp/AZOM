@@ -2,6 +2,43 @@
 
 All notable changes to the AZOM plugin are documented here.
 
+## [1.7.0]
+
+## Added
+
+- **MOZA HMA150 motion platform in SimHub Motion (preview).** Pick the MOZA HMA150 preset in
+  Motion; it streams game telemetry and engine vibration like Motion Manager, and port setup,
+  self-tests, motion effects, stroke and lighting are in its settings. The COM port is free while
+  motion is off.
+  Motion effects are saved per profile, and Motion Manager presets import from the Import tab.
+- **Banner warns when SimHub is older than 9.12,** since some plugin features need it.
+- **In-app updates restart SimHub automatically** once the install finishes.
+- **Stalk button debounce slider** in truck-sim mode, for levers whose contacts bounce.
+- **Guides card on the Help tab** links every online guide.
+- **First RPM LED pulses blue while dashboard channels negotiate;** wheel LEDs are no longer throttled meanwhile.
+- **AB9/AB6 tab shows the selected shift gate** with the engaged gear highlighted live.
+- **"Stay on beta releases" update option** follows the newest beta instead of falling back to stable.
+
+## Fixed
+
+- **Profile wheel settings such as paddle mode are no longer lost at connect** when dashboard telemetry starts at the same time; paddle mode, clutch point and knob modes are also re-checked against the wheel.
+- **Pedal haptics no longer lag seconds behind the game** with several ShakeIt effects active.
+- **GS V2 Pro wheels reporting "GS" show as MOZA GS V2 Pro again;** the leftover "MOZA GS" definition that hid it is removed, existing devices carry over.
+- **mBooster Wheel Spin and Lockup no longer fire on every full throttle or hard stop;** they need per-wheel speed from the game and stay off without it (e.g. iRacing).
+- **No false "not added in SimHub" banner after switching games** for pedal haptics, wheelbase and dash devices.
+- **mBooster damping no longer flips between the plain and segmented settings;** the plain sliders replace the graphs when segmented damping is off.
+- **mBooster Pedal Feel shows the pedal's own values** when the profile hasn't set them, chained units included.
+- **The MOZA Motion Controller is no longer probed as a wheelbase or AB9.**
+- **Dashboard channel mappings show at launch,** not only after switching dashboards.
+- **Minimum blinker time holds through a same-side re-press,** and the deferred cancel no longer fires while the lever is still at that side.
+- **Stalk held keys are released on mode change and game exit.**
+- **iRacing opponents show on the track map;** only the player's dot was drawn once
+  drivers had come and gone.
+- **The iRacing track map highlights your car while you spectate it,** e.g. a team-mate's stint
+  watched from the pit wall.
+- **Wheel, dash and base LEDs no longer drop to the idle effect** after SimHub pauses the LED
+  device; knob LEDs also hold through LED pipeline stalls while a game is running.
+
 ## [1.6.4]
 
 ## Added

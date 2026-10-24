@@ -150,6 +150,16 @@ namespace MozaPlugin
                 ["wheel-knob-brightness"]         = "wheel-knob-brightness",
                 ["wheel-rpm-indicator-mode"]      = "wheel-rpm-indicator-mode",
                 ["wheel-get-rpm-display-mode"]    = "wheel-set-rpm-display-mode",
+                // Input modes: the apply re-asserts these per profile, so a readback
+                // that disagrees must trigger a re-assert (bundle TPEA51GB).
+                ["wheel-paddles-mode"]            = "wheel-paddles-mode",
+                ["wheel-clutch-point"]            = "wheel-clutch-point",
+                ["wheel-knob-mode"]               = "wheel-knob-mode",
+                ["wheel-knob-signal-mode0"]       = "wheel-knob-signal-mode0",
+                ["wheel-knob-signal-mode1"]       = "wheel-knob-signal-mode1",
+                ["wheel-knob-signal-mode2"]       = "wheel-knob-signal-mode2",
+                ["wheel-knob-signal-mode3"]       = "wheel-knob-signal-mode3",
+                ["wheel-knob-signal-mode4"]       = "wheel-knob-signal-mode4",
             };
 
         private static bool TryPrimableWheelCfgKey(string name, out string cacheKey) =>

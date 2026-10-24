@@ -30,15 +30,70 @@ namespace MozaPlugin.UI
         // ── Diagnostics tab ─────────────────────────────────────────────
         // ===== About-tab link handlers =====
 
+        private const string AboutGuidesUrl  = "https://giant.orth.cc/guides/";
         private const string AboutGitHubUrl  = "https://github.com/giantorth/AZOM";
         private const string AboutDiscordUrl = "https://discord.gg/J4enw43e62";
         private const string AboutSponsorUrl = "https://github.com/sponsors/giantorth";
         private const string AboutKofiUrl    = "https://ko-fi.com/giantorth";
 
+        private void AboutGuidesIndexButton_Click(object sender, System.Windows.RoutedEventArgs e) => OpenExternalUrl(AboutGuidesUrl);
         private void AboutGitHubButton_Click(object sender, System.Windows.RoutedEventArgs e)  => OpenExternalUrl(AboutGitHubUrl);
         private void AboutDiscordButton_Click(object sender, System.Windows.RoutedEventArgs e) => OpenExternalUrl(AboutDiscordUrl);
         private void AboutSponsorButton_Click(object sender, System.Windows.RoutedEventArgs e) => OpenExternalUrl(AboutSponsorUrl);
         private void AboutKofiButton_Click(object sender, System.Windows.RoutedEventArgs e)    => OpenExternalUrl(AboutKofiUrl);
+
+        // Slug under AboutGuidesUrl + title, in the site's guide order.
+        private static readonly (string Slug, Func<string> Title)[] AboutGuides =
+        {
+            ("getting-started",             () => Strings.Guide_GettingStarted),
+            ("install-the-plugin",          () => Strings.Guide_InstallPlugin),
+            ("linux-setup",                 () => Strings.Guide_LinuxSetup),
+            ("add-your-device",             () => Strings.Guide_AddDevice),
+            ("configure-the-wheelbase",     () => Strings.Guide_ConfigureWheelbase),
+            ("lfe-effects",                 () => Strings.Guide_LfeEffects),
+            ("pedals-and-handbrake",        () => Strings.Guide_PedalsHandbrake),
+            ("mbooster",                    () => Strings.Guide_MBooster),
+            ("pedal-haptics",               () => Strings.Guide_PedalHaptics),
+            ("ab9-shifter",                 () => Strings.Guide_Ab9Shifter),
+            ("hgp-sgp-shifters",            () => Strings.Guide_HgpSgpShifters),
+            ("stalks",                      () => Strings.Guide_Stalks),
+            ("import-a-profile",            () => Strings.Guide_ImportProfile),
+            ("wheel-leds-and-knobs",        () => Strings.Guide_WheelLedsKnobs),
+            ("atsr-led-profiles",           () => Strings.Guide_AtsrLeds),
+            ("dashboard-and-channels",      () => Strings.Guide_DashboardChannels),
+            ("wheel-files",                 () => Strings.Guide_WheelFiles),
+            ("controls-and-actions",        () => Strings.Guide_ControlsActions),
+            ("control-mapper",              () => Strings.Guide_ControlMapper),
+            ("properties-and-actions",      () => Strings.Guide_PropertiesActions),
+            ("sdk-and-iracing",             () => Strings.Guide_SdkIracing),
+            ("options",                     () => Strings.Guide_PluginOptions),
+            ("diagnostics-and-bug-reports", () => Strings.Guide_Diagnostics),
+        };
+
+        private void InitAboutGuides()
+        {
+            if (GuidesLeftColumn == null || GuidesRightColumn == null) return;
+            GuidesLeftColumn.Children.Clear();
+            GuidesRightColumn.Children.Clear();
+            int leftCount = (AboutGuides.Length + 1) / 2;
+            for (int i = 0; i < AboutGuides.Length; i++)
+            {
+                string url = AboutGuidesUrl + AboutGuides[i].Slug + "/";
+                var link = new Hyperlink(new Run(AboutGuides[i].Title())) { ToolTip = url };
+                link.Click += (s, e) => OpenExternalUrl(url);
+                if (TryFindResource("CyanBrush") is Brush brush)
+                    link.Foreground = brush;
+                var text = new TextBlock(link)
+                {
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 13,
+                    Margin = new Thickness(0, 0, 0, 6),
+                };
+                if (TryFindResource("FontUi") is FontFamily font)
+                    text.FontFamily = font;
+                (i < leftCount ? GuidesLeftColumn : GuidesRightColumn).Children.Add(text);
+            }
+        }
 
         // Open a URL via the OS shell. On Windows this hits the default
         // browser; under Wine/Proton it routes through winebrowser which
@@ -87,6 +142,9 @@ namespace MozaPlugin.UI
             sb.AppendLine();
             sb.AppendLine("=== mBooster pedals ===");
             sb.AppendLine(DiagnosticsTextBuilder.BuildMBoosterDevices(_plugin, _data));
+            sb.AppendLine();
+            sb.AppendLine("=== Motion controller ===");
+            sb.AppendLine(DiagnosticsTextBuilder.BuildMotionController(_plugin));
             sb.AppendLine();
             sb.AppendLine("=== Stalks ===");
             sb.AppendLine(DiagnosticsTextBuilder.BuildStalks(_plugin, _data));

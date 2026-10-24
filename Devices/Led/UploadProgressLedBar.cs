@@ -13,8 +13,7 @@ namespace MozaPlugin.Devices.Led
     /// <see cref="IsStandDownActive"/> guard in <see cref="MozaLedDeviceManager"/>,
     /// <see cref="MozaDashLedDeviceManager"/> and
     /// <see cref="MozaBaseLedDeviceManager"/>. The transfer and a 60 Hz LED
-    /// stream contend for the same half-duplex 115200 link (the contention the
-    /// catalog-negotiation throttle already exists for) and the wheel processes
+    /// stream contend for the same half-duplex 115200 link and the wheel processes
     /// upload rounds at a few hundred B/s, so the stream is replaced by ~1
     /// frame/s of progress fill for the duration.
     ///

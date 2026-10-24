@@ -85,7 +85,8 @@ namespace MozaPlugin.UI.UpdateCheck
             if (s == null) return;
             if (DismissedThisSession || !s.UpdateCheckEnabled) return;
             if (string.IsNullOrEmpty(latest)) return;
-            if (!UpdateCheckService.IsUpdateAvailable(latest, current, s.UpdateChannelId)) return;
+            if (!UpdateCheckService.IsUpdateAvailable(
+                    latest, current, s.UpdateChannelId, s.FollowBetaChannel)) return;
             if (!string.IsNullOrEmpty(s.LastSkippedVersion)
                 && string.Equals(s.LastSkippedVersion, latest, StringComparison.Ordinal)) return;
 
@@ -151,6 +152,11 @@ namespace MozaPlugin.UI.UpdateCheck
 
             InstallInProgress = false;
             Completed?.Invoke(result);
+
+            // Restart straight away to load the new DLL. If the exit request
+            // can't be issued, the pending-restart banner's Restart button remains.
+            if (result.Success)
+                MozaPlugin.Instance?.RestartSimHub();
         }
 
         /// <summary>Cancels an in-flight install (e.g. when the last UI host unloads).</summary>

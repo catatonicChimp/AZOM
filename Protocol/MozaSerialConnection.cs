@@ -100,6 +100,11 @@ namespace MozaPlugin.Protocol
         // settings. Same transport for every axis now.
         MBoosterEffectAxis1 = 44,
         MBoosterEffectAxis2 = 45,
+
+        // MOZA Motion Controller 0x22/00 telemetry frame (~33 Hz, latest-wins).
+        MotionTelemetry = 46,
+        // Its 0x22/09 engine vibration frame, sent alongside (latest-wins).
+        MotionEngineVibration = 47,
     }
 
     /// <summary>Device family targeted by the serial probe fallback (registry-empty case).</summary>
@@ -138,6 +143,8 @@ namespace MozaPlugin.Protocol
         // port is claimed by PID (0x002F), so the generic probe fallback stays
         // disabled and this never writes scan bytes to a port it was not handed.
         PedalHaptics,
+        // MOZA Motion Controller (PID 0x2000). Registry-only; probe fallback disabled.
+        Motion,
     }
 
     public class MozaSerialConnection : IDisposable
@@ -154,11 +161,12 @@ namespace MozaPlugin.Protocol
         //   41..43 — wheelbase LFE lanes (the three summed host-rendered oscillator
         //            streams: engine id1, ABS id2, Osc0 id0).
         //   44..45 — mBooster chained-axis motor lanes (axes 1/2; axis 0 is slot 17).
+        //   46..47 — motion-controller telemetry + engine vibration frames (its own USB pipe).
         // A CM2 on its own USB connection runs at base 0 on THAT connection, so the
         // second block is only used when two pipelines share one connection.
         // NOTE: keep this >= (highest StreamKind + 1). The static ctor below
         // asserts the regions are disjoint and fit.
-        private const int StreamSlotCount = 46;
+        private const int StreamSlotCount = 48;
 
         // Startup slot-layout invariant: the LED lanes (29+) must not alias the
         // wheel value pipeline (0..10), AB9/mBooster (11..17), or the CM2 second
@@ -179,11 +187,17 @@ namespace MozaPlugin.Protocol
                 "wheelbase LFE stream slots must start after the LED lanes");
             System.Diagnostics.Debug.Assert(lfeLast < StreamSlotCount,
                 "StreamSlotCount too small for the wheelbase LFE stream slots");
-            const int mbLast = (int)StreamKind.MBoosterEffectAxis2; // 45 (highest slot overall)
+            const int mbLast = (int)StreamKind.MBoosterEffectAxis2; // 45
             System.Diagnostics.Debug.Assert((int)StreamKind.MBoosterEffectAxis1 > lfeLast,
                 "mBooster chained-axis stream slots must start after the LFE lanes");
             System.Diagnostics.Debug.Assert(mbLast < StreamSlotCount,
                 "StreamSlotCount too small for the mBooster chained-axis stream slots");
+            System.Diagnostics.Debug.Assert((int)StreamKind.MotionTelemetry > mbLast
+                && (int)StreamKind.MotionTelemetry < StreamSlotCount,
+                "motion telemetry stream slot must follow the mBooster lanes and fit StreamSlotCount");
+            System.Diagnostics.Debug.Assert((int)StreamKind.MotionEngineVibration > (int)StreamKind.MotionTelemetry
+                && (int)StreamKind.MotionEngineVibration < StreamSlotCount,
+                "motion engine-vibration stream slot must follow the telemetry slot and fit StreamSlotCount");
         }
 
         // Ports held by a live connection — probe path skips these (Wine pty
@@ -339,13 +353,66 @@ namespace MozaPlugin.Protocol
         // after switch" symptom on issue #43.
         private readonly ConcurrentQueue<byte[]> _priorityQueue = new ConcurrentQueue<byte[]>();
         // One-shot lane: FIFO + 4 ms burst pacing (bases drop unpaced rapid writes).
-        private readonly ConcurrentQueue<byte[]> _oneShotQueue = new ConcurrentQueue<byte[]>();
+        private readonly ConcurrentQueue<OneShotFrame> _oneShotQueue = new ConcurrentQueue<OneShotFrame>();
+        // Enqueue counter for the one-shot lane, and the FlushPendingWrites watermark:
+        // non-device frames enqueued at or below it are discarded by the write loop.
+        private long _oneShotSeq;
+        private long _oneShotFlushSeq;
+
+        private readonly struct OneShotFrame
+        {
+            public readonly byte[] Frame;
+            public readonly long Seq;
+            // Settings reads/writes/probes from MozaDeviceManager. Survive FlushPendingWrites:
+            // the telemetry pipeline's stop must not discard them (bundle TPEA51GB — a
+            // sender start flushed the connect-time profile writes).
+            public readonly bool DeviceCommand;
+            public OneShotFrame(byte[] frame, long seq, bool deviceCommand)
+            {
+                Frame = frame; Seq = seq; DeviceCommand = deviceCommand;
+            }
+        }
         // Stream lane: per-kind latest-wins slots, unpaced. SendStream overwrites pending values.
         private readonly byte[]?[] _streamSlots = new byte[StreamSlotCount][];
 
         /// <summary>Live LED lane: latest-state zones pulled through the one-shot pacing
-        /// gate, alternating with the FIFO. See <see cref="LedFrameScheduler"/>.</summary>
+        /// gate, taking turns with the FIFO and any <see cref="IPacedFrameSource"/>.
+        /// See <see cref="LedFrameScheduler"/>.</summary>
         public LedFrameScheduler Leds { get; } = new LedFrameScheduler();
+
+        // Other latest-state lanes pulled through the same gate. Copy-on-write: the
+        // write loop reads it every iteration.
+        private readonly object _pacedSourcesLock = new object();
+        private IPacedFrameSource[] _pacedSources = Array.Empty<IPacedFrameSource>();
+
+        /// <summary>Pull <paramref name="source"/> through the paced lane. Idempotent.</summary>
+        public void AddPacedSource(IPacedFrameSource source)
+        {
+            if (source == null) return;
+            lock (_pacedSourcesLock)
+            {
+                if (Array.IndexOf(_pacedSources, source) >= 0) return;
+                var next = new IPacedFrameSource[_pacedSources.Length + 1];
+                Array.Copy(_pacedSources, next, _pacedSources.Length);
+                next[next.Length - 1] = source;
+                Volatile.Write(ref _pacedSources, next);
+            }
+        }
+
+        public void RemovePacedSource(IPacedFrameSource source)
+        {
+            if (source == null) return;
+            lock (_pacedSourcesLock)
+            {
+                int idx = Array.IndexOf(_pacedSources, source);
+                if (idx < 0) return;
+                var next = new IPacedFrameSource[_pacedSources.Length - 1];
+                Array.Copy(_pacedSources, 0, next, 0, idx);
+                Array.Copy(_pacedSources, idx + 1, next, idx, next.Length - idx);
+                Volatile.Write(ref _pacedSources, next);
+            }
+        }
+
         private readonly WriteBudget _budget = new WriteBudget();
         private int _framesDropped;
         private int _checksumFailures;
@@ -1032,7 +1099,17 @@ namespace MozaPlugin.Protocol
             // Nothing drains the lanes while the I/O threads are down (Disconnect);
             // FinishOpen dropped anything queued in that window anyway.
             if (message != null && _running)
-                _oneShotQueue.Enqueue(message);
+                _oneShotQueue.Enqueue(new OneShotFrame(message, Interlocked.Increment(ref _oneShotSeq), false));
+        }
+
+        /// <summary>
+        /// <see cref="Send"/> for device settings commands (reads, writes, probes).
+        /// Same paced FIFO, but kept by <see cref="FlushPendingWrites"/>.
+        /// </summary>
+        public void SendDeviceCommand(byte[] message)
+        {
+            if (message != null && _running)
+                _oneShotQueue.Enqueue(new OneShotFrame(message, Interlocked.Increment(ref _oneShotSeq), true));
         }
 
         /// <summary>
@@ -1074,11 +1151,18 @@ namespace MozaPlugin.Protocol
         // unlocked _port.Write there (SerialPort is not thread-safe).
         private volatile bool _flushRequested;
 
-        /// <summary>Drop priority + one-shot FIFOs + all stream slots + LED zones + the OS write buffer (Stop button halts the wheel instantly).</summary>
+        /// <summary>Drop priority + one-shot FIFOs + all stream slots + LED zones + the OS write buffer (Stop button halts the wheel instantly).
+        /// Queued device commands (<see cref="SendDeviceCommand"/>) are kept.</summary>
         public void FlushPendingWrites()
         {
             while (_priorityQueue.TryDequeue(out _)) { }
-            while (_oneShotQueue.TryDequeue(out _)) { }
+            long seq = Interlocked.Read(ref _oneShotSeq);
+            long prev;
+            do
+            {
+                prev = Interlocked.Read(ref _oneShotFlushSeq);
+                if (seq <= prev) break;
+            } while (Interlocked.CompareExchange(ref _oneShotFlushSeq, seq, prev) != prev);
             for (int k = 0; k < _streamSlots.Length; k++)
                 Interlocked.Exchange(ref _streamSlots[k], null);
             // The OS-buffer discard may eat LED frames already counted as sent.
@@ -1654,8 +1738,15 @@ namespace MozaPlugin.Protocol
             long lastWriteTs = System.Diagnostics.Stopwatch.GetTimestamp() - stopwatchFreq;
             long lastBudgetWarnTs = 0;
             bool lastWasOneShot = false;
-            // Paced-lane turn: true = the LED lane goes next when the FIFO also has work.
-            bool preferLed = true;
+            // Paced-lane turn: which lane gets first look next, and which source within
+            // the source lane.
+            int pacedTurn = PacedLaneLed;
+            int sourceTurn = 0;
+            // Device commands handed to the port, keyed by the wire-byte offset each
+            // ended at, so a DiscardOutBuffer can re-send the ones it ate; and the
+            // re-send queue, drained ahead of the one-shot FIFO.
+            var recentDeviceWrites = new Queue<KeyValuePair<long, byte[]>>();
+            var resendDeviceFrames = new Queue<byte[]>();
 
             while (_running && gen == Volatile.Read(ref _ioGeneration))
             {
@@ -1666,8 +1757,11 @@ namespace MozaPlugin.Protocol
                 if (_flushRequested)
                 {
                     _flushRequested = false;
+                    int unsent = -1;
+                    try { unsent = _port?.BytesToWrite ?? -1; } catch { }
                     try { _port?.DiscardOutBuffer(); }
                     catch (Exception ex) { MozaLog.Debug($"[AZOM] DiscardOutBuffer: {ex.Message}"); }
+                    RequeueDiscardedDeviceCommands(recentDeviceWrites, resendDeviceFrames, unsent);
                 }
 
                 // 0) Priority lane: drain all queued fc:00 acks first, unpaced.
@@ -1693,69 +1787,88 @@ namespace MozaPlugin.Protocol
                     }
                 }
 
-                // 1) Paced lane: the one-shot FIFO and the live LED zones share the 4 ms
-                //    inter-write gate (boxflat's timing; bases drop unpaced settings
-                //    bursts, and the rim lost frames when a whole LED set went out
-                //    back-to-back). WriteBudget extends the gate under bandwidth
-                //    pressure. When both have work they alternate, so neither starves.
-                bool ledReady = Leds.MayHaveWork;
-                bool takeLed = ledReady && (preferLed || _oneShotQueue.IsEmpty);
-                if (takeLed && gen == Volatile.Read(ref _ioGeneration))
+                // 1) Paced lane: the one-shot FIFO, the live LED zones and any other
+                //    latest-state sources share the 4 ms inter-write gate (boxflat's
+                //    timing; bases drop unpaced settings bursts, and the rim lost frames
+                //    when a whole LED set went out back-to-back). WriteBudget extends the
+                //    gate under bandwidth pressure. Lanes with work take turns, so none
+                //    starves.
+                var sources = Volatile.Read(ref _pacedSources);
+                IPacedFrameSource? readySource = null;
+                int readySourceIdx = -1;
+                for (int k = 0; k < sources.Length; k++)
                 {
-                    // Gate first, build after: the frame reflects the LED state at the
-                    // moment it can actually go out.
-                    long now = System.Diagnostics.Stopwatch.GetTimestamp();
-                    int budgetExtraMs = _budget.RecommendOneShotDelayMs(LedFrameScheduler.NominalFrameBytes);
-                    int baseGapMs = 0;
-                    if (lastWasOneShot)
-                    {
-                        long sinceTicks = now - lastWriteTs;
-                        if (sinceTicks < fourMsTicks)
-                            baseGapMs = (int)((fourMsTicks - sinceTicks) * 1000 / stopwatchFreq);
-                    }
-                    int sleepMs = Math.Max(baseGapMs, budgetExtraMs);
-                    if (sleepMs > 0) Thread.Sleep(sleepMs);
+                    int idx = (sourceTurn + k) % sources.Length;
+                    if (!sources[idx].MayHaveWork) continue;
+                    readySource = sources[idx];
+                    readySourceIdx = idx;
+                    break;
+                }
+                bool ledReady = Leds.MayHaveWork;
+                bool fifoReady = resendDeviceFrames.Count > 0 || !_oneShotQueue.IsEmpty;
+                int lane = -1;
+                for (int k = 0; k < PacedLaneCount && lane < 0; k++)
+                {
+                    int l = (pacedTurn + k) % PacedLaneCount;
+                    if ((l == PacedLaneLed && ledReady)
+                        || (l == PacedLaneSource && readySource != null)
+                        || (l == PacedLaneFifo && fifoReady))
+                        lane = l;
+                }
 
-                    var ledMsg = Leds.TryTakeFrame();
-                    if (ledMsg != null)
+                if (lane == PacedLaneFifo)
+                {
+                    if (gen == Volatile.Read(ref _ioGeneration)
+                        && TryDequeueOneShot(resendDeviceFrames, out var msg, out bool deviceCommand))
                     {
-                        if (WriteFrame(ledMsg, ref stuffBuf, MozaProtocol.StuffedFrameSize(ledMsg)) > 0)
+                        pacedTurn = (lane + 1) % PacedLaneCount;
+                        int stuffedSize = MozaProtocol.StuffedFrameSize(msg);
+                        SleepForPacedGate(stuffedSize, lastWasOneShot, lastWriteTs, fourMsTicks, stopwatchFreq);
+
+                        int written = WriteFrame(msg, ref stuffBuf, stuffedSize);
+                        if (written > 0)
+                        {
+                            if (deviceCommand)
+                                RecordDeviceWrite(recentDeviceWrites, msg);
+                            writeCount++;
+                            if (writeCount <= 5)
+                                MozaLog.Debug($"[AZOM] Sent cmd #{writeCount}: {msg.Length} bytes, group=0x{(msg.Length > 2 ? msg[2] : 0):X2}");
+                            lastWriteTs = System.Diagnostics.Stopwatch.GetTimestamp();
+                            lastWasOneShot = true;
+                        }
+                        didWork = true;
+                    }
+                }
+                else if (lane >= 0 && gen == Volatile.Read(ref _ioGeneration))
+                {
+                    // Gate first, build after: the frame reflects the state at the moment
+                    // it can actually go out.
+                    pacedTurn = (lane + 1) % PacedLaneCount;
+                    int nominal = lane == PacedLaneLed
+                        ? LedFrameScheduler.NominalFrameBytes
+                        : readySource!.NominalFrameBytes;
+                    SleepForPacedGate(nominal, lastWasOneShot, lastWriteTs, fourMsTicks, stopwatchFreq);
+
+                    byte[]? pulled;
+                    if (lane == PacedLaneLed)
+                    {
+                        pulled = Leds.TryTakeFrame();
+                    }
+                    else
+                    {
+                        sourceTurn = readySourceIdx + 1;
+                        pulled = readySource!.TryTakeFrame();
+                    }
+                    if (pulled != null)
+                    {
+                        if (WriteFrame(pulled, ref stuffBuf, MozaProtocol.StuffedFrameSize(pulled)) > 0)
                         {
                             writeCount++;
                             lastWriteTs = System.Diagnostics.Stopwatch.GetTimestamp();
                             lastWasOneShot = true;
                         }
-                        preferLed = false;
                         didWork = true;
                     }
-                }
-                else if (gen == Volatile.Read(ref _ioGeneration)
-                    && _oneShotQueue.TryDequeue(out var msg))
-                {
-                    preferLed = true;
-                    long now = System.Diagnostics.Stopwatch.GetTimestamp();
-                    int stuffedSize = MozaProtocol.StuffedFrameSize(msg);
-                    int budgetExtraMs = _budget.RecommendOneShotDelayMs(stuffedSize);
-                    int baseGapMs = 0;
-                    if (lastWasOneShot)
-                    {
-                        long sinceTicks = now - lastWriteTs;
-                        if (sinceTicks < fourMsTicks)
-                            baseGapMs = (int)((fourMsTicks - sinceTicks) * 1000 / stopwatchFreq);
-                    }
-                    int sleepMs = Math.Max(baseGapMs, budgetExtraMs);
-                    if (sleepMs > 0) Thread.Sleep(sleepMs);
-
-                    int written = WriteFrame(msg, ref stuffBuf, stuffedSize);
-                    if (written > 0)
-                    {
-                        writeCount++;
-                        if (writeCount <= 5)
-                            MozaLog.Debug($"[AZOM] Sent cmd #{writeCount}: {msg.Length} bytes, group=0x{(msg.Length > 2 ? msg[2] : 0):X2}");
-                        lastWriteTs = System.Diagnostics.Stopwatch.GetTimestamp();
-                        lastWasOneShot = true;
-                    }
-                    didWork = true;
                 }
 
                 // 2) Stream lane drained after every FIFO item (retransmit bursts
@@ -1794,6 +1907,95 @@ namespace MozaPlugin.Protocol
             }
         }
 
+        /// <summary>Next one-shot frame to write: device commands a DiscardOutBuffer ate
+        /// first, then the FIFO, skipping frames FlushPendingWrites dropped.</summary>
+        private bool TryDequeueOneShot(Queue<byte[]> resend, out byte[] frame, out bool deviceCommand)
+        {
+            deviceCommand = true;
+            if (resend.Count > 0)
+            {
+                frame = resend.Dequeue();
+                return true;
+            }
+            while (_oneShotQueue.TryDequeue(out var entry))
+            {
+                if (entry.DeviceCommand || entry.Seq > Interlocked.Read(ref _oneShotFlushSeq))
+                {
+                    frame = entry.Frame;
+                    deviceCommand = entry.DeviceCommand;
+                    return true;
+                }
+            }
+            frame = null!;
+            return false;
+        }
+
+        // Wire bytes handed to the port by the write thread.
+        private long _txWireBytes;
+
+        // Older device writes than this many wire bytes back have drained: it exceeds
+        // the 16 KB SerialPort write buffer and any driver TX queue we sit on.
+        private const long DeviceWriteResendWindowBytes = 32 * 1024;
+
+        private void RecordDeviceWrite(Queue<KeyValuePair<long, byte[]>> recent, byte[] frame)
+        {
+            recent.Enqueue(new KeyValuePair<long, byte[]>(Interlocked.Read(ref _txWireBytes), frame));
+            PruneDeviceWrites(recent);
+        }
+
+        private void PruneDeviceWrites(Queue<KeyValuePair<long, byte[]>> recent)
+        {
+            while (recent.Count > 0 && Interlocked.Read(ref _txWireBytes) - recent.Peek().Key > DeviceWriteResendWindowBytes)
+                recent.Dequeue();
+        }
+
+        /// <summary>
+        /// After a DiscardOutBuffer, queue for re-send every device command that may
+        /// not have fully left: those ending inside the <paramref name="unsentBytes"/>
+        /// the driver still held, or — when the port can't say — every one inside the
+        /// resend window. A re-sent command that had in fact gone out is a repeat of the
+        /// same read or write, which is harmless; a lost one is a silently dropped setting.
+        /// </summary>
+        private void RequeueDiscardedDeviceCommands(Queue<KeyValuePair<long, byte[]>> recent,
+                                                    Queue<byte[]> resend, int unsentBytes)
+        {
+            PruneDeviceWrites(recent);
+            long cutoff = unsentBytes >= 0 ? Interlocked.Read(ref _txWireBytes) - unsentBytes : long.MinValue;
+            int n = 0;
+            foreach (var kv in recent)
+            {
+                if (kv.Key <= cutoff) continue;
+                resend.Enqueue(kv.Value);
+                n++;
+            }
+            recent.Clear();
+            if (n > 0)
+                MozaLog.Debug($"[AZOM] Re-sending {n} device command(s) discarded from the OS write buffer "
+                              + $"(unsent={(unsentBytes >= 0 ? unsentBytes.ToString() : "unknown")})");
+        }
+
+        // Paced-lane round-robin order.
+        private const int PacedLaneLed = 0;
+        private const int PacedLaneSource = 1;
+        private const int PacedLaneFifo = 2;
+        private const int PacedLaneCount = 3;
+
+        /// <summary>Wait out the 4 ms one-shot gate and any write-budget extension.</summary>
+        private void SleepForPacedGate(int stuffedSize, bool lastWasOneShot, long lastWriteTs,
+            long fourMsTicks, long stopwatchFreq)
+        {
+            int budgetExtraMs = _budget.RecommendOneShotDelayMs(stuffedSize);
+            int baseGapMs = 0;
+            if (lastWasOneShot)
+            {
+                long sinceTicks = System.Diagnostics.Stopwatch.GetTimestamp() - lastWriteTs;
+                if (sinceTicks < fourMsTicks)
+                    baseGapMs = (int)((fourMsTicks - sinceTicks) * 1000 / stopwatchFreq);
+            }
+            int sleepMs = Math.Max(baseGapMs, budgetExtraMs);
+            if (sleepMs > 0) Thread.Sleep(sleepMs);
+        }
+
         /// <summary>Byte-stuff and write a frame. Returns wire-byte count or -1 on write failure.</summary>
         private int WriteFrame(byte[] msg, ref byte[] stuffBuf, int needed)
         {
@@ -1814,6 +2016,7 @@ namespace MozaPlugin.Protocol
                     return -1;
                 }
                 port.Write(stuffBuf, 0, len);
+                Interlocked.Add(ref _txWireBytes, len);
                 Interlocked.Exchange(ref _consecutiveIoErrors, 0);
                 SerialTrafficCapture.Instance.RecordTx(CaptureLabel, msg);
                 _budget.Record(len);

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using MozaPlugin.Settings;
 using Newtonsoft.Json.Linq;
 
 namespace MozaPlugin.UI.UpdateCheck
@@ -288,6 +289,58 @@ namespace MozaPlugin.UI.UpdateCheck
                 : UpdateCheckResult.Ok(st.Version, st.HtmlUrl, st.Notes, st.AssetUrl);
         }
 
+        /// <summary>
+        /// Channel the "stay on beta" setting should follow: the PR channel
+        /// whose title contains "beta" with the highest version, provided it
+        /// is newer than stable; otherwise stable. <paramref name="label"/> is
+        /// the PR title (empty for stable).
+        /// </summary>
+        public static string ResolveBetaChannelId(UpdateSnapshot snapshot, out string label)
+        {
+            PrChannel? best = null;
+            foreach (var ch in snapshot.PrChannels)
+            {
+                if (ch.Title.IndexOf("beta", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (best == null || CompareSemVer(ch.Newest.Version, best.Newest.Version) > 0)
+                    best = ch;
+            }
+            if (best != null
+                && (snapshot.Stable == null
+                    || CompareSemVer(best.Newest.Version, snapshot.Stable.Version) > 0))
+            {
+                label = best.Title;
+                return best.ChannelId;
+            }
+            label = "";
+            return StableChannelId;
+        }
+
+        /// <summary>
+        /// When <see cref="MozaPluginSettings.FollowBetaChannel"/> is on, moves
+        /// the selected channel to <see cref="ResolveBetaChannelId"/>'s pick,
+        /// clearing the per-channel cache like a manual switch. Returns true
+        /// when the channel changed.
+        /// </summary>
+        public static bool ApplyBetaFollow(MozaPluginSettings s, UpdateSnapshot snapshot)
+        {
+            if (!s.FollowBetaChannel) return false;
+            string id = ResolveBetaChannelId(snapshot, out string label);
+            if (string.Equals(id, s.UpdateChannelId, StringComparison.Ordinal))
+            {
+                s.UpdateChannelLabel = label;
+                return false;
+            }
+            MozaLog.Info($"[UpdateCheck] following beta: {s.UpdateChannelId} -> {id}");
+            s.UpdateChannelId = id;
+            s.UpdateChannelLabel = label;
+            s.LastSeenLatestVersion = "";
+            s.LastSeenReleaseUrl = "";
+            s.LastSeenAssetUrl = "";
+            s.LastSeenReleaseNotes = "";
+            s.LastSkippedVersion = "";
+            return true;
+        }
+
         private sealed class HttpTextResult
         {
             public string? Body;
@@ -417,10 +470,12 @@ namespace MozaPlugin.UI.UpdateCheck
         /// (a PR/dev build whose channel the user left) is offered the stable
         /// release even though its numeric core is lower — that downgrade is
         /// the point of switching back. Stable-on-stable only ever moves
-        /// forward, by spec-correct SemVer.
+        /// forward, by spec-correct SemVer. With <paramref name="followBeta"/>
+        /// the stable fallback (no beta open right now) never downgrades a
+        /// running beta — only a newer stable is offered.
         /// </summary>
         public static bool IsUpdateAvailable(
-            string latest, string current, string? channelId)
+            string latest, string current, string? channelId, bool followBeta)
         {
             if (string.IsNullOrEmpty(latest)) return false;
             if (string.IsNullOrEmpty(current)) return true;
@@ -428,7 +483,7 @@ namespace MozaPlugin.UI.UpdateCheck
             if (TryParsePrChannelId(channelId, out _))
                 return !string.Equals(latest, current, StringComparison.Ordinal);
 
-            if (HasPrereleaseTag(current))
+            if (HasPrereleaseTag(current) && !followBeta)
                 return !string.Equals(latest, current, StringComparison.Ordinal);
 
             return CompareSemVer(latest, current) > 0;

@@ -59,8 +59,6 @@ namespace MozaPlugin.UI
                       _plugin.Ab9Manager.Connection.DiscoveredPid)
                 : (object)Strings.TabHeader_Ab9Shifter;
 
-            if (!connected && !detected) return;
-
             // Re-seed the controls from the active profile every refresh tick so
             // the tab follows per-game profile switches (matching the other
             // tabs). Events are suppressed (RefreshDisplay holds the suppressor;
@@ -68,6 +66,20 @@ namespace MozaPlugin.UI
             // shows defaults. The slider handlers write profile.Ab9 synchronously
             // so re-seeding can't fight a live drag.
             var ab9 = _plugin.Settings?.ProfileStore?.CurrentProfile?.Ab9 ?? new Ab9Settings();
+
+            // ShowAllTabs can surface the tab with no AB9; the layout picker and
+            // its gate still work against the profile.
+            if (!connected && !detected)
+            {
+                using (_suppressor.Begin())
+                {
+                    SetAb9InputModeCombo(ab9.InputMode);
+                    SetAb9ModeCombo(ab9.Mode);
+                }
+                RefreshAb9GateView(ab9);
+                return;
+            }
+
             using (_suppressor.Begin())
             {
                 SetAb9InputModeCombo(ab9.InputMode);
@@ -92,7 +104,34 @@ namespace MozaPlugin.UI
                 Ab9GearShiftDebounceValue.Text = $"{ab9DbMs} ms";
             }
 
+            RefreshAb9GateView(ab9);
             RefreshAb9StatusProbe();
+        }
+
+        // ===== AB9 live gate =====
+
+        private static readonly Ab9Mode DefaultAb9Mode = new Ab9Settings().Mode;
+
+        // In flight-sim mode the buttons aren't gears, so the gate is hidden.
+        private void RefreshAb9GateView(Ab9Settings ab9)
+        {
+            var data = _data;
+            if (data == null) return;
+
+            if (Ab9GateView.Poll == null)
+            {
+                Ab9GateView.Poll = () =>
+                {
+                    var mode = _plugin.Settings?.ProfileStore?.CurrentProfile?.Ab9?.Mode ?? DefaultAb9Mode;
+                    // No HID: the buttons hold the last session's state, so draw neutral.
+                    if (!data.IsAb9HidConnected) return (mode, Ab9Gear.Neutral, false, false);
+                    var b = data.Ab9ButtonStates;
+                    return (mode, Ab9Gear.FromButtons(b), Ab9Gear.SeqUp(b), Ab9Gear.SeqDown(b));
+                };
+            }
+
+            Ab9GateView.Visibility = ab9.InputMode == Ab9InputMode.Shifter
+                ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // ===== AB9 status probe (diagnostic) =====

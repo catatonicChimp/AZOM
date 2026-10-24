@@ -236,6 +236,7 @@ namespace MozaPlugin.UI
                 // About-tab version line — same source as the diagnostics dump.
                 if (AboutVersionText != null)
                     AboutVersionText.Text = "v" + DiagnosticsTextBuilder.GetPluginVersion();
+                InitAboutGuides();
 
                 // Update-notification banner + settings (About tab). Reads
                 // persisted state from MozaPluginSettings populated by the

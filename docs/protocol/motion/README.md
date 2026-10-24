@@ -11,11 +11,15 @@ taken from vendor documentation.
 | [`identity-and-ports.md`](identity-and-ports.md) | Enumeration of the controller and of each actuator port, identity strings, presence poll, port → axis-role table, re-seating behaviour |
 | [`modes-and-control.md`](modes-and-control.md) | Mode state machine (`0x1E/03` + `0x1F/03`), run-state and identify-port (`0x20/02`), status records (`0x21`), the observed start-up / power-up / game / shutdown sequences, error codes |
 | [`effect-parameters.md`](effect-parameters.md) | Motion-effect intensity/smoothness slots (`0x1E/05`), road detail (`0x1E/06`), global sliders (`0x1E/04`), rig dimensions (`0x1F/08`), lighting table (`0x1E/0B`) |
-| [`game-stream-0x22.md`](game-stream-0x22.md) | The game-mode streams: raw vehicle telemetry frame (`0x22/00`), haptic oscillators (`0x22/09`), ABS (`0x22/07`) and gear-shift (`0x22/08`) events; the manual-test setpoint (`0x1E/07`) |
+| [`game-stream-0x22.md`](game-stream-0x22.md) | The game-mode streams: raw vehicle telemetry frame (`0x22/00`), engine vibration (`0x22/09`), ABS (`0x22/07`) and gear-shift (`0x22/08`) events; the manual-test setpoint (`0x1E/07`) |
 | [`firmware-log-0x0E.md`](firmware-log-0x0E.md) | Firmware log lines and register sweeps on group `0x0E` — the controller narrates every mode change, port map and fault in plain ASCII |
 
 Wire framing is the standard MOZA `7E len group dev payload chk` frame with `0x7E` stuffing and
 the usual response transform (group `| 0x80`, device nibbles swapped) — see [`../wire/`](../wire/).
+The checksum counts every body `0x7E` twice, exactly as on the wheelbase bus: 3,009 captured
+frames with a `0x7E` in the body (all `0x22/00` telemetry) validate only that way. The handover
+bridge summed the unescaped bytes once, so its frames containing `0x7E` carried a bad checksum
+(fixed in `tools/hma150-bridge.ps1`).
 Nothing on this bus uses the session layer (`0x43`), tier definitions or dashboards.
 
 ## Topology
@@ -59,8 +63,8 @@ Motion Controller  = bus master, dev 0x12 (replies 0x21)
 | HID traffic | **none** in any capture — the HID interface is enumerated but idle |
 | Line coding | Motion Manager sets `SET_LINE_CODING` 9600 8N1 on connect (irrelevant on a virtual CDC port, recorded for byte-exactness) |
 
-Not in the plugin's PID inventory yet — see [`../devices/usb-ids.md`](../devices/usb-ids.md) for
-what that means today. Interface map in [`../transport/usb-topology.md`](../transport/usb-topology.md).
+In the plugin's PID inventory as category `Motion`, owned by its own lane — see [`../devices/usb-ids.md`](../devices/usb-ids.md).
+Interface map in [`../transport/usb-topology.md`](../transport/usb-topology.md).
 
 ## Traffic at a glance
 
@@ -74,7 +78,7 @@ what that means today. Interface map in [`../transport/usb-topology.md`](../tran
 | Register sweep, actuators | h2b | `0x0E/00 00 [idx 1..9]` to each port | ~1 Hz | always | firmware-log |
 | Firmware log | b2h | `0x0E/05 <ascii>` from controller and actuators | bursty | always | firmware-log |
 | **Telemetry frame** | h2b | `0x22/00` 53 B | **~33 Hz** (p50 27 ms) | mode 1 | game-stream |
-| Haptic oscillators | h2b | `0x22/09` 51 B | ~30 Hz | mode 1 | game-stream |
+| Engine vibration | h2b | `0x22/09` 51 B | ~30 Hz | mode 1 | game-stream |
 | ABS oscillator | h2b | `0x22/07` 14 B | ~31 Hz while ABS active | mode 1 | game-stream |
 | Gear-shift pulse | h2b | `0x22/08` 13 B | per shift | mode 1 | game-stream |
 | Manual setpoint | h2b | `0x1E/07 [axis][f32]` | per slider move | mode 2 | game-stream |
@@ -125,6 +129,10 @@ folded into [`game-stream-0x22.md`](game-stream-0x22.md) and [`effect-parameters
 | `tools/motion-decode log|streams|control|identity|registers <jsonl>` | the decoders behind every table on these pages |
 | `tools/motion-replay-correlate <jsonl> <replay-stem>` | field-by-field fit of the `0x22` stream against a SimHub replay (how the telemetry frame was identified) |
 | `tools/simhub_replay.py` | reader for SimHub session recordings (format in the module docstring) |
+| `tools/motion-displacement <jsonl>` | pairs each firmware `Output Displacement` snapshot with the last `0x22/00` frame sent; heave / tilt / warp decomposition |
+| `tools/motion-frame-check` | rebuilds every captured host frame with Python mirrors of `Protocol/MozaMotionProtocol.cs` and diffs the bytes |
+| `tools/hma150-characterize.ps1` | Windows bench script: game mode with scripted `0x22/00` inputs (gain/washout, bandwidth, heave path, gating, `0x21/02` feedback, inferred setup writes; `-Experiment All` runs all but the writes in one session); logs `{t,dir,hex}` JSONL for `motion-decode` |
+| `tools/hma150-bridge.ps1` | the handover's SimHub→controller bridge (raw-telemetry game mode), kept for reference; formula for its SimHub custom serial device in `tools/hma150-bridge-simhub-formula.js` |
 
 ## Status / open items
 
@@ -136,4 +144,7 @@ Open (also listed in [`../open-questions.md`](../open-questions.md)): telemetry 
 exact semantics of modes 3/4/5 and of the `0x20/02` 02↔03 toggles; status-record byte 1 and
 flag bit `0x04`; the `0x0E/03` notification codes; the per-port status word that appears in
 game mode; the actuator `0x27` calibration block; whether mode 2 accepts a continuous
-`0x1E/07` stream.
+`0x1E/07` stream; heave's exact source and washout in game mode (a held common-mode shock
+offset washes out completely); the heave sign; the `0x1F/0A` read that differed at pitch;
+current mode 9 / `ErrCode:512`. No on-demand position read exists (register scan,
+[`firmware-log-0x0E.md`](firmware-log-0x0E.md)).

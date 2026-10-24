@@ -467,50 +467,54 @@ namespace MozaPlugin
 
         /// <summary>Wheel LED group g (2=Single, 3=Rotary, 4=Ambient). Detected on brightness read.</summary>
         internal bool IsWheelLedGroupPresent(int group) => DetectionState.IsWheelLedGroupPresent(group);
+        // Extension registration state is static: device extensions outlive a
+        // plugin reload (game switch) without End/Init, so per-instance state
+        // would read "not added" on the new instance.
+
         /// <summary>Device extension owns wheel LED settings; plugin profile-apply skips wheel writes.</summary>
-        private volatile bool _deviceExtensionActive;
+        private static volatile bool s_deviceExtensionActive;
         internal bool DeviceExtensionActive
         {
-            get => _deviceExtensionActive;
-            set => _deviceExtensionActive = value;
+            get => s_deviceExtensionActive;
+            set => s_deviceExtensionActive = value;
         }
 
-        private volatile bool _dashDeviceExtensionActive;
+        private static volatile bool s_dashDeviceExtensionActive;
         internal bool DashDeviceExtensionActive
         {
-            get => _dashDeviceExtensionActive;
-            set => _dashDeviceExtensionActive = value;
+            get => s_dashDeviceExtensionActive;
+            set => s_dashDeviceExtensionActive = value;
         }
 
-        private volatile bool _baseAmbientDeviceExtensionActive;
+        private static volatile bool s_baseAmbientDeviceExtensionActive;
         internal bool BaseAmbientDeviceExtensionActive
         {
-            get => _baseAmbientDeviceExtensionActive;
-            set => _baseAmbientDeviceExtensionActive = value;
+            get => s_baseAmbientDeviceExtensionActive;
+            set => s_baseAmbientDeviceExtensionActive = value;
         }
 
         // Count, not a flag: one extension instance per pedal device.
-        private int _pedalHapticsDeviceExtensionsActive;
+        private static int s_pedalHapticsDeviceExtensionsActive;
         internal bool PedalHapticsDeviceExtensionActive
-            => System.Threading.Volatile.Read(ref _pedalHapticsDeviceExtensionsActive) > 0;
-        internal void PedalHapticsDeviceExtensionStarted()
-            => System.Threading.Interlocked.Increment(ref _pedalHapticsDeviceExtensionsActive);
-        internal void PedalHapticsDeviceExtensionEnded()
-            => System.Threading.Interlocked.Decrement(ref _pedalHapticsDeviceExtensionsActive);
+            => System.Threading.Volatile.Read(ref s_pedalHapticsDeviceExtensionsActive) > 0;
+        internal static void PedalHapticsDeviceExtensionStarted()
+            => System.Threading.Interlocked.Increment(ref s_pedalHapticsDeviceExtensionsActive);
+        internal static void PedalHapticsDeviceExtensionEnded()
+            => System.Threading.Interlocked.Decrement(ref s_pedalHapticsDeviceExtensionsActive);
 
         /// <summary>
         /// Model prefixes with an active device extension. Copy-on-write: reads see a
         /// consistent snapshot; mutations (extension init/end only) allocate a new set.
         /// </summary>
-        private volatile HashSet<string> _activeModelPrefixes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static volatile HashSet<string> s_activeModelPrefixes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         internal void RegisterActiveModelPrefix(string prefix)
         {
             if (!string.IsNullOrEmpty(prefix) && prefix != MozaDeviceConstants.OldProtocolMarker)
             {
-                var newSet = new HashSet<string>(_activeModelPrefixes, StringComparer.OrdinalIgnoreCase);
+                var newSet = new HashSet<string>(s_activeModelPrefixes, StringComparer.OrdinalIgnoreCase);
                 newSet.Add(prefix);
-                _activeModelPrefixes = newSet;
+                s_activeModelPrefixes = newSet;
             }
         }
 
@@ -518,9 +522,9 @@ namespace MozaPlugin
         {
             if (!string.IsNullOrEmpty(prefix))
             {
-                var newSet = new HashSet<string>(_activeModelPrefixes, StringComparer.OrdinalIgnoreCase);
+                var newSet = new HashSet<string>(s_activeModelPrefixes, StringComparer.OrdinalIgnoreCase);
                 newSet.Remove(prefix);
-                _activeModelPrefixes = newSet;
+                s_activeModelPrefixes = newSet;
             }
         }
 
@@ -529,10 +533,10 @@ namespace MozaPlugin
         /// </summary>
         internal bool IsModelSpecificExtensionActive(string modelName)
         {
-            if (string.IsNullOrEmpty(modelName) || _activeModelPrefixes.Count == 0)
+            if (string.IsNullOrEmpty(modelName) || s_activeModelPrefixes.Count == 0)
                 return false;
 
-            foreach (var prefix in _activeModelPrefixes)
+            foreach (var prefix in s_activeModelPrefixes)
             {
                 if (modelName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     return true;

@@ -233,11 +233,12 @@ namespace MozaPlugin.Telemetry.Frames
             // iRacing reports every car as [LapDistPct, 0, 0]. The wheel's own outline
             // line places it exactly on the drawn track; else SimHub's recorded map
             // resolves it. Without either there is nothing to plot.
-            var line = data.RelativeCarCoordinates != null && snap.Outline != null && snap.Outline.HasLine
-                ? snap.Outline : null;
+            // Only normalised (iRacing) outlines carry a line.
+            var line = snap.Outline != null && snap.Outline.HasLine ? snap.Outline : null;
+            bool lapRelative = line != null || data.RelativeCarCoordinates != null;
             bool lineMetres = false;
             double lineScale = line != null ? LineMetresPerUnit(data, line, out lineMetres) : 0.0;
-            if (line == null && map == null && data.RelativeCarCoordinates != null)
+            if (line == null && map == null && lapRelative)
                 return;
 
             if (line != null)
@@ -264,16 +265,24 @@ namespace MozaPlugin.Telemetry.Frames
                 }
             }
 
+            var opps = data.Opponents;
+
+            // iRacing's player-car telemetry (LapDistPct → CarCoordinates) is 0 while
+            // spectating, e.g. watching a team-mate from the pit wall; the player's
+            // own entry (CarIdxLapDistPct[PlayerCarIdx]) is valid driving or not.
             var pc = data.CarCoordinates;
+            if (lapRelative && opps != null)
+                foreach (var o in opps)
+                    if (o != null && o.IsPlayer && o.Coordinates != null && o.Coordinates.Length >= 3)
+                    { pc = o.Coordinates; break; }
             float px = 0f, py = 0f, pz = 0f; bool havePlayer = false;
-            if (pc != null && pc.Length >= 3)
+            if (pc != null && pc.Length >= 3 && (!lapRelative || pc[0] != 0.0 || pc[2] != 0.0))
             {
                 (px, py, pz) = ResolveXyz(map, line, lineScale, pc);
                 havePlayer = px != 0f || pz != 0f || line == null;
                 if (havePlayer) snap.PlayerLocation = (px, py, pz);
             }
 
-            var opps = data.Opponents;
             if (opps == null || opps.Count == 0) return;
             int count = opps.Count;
 
@@ -305,11 +314,10 @@ namespace MozaPlugin.Telemetry.Frames
             //  • Live AC exposes the raw Graphics.CarCoordinates array, which is
             //    indexed by AC carId (slot i = the car with carId i) — so locs[i]
             //    is carId-indexed and slot i == carId i, matching PitHouse exactly.
-            //  • A SimHub replay only records the player's CarCoordinates (raw is
-            //    too short), and exposes opponents only as a position-sorted list
-            //    with a stable driver Id (no carId). We map Id -> a fixed slot
-            //    (player -> 0, others first-seen) so the slot stays put; the slot
-            //    numbers differ from live carIds but each car renders correctly.
+            //  • iRacing and SimHub replays expose opponents only as a
+            //    position-sorted list with a stable driver Id (no carId). We map
+            //    Id -> a dense slot (player -> 0, see AssignOpponentSlots) that
+            //    stays put while the driver is present.
             bool rawCarIdIndexed = raw != null && raw.Length >= count * 3;
 
             (float X, float Y, float Z)[] locs;
@@ -340,14 +348,10 @@ namespace MozaPlugin.Telemetry.Frames
             }
             else
             {
-                int[] slotOf = new int[count];
+                int[] slotOf = AssignOpponentSlots(opps, snap.TrackFolderName);
                 int maxSlot = 0;
                 for (int i = 0; i < count; i++)
-                {
-                    var opp = opps[i];
-                    slotOf[i] = StableOpponentSlot(opp?.Id, opp?.IsPlayer ?? false, snap.TrackFolderName);
                     if (slotOf[i] > maxSlot) maxSlot = slotOf[i];
-                }
                 locs = new (float X, float Y, float Z)[maxSlot + 1];
                 rels = new (float X, float Y)[maxSlot + 1];
                 for (int i = 0; i < count; i++)
@@ -446,30 +450,73 @@ namespace MozaPlugin.Telemetry.Frames
             return arr;
         }
 
-        // Stable per-car radar/track-map slot. SimHub sorts Opponents by race
-        // position, so the list index churns; we pin each stable driver Id to a
-        // fixed slot (player -> 0, the ri0 magic-header slot that's skipped;
-        // others first-seen 1..N). Cleared on track change so a fresh session
-        // re-packs from slot 1. Guarded by s_carPosLock.
+        // Per-car radar/track-map slot for SimHub-list games (iRacing). SimHub sorts
+        // Opponents by race position, so the list index churns; each driver Id keeps
+        // its slot while present (player -> 0, the ri0 magic-header slot). Slots stay
+        // DENSE in 1..present-opponents: the wheel draws only Location_0..OpponentCount,
+        // so first-seen numbering that never reused a departed driver's slot pushed new
+        // cars past the mask (bundle XMVWAYC1: OpponentCount 22, cars in slots 33+).
+        // A new car takes the lowest slot no present car holds; a departed driver
+        // gets its slot back if it returns within the hold and nobody took it.
+        // Guarded by s_carPosLock.
+        private const int OppSlotHoldMs = 5000;
         private static readonly Dictionary<string, int> _oppSlotById = new Dictionary<string, int>();
+        private static readonly Dictionary<string, int> _oppLastSeenMs = new Dictionary<string, int>();
+        private static readonly HashSet<int> s_oppSlotUsed = new HashSet<int>();
         private static string? _oppSlotTrack;
-        private static int _oppSlotNext = 1;
-        private static int StableOpponentSlot(string? id, bool isPlayer, string? track)
+
+        private static int[] AssignOpponentSlots(List<Opponent> opps, string? track)
         {
             if (track != _oppSlotTrack)
             {
-                _oppSlotById.Clear();
-                _oppSlotNext = 1;
-                _oppSlotTrack = track;
+                _oppSlotById.Clear(); _oppLastSeenMs.Clear(); _oppSlotTrack = track;
             }
-            if (isPlayer) return 0;
-            if (string.IsNullOrEmpty(id)) return -1;
-            if (!_oppSlotById.TryGetValue(id!, out int s))
+            int now = Environment.TickCount;
+            int count = opps.Count;
+            var slotOf = new int[count];
+            int present = 0;
+            for (int i = 0; i < count; i++)
             {
-                s = _oppSlotNext++;
-                _oppSlotById[id!] = s;
+                var o = opps[i];
+                if (o != null && !o.IsPlayer && !string.IsNullOrEmpty(o.Id)) present++;
             }
-            return s;
+
+            // Present drivers keep a slot that is still inside 1..present.
+            var used = s_oppSlotUsed;
+            used.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                var o = opps[i];
+                if (o == null) { slotOf[i] = -1; continue; }
+                if (o.IsPlayer) { slotOf[i] = 0; continue; }
+                if (string.IsNullOrEmpty(o.Id)) { slotOf[i] = -1; continue; }
+                _oppLastSeenMs[o.Id] = now;
+                slotOf[i] = _oppSlotById.TryGetValue(o.Id, out int s) && s >= 1 && s <= present && used.Add(s)
+                    ? s : int.MinValue;   // needs a slot
+            }
+
+            // Everyone else takes the lowest free slot, evicting a departed holder.
+            int next = 1;
+            for (int i = 0; i < count; i++)
+            {
+                if (slotOf[i] != int.MinValue) continue;
+                while (used.Contains(next)) next++;
+                string? holder = null;
+                foreach (var kv in _oppSlotById)
+                    if (kv.Value == next) { holder = kv.Key; break; }
+                if (holder != null) _oppSlotById.Remove(holder);
+                _oppSlotById[opps[i].Id] = next;
+                used.Add(next);
+                slotOf[i] = next;
+            }
+
+            // Forget drivers gone longer than the hold.
+            List<string>? stale = null;
+            foreach (var kv in _oppLastSeenMs)
+                if (unchecked(now - kv.Value) > OppSlotHoldMs) (stale ??= new List<string>()).Add(kv.Key);
+            if (stale != null)
+                foreach (var id in stale) { _oppLastSeenMs.Remove(id); _oppSlotById.Remove(id); }
+            return slotOf;
         }
 
         // Per-car absolute ground coordinates from the raw game struct, when the

@@ -811,7 +811,7 @@ namespace MozaPlugin.Devices.Extensions
                         // Definition is current, but the artwork may still be
                         // missing (added by a plugin update, or user-deleted).
                         EnsureThumbnail(deviceDir, modelPrefix);
-                        return false;
+                        return RemoveShadowingWheelDefinitions(deviceName, guid);
                     }
                 }
 
@@ -830,6 +830,7 @@ namespace MozaPlugin.Devices.Extensions
                     $"[AZOM] {action} device definition: {deviceName} " +
                     $"(guid={guid}, telemetryLeds={expectedTelemetryCount}, rpm={rpmCount}, flags={hasFlagLeds}, " +
                     $"buttons={buttonCount}, knobs={knobCount}, brow={browSegmentSize}, pid={pid}, restart SimHub to pick up changes)");
+                RemoveShadowingWheelDefinitions(deviceName, guid);
                 return true;
             }
             catch (Exception ex)
@@ -837,6 +838,80 @@ namespace MozaPlugin.Devices.Extensions
                 MozaLog.Error($"[AZOM] Error deploying device definition '{deviceName}': {ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Delete other MOZA definition folders carrying <paramref name="guid"/>. A
+        /// model whose friendly name changed keeps its GUID, so the folder written
+        /// under the old name (e.g. "MOZA GS" before bare "GS" became "MOZA GS V2 Pro")
+        /// lingers with the same identity. SimHub keeps only the first definition per
+        /// DeviceTypeID, in directory order, so that stale folder hides the current one.
+        /// Device instances bind by DeviceTypeID, so existing ones move over with their
+        /// settings. Returns true when something was removed (restart needed).
+        /// </summary>
+        private static bool RemoveShadowingWheelDefinitions(string canonicalDeviceName, string guid)
+        {
+            bool removed = false;
+            string userDefsDir;
+            string[] dirs;
+            try
+            {
+                userDefsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "DevicesDefinitions", "User");
+                if (!Directory.Exists(userDefsDir))
+                    return false;
+                dirs = Directory.GetDirectories(userDefsDir);
+            }
+            catch (Exception ex)
+            {
+                MozaLog.Warn($"[AZOM] Could not scan for duplicate definitions of '{canonicalDeviceName}': {ex.Message}");
+                return false;
+            }
+
+            foreach (var dir in dirs)
+            {
+                var name = Path.GetFileName(dir);
+                if (string.Equals(name, canonicalDeviceName, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var jsonPath = Path.Combine(dir, "device.json");
+                try
+                {
+                    if (!File.Exists(jsonPath))
+                        continue;
+
+                    var existing = JObject.Parse(File.ReadAllText(jsonPath));
+                    if (!string.Equals(existing.SelectToken("DescriptorUniqueId")?.Value<string>(), guid,
+                            StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    if (!string.Equals(existing.SelectToken("DeviceDescription.BrandName")?.Value<string>(), "MOZA",
+                            StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    // device.json alone drops the duplicate; SimHub may hold thumbnail.png open.
+                    File.Delete(jsonPath);
+                }
+                catch (Exception ex)
+                {
+                    MozaLog.Warn($"[AZOM] Could not remove duplicate definition '{name}' of '{canonicalDeviceName}': {ex.Message}");
+                    continue;
+                }
+
+                try
+                {
+                    Directory.Delete(dir, recursive: true);
+                }
+                catch (Exception ex)
+                {
+                    MozaLog.Debug($"[AZOM] Duplicate definition folder '{name}' kept a file back ({ex.Message})");
+                }
+
+                MozaLog.Info(
+                    $"[AZOM] Removed '{name}' — same identity ({guid}) as '{canonicalDeviceName}' and hid it from SimHub; " +
+                    "existing devices carry over; restart SimHub to pick it up");
+                removed = true;
+            }
+
+            return removed;
         }
 
         /// <summary>

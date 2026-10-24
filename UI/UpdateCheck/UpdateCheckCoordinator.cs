@@ -41,8 +41,10 @@ namespace MozaPlugin.UI.UpdateCheck
                 // prior session may be stale, and the tracked PR may have
                 // closed since. Re-check PR channels on every launch (still
                 // once per process via s_started); stable versions are
-                // directly comparable and keep the 24h throttle.
-                if (!UpdateCheckService.TryParsePrChannelId(settings.UpdateChannelId, out _)
+                // directly comparable and keep the 24h throttle. Beta-follow
+                // also re-checks every launch so a newly opened beta is found.
+                if (!settings.FollowBetaChannel
+                    && !UpdateCheckService.TryParsePrChannelId(settings.UpdateChannelId, out _)
                     && DateTime.UtcNow - settings.LastUpdateCheckUtc < TimeSpan.FromHours(24))
                 {
                     MozaLog.Debug("[UpdateCheck] skipped — last check less than 24h ago");
@@ -63,6 +65,8 @@ namespace MozaPlugin.UI.UpdateCheck
                         if (fetch.Snapshot != null)
                         {
                             var snap = fetch.Snapshot;
+                            UpdateCheckService.ApplyBetaFollow(settings, snap);
+                            channelId = settings.UpdateChannelId;
                             var result = UpdateCheckService.ResolveChannel(
                                 snap, channelId, out bool channelFound);
                             if (!channelFound)

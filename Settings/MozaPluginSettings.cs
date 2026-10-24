@@ -205,6 +205,7 @@ namespace MozaPlugin.Settings
         public string LastHubPort { get; set; } = "";
         // Port the dedicated base-aux pipe last bound (broken base + wheel on hub).
         public string LastBaseAuxPort { get; set; } = "";
+        public string LastMotionPort { get; set; } = "";
 
         // Durable device identity per lane (VID:PID:serial — see
         // MozaPortDiscovery.DurableId), saved alongside the port name and tried
@@ -217,6 +218,7 @@ namespace MozaPlugin.Settings
         public string LastDashboardDeviceId { get; set; } = "";
         public string LastHubDeviceId { get; set; } = "";
         public string LastBaseAuxDeviceId { get; set; } = "";
+        public string LastMotionDeviceId { get; set; } = "";
 
         // Active-shifter (AB9 / AB6) lane. Off = the plugin never opens the
         // shifter's port, and switching it off releases a port already held.
@@ -448,6 +450,11 @@ namespace MozaPlugin.Settings
         // the channel picker can render the selection before the release list
         // has been fetched this session. Empty for the stable channel.
         public string UpdateChannelLabel { get; set; } = "";
+
+        // Auto-select the newest open PR channel titled "beta" on every check
+        // (stable while none is open) instead of dropping to stable for good
+        // when the tracked PR closes. See UpdateCheckService.ResolveBetaChannelId.
+        public bool FollowBetaChannel { get; set; } = false;
 
         // Version the user clicked "Skip this version" on — the banner stays
         // hidden as long as the latest published version still equals this
@@ -821,6 +828,10 @@ namespace MozaPlugin.Settings
         public int KeyHoldMs { get; set; } = 30;
         public int KeyGapMs { get; set; } = 40;
 
+        /// <summary>Per-button press lockout (ms): after a press, that button's edges are
+        /// ignored for this long so contact chatter can't re-fire the action. 0 = off.</summary>
+        public int DebounceMs { get; set; } = 20;
+
         public StalkTruckSimSettings Clone()
         {
             var c = new StalkTruckSimSettings
@@ -836,6 +847,7 @@ namespace MozaPlugin.Settings
                 LightStageCount = LightStageCount,
                 KeyHoldMs = KeyHoldMs,
                 KeyGapMs = KeyGapMs,
+                DebounceMs = DebounceMs,
                 ButtonActions = new Dictionary<int, StalkAction>(),
             };
             if (ButtonActions != null)

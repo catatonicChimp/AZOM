@@ -51,7 +51,64 @@ fits give; the Spa fit of f8–f11 is poor only because the replay samples at 10
 The `100_STROKE` and Spa fits put the stream at zero lag against the replay (±50 ms search), so
 Motion Manager forwards the game's values without visible buffering.
 
-## `0x22/09` — haptic oscillators, 51-byte payload, ~30 Hz
+## Controller output and heave
+
+Game mode has **no heave position field**; the Heave slot (`0x1E/05 03`) and Road Detail
+(`0x1E/06`) scale what the controller derives from the frame itself. The only readback of
+what it does is the firmware log's `Output Displacement` (mm per actuator) every 60 s
+([`firmware-log-0x0E.md`](firmware-log-0x0E.md)), logged with the pitch/roll it applied.
+
+- The four displacements always satisfy `d0 + d2 = d1 + d3` (warp exactly 0): the platform is
+  driven as a plane — heave = mean, plus a pitch and a roll term.
+- The logged `pitch` / `roll` equal f0/f1 of the last frame, so attitude passes straight
+  through. A plugin session (Pitch/Roll 1.0, smoothness 0, every other slot 0) logged pitch
+  −0.032 / roll −0.020 rad → `-2.45 9.65 2.69 -9.41` mm, ≈ 6 mm per degree of pitch; Motion
+  Manager's Nürburgring session gave ≈ 200 mm/rad at Pitch 0.60.
+- Heave source, from the 12 Motion Manager game snapshots (`nurburgring-002`, `spa-003`;
+  Heave 0.30 / 0.56, Road Detail 0.70): the mean displacement fits the mean of f8–f11 minus its
+  1 s average (r = −0.80, −0.58 mm per mm) better than f6 averaged over 0.3 s (r = +0.65); raw
+  shocks, f4, f5, f7 do not fit. So heave comes mainly from common-mode suspension deflection,
+  washed out over ~1 s; too few samples to rule out an f6 term.
+- Sign is unresolved. Manual Input heave −1.0 (mode 2) logged `13.35935` on all four
+  actuators, but standby logs `-80` on all four, so if standby is fully down a positive
+  displacement is up and the slider's + is down. Same capture: Max Available Stroke 0.30.
+- A held common-mode shock offset does not hold heave: plugin bundle `P12GYH3K` (heave slot
+  1.0, road detail 1.0) sent +4.5 mm on all four shocks for 97 s and the 60 s snapshot read
+  0.00003 mm; a moving offset of ~5 mm read −0.12 mm.
+- Pitch holds (bench run 13 Oct, `tools/hma150-characterize.ps1 -Experiment Gain`, slots
+  other than pitch at 0, smoothness 0): 0.82 mm per actuator per degree at intensity 0.25
+  (1° and −3°, 5 s into the hold) and 1.46 at 0.5 (+5°, 8.6 s in) — linear in angle, slightly
+  under linear in intensity or a little washout; d0/d3 move opposite d1/d2. No sample at 1.0.
+
+## Plugin mapping
+
+`Devices/Motion/MotionGameFeed` fills the frame from SimHub `GameData` the way the handover
+bridge (v30) does — tuned against Motion Manager's stream and the rig — and leaves strength to
+the controller's Motion Effects sliders, as Motion Manager does:
+
+| Field | Source |
+|-------|--------|
+| f0 | `OrientationPitch` → rad |
+| f1 | −`OrientationRoll` → rad |
+| f2 | −`OrientationYaw` → rad, wrapped to ±π |
+| f3 | `OrientationYawVelocity` → rad/s |
+| f4 / f5 / f6 | `AccelerationSurge` / −`AccelerationSway` / `AccelerationHeave`, m/s² (surge positive when braking). SimHub's sway is opposite to Motion Manager's lateral field — an iRacing slow-turns Motion Manager capture (tester, 16 Oct, bridge v31); the synthetic shocks use the flipped value too |
+| f7 | `SpeedKmh` / 3.6 |
+| f8–f11 | iRacing: `GameRawData.Telemetry.{LF,LR,RR,RF}shockDefl` × 1000 (what Motion Manager sends); other games: `base + a·surge + b·sway + c·heave + d·speed²` per corner, fitted to the Spa stream (R² 0.78–0.90; coefficients in the source) |
+| brake / throttle | `Brake` / `Throttle`, 0–100 |
+| flags | `01`; bit1 for 120 ms after each gear change |
+
+No frame while the game is not running or paused: the lane then sends the neutral frame
+(shocks at rest, flag `01`), and SimHub idle sends it with flag `00`.
+
+Each live frame is followed by a `0x22/09` engine vibration frame (below) built from SimHub's
+`Rpms` and `Throttle`, scaled by the profile's Engine vibration and Tactile feedback values (else
+50 % and the controller's haptic intensity, i.e. the gt3 level). Unlike Motion Manager it sends
+no tone while the engine is off (`Rpms` ≤ 100, the bridge's cut-off): testers found Motion
+Manager's 25 Hz buzz before ignition and after a stall unwanted. When live frames stop, the
+engine stops, and on disengage, one zero-gain `0x22/09` follows.
+
+## `0x22/09` — engine vibration, 51-byte payload, ~30 Hz
 
 ```
 7E 33 22 12 09 00 FF  [id][gain f32][freq f32] × 5  00 00 64 [chk]
@@ -63,13 +120,30 @@ Motion Manager forwards the game's values without visible buffering.
 | 1 | `59` | 0.0090 | **f₀** | engine vibration fundamental |
 | 2 | `0F` | 0.0045 | 2 f₀ | 2nd harmonic |
 | 3 | `00` | 0.0045 | 3 f₀ | 3rd harmonic |
-| 4 | `0F` | 0.0009 or 0.00225 | 4 f₀ | 4th harmonic (gain toggles between the two values) |
+| 4 | `0F` | 0.0009 + 0.00135 × throttle | 4 f₀ | 4th harmonic, louder with throttle |
 
 Fit of record 1 against the replay's `RPM`: **f₀ = RPM / 200 + 20 Hz** (`100_STROKE`: 0.00527·RPM
-+ 17.9, R² 0.979; Spa: 0.00500·RPM + 20.2, R² 0.975), so idle (1000 rpm) sits at 25 Hz and 8000
-rpm at 60 Hz, harmonics exactly ×2/×3/×4. The gains never changed in the captures; the Engine
-Vibration slider stood at 60 % throughout (`Settings.png`), so gain ↔ slider is not established.
-Trailer `00 00 64` is constant.
++ 17.9, R² 0.979; Spa: 0.00500·RPM + 20.2, R² 0.975), **floored at 25.00 Hz** (the minimum in
+all three game captures), so idle (1000 rpm) sits at 25 Hz and 8000 rpm at 60 Hz; harmonics
+exactly ×2/×3/×4. Record 4's gain follows the `0x22/00` throttle byte (all frames within its
+1 % rounding; the tester found the same, 16 Oct). Trailer `00 00 64` is constant.
+
+**Gain level = Engine Vibration strength × tactile intensity**, in float32 at every step:
+record 0 = 0.0009·S·T, record 1 = 0.045·S·T, records 2–3 = record 1 × 0.5, record 4 =
+record 1 × (0.1 + 0.15 × throttle), S = the preset's `EngineVibration.Strength`, T =
+`platform.tactileFeedbackValue` (also written to the controller as Haptic Feedback Intensity,
+`0x1E/04 01`). `100_STROKE` and Spa ran "iRacing gt3" (S 50, T 40 → 0.009, stored as `3C1374BD`,
+one ULP above the nearest float32); `nurburgring` ran "iRacing caterham" (S 60, T 50 → 0.0135,
+all five gains 1.5×, the haptic intensity read 0.40 then written 0.50 before the drive). Both
+reproduce bit for bit; it rests on these two combinations, and whether the controller applies
+its own Haptic Feedback Intensity again on top is unknown. The preset's
+`EngineVibration.Frequency` (100 / 132 / 200) does not show in f₀: it fits RPM / 200 + 20 in the
+gt3 sessions, whose preset says 132 (no RPM replay exists for the caterham session).
+
+Motion Manager streams it while the game runs, even with the engine off, stops with the game,
+and sends one frame with every gain zero (frequencies kept) as it leaves game mode
+(`nurburgring` 693.2 s, with `Set next mode:3`). `tools/motion-frame-check` rebuilds all 6 566
+captured frames at the base level byte-exact.
 
 ## `0x22/07` — ABS oscillator, 14-byte payload, ~31 Hz while active
 

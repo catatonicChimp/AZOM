@@ -158,8 +158,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Woof!</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Boof!</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Wuff Yip Grr!</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>YOWFF!!</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Bork Awoo Ruff!</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Snarf Wroof Boof Yap Grrowl Wan Howl!</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>Barff!</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>Ruff!</value></data>
@@ -244,7 +242,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Yap!</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Awoo!</value></data>
   <data name="Section_About" xml:space="preserve"><value>YOWL!!</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>Barff!</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>ARF!!</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>Awoo!</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Wan Grr Wroof Yap Boof Wroof!</value></data>
@@ -258,6 +255,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Yowl!</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>Yowff!</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>Wan!</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Sniff!</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Sniff Sniff!</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Arf Woof!</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Yap Yap Bork!</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Grr Woof!</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Ruff Yip!</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Awoo Arf Bark!</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>WOOF!!</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Bark Arf Grr!</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>Yowff Ruff Arf Woof!</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Yip Bark!</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Woof Awoo Yap!</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Arf Bork Grr!</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Ruff Ruff Yip!</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Bark Woof!</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>Yap Arf Bork!</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>Awoo Yip Grr!</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Bork Woof!</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Arf Ruff Bark Yap!</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Grr Yip!</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Woof Bork!</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Awoo Arf Grr Yap!</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>Yip Woof!</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Ruff Bark!</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Bork Awoo Yip!</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Barff!</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Wroof!</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Howl!</value></data>
@@ -270,6 +292,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Yip!</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Wuff!</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Snarf!</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Arf arf!</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Yap!</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Wroof!</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Barff…</value></data>
@@ -503,7 +526,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>ARF!!</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>BORK!!</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>WOOF!!</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Woof Yip Wan Boof!</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Woof Yip Wan Arf Boof!</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>Yip Grrowl {0}!</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Wan Rrrf Yowl Yowff {0} Yowff Yip Grr Wan!</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Barff!</value></data>
@@ -791,4 +814,69 @@
   <data name="Option_SoftLimitMiddle" xml:space="preserve"><value>Arf!</value></data>
   <data name="Option_SoftLimitHard" xml:space="preserve"><value>Grrr!</value></data>
   <data name="SliderLabel_DeadzoneCompensation" xml:space="preserve"><value>Woof woof woof!</value></data>
+  <data name="Motion_Error_PluginUnavailable" xml:space="preserve"><value>Woof Bark Grr Arf Rrrf Yip Boof Snarf!</value></data>
+  <data name="Motion_Error_NotConnected" xml:space="preserve"><value>MOZA Woof Grr Bark Arf</value></data>
+  <data name="Motion_Error_Enrolling" xml:space="preserve"><value>MOZA Woof Grr Bark Arf Yip Rrrf</value></data>
+  <data name="Motion_Error_PortUnassignedFmt" xml:space="preserve"><value>Woof Bark {0} Grr Arf Yip</value></data>
+  <data name="Motion_Error_PortDuplicateFmt" xml:space="preserve"><value>Woof Bark {0} Grr {1} Arf Yip Rrrf</value></data>
+  <data name="Motion_Error_ActuatorsMissingFmt" xml:space="preserve"><value>{0} Woof {1} Grr Bark</value></data>
+  <data name="Motion_Error_PortConfigPending" xml:space="preserve"><value>Woof Bark Grr: Arf Yip Rrrf Boof</value></data>
+  <data name="Motion_Error_FaultFmt" xml:space="preserve"><value>Woof Grr Bark: {0}</value></data>
+  <data name="Motion_Corner_FrontLeft" xml:space="preserve"><value>Woof Bark</value></data>
+  <data name="Motion_Corner_FrontRight" xml:space="preserve"><value>Woof Grr</value></data>
+  <data name="Motion_Corner_RearLeft" xml:space="preserve"><value>Arf Bark</value></data>
+  <data name="Motion_Corner_RearRight" xml:space="preserve"><value>Arf Grr</value></data>
+  <data name="Motion_Corner_None" xml:space="preserve"><value>Yip Rrrf</value></data>
+  <data name="Motion_Panel_Status" xml:space="preserve"><value>Woof</value></data>
+  <data name="Motion_Panel_Connection" xml:space="preserve"><value>Bark</value></data>
+  <data name="Motion_Panel_NotConnected" xml:space="preserve"><value>Grr Arf</value></data>
+  <data name="Motion_Panel_State" xml:space="preserve"><value>Yip</value></data>
+  <data name="Motion_Panel_Mode" xml:space="preserve"><value>Woof Rrrf</value></data>
+  <data name="Motion_Panel_Firmware" xml:space="preserve"><value>Boof</value></data>
+  <data name="Motion_Panel_Actuators" xml:space="preserve"><value>Snarf</value></data>
+  <data name="Motion_Panel_Errors" xml:space="preserve"><value>Grr Grr</value></data>
+  <data name="Motion_Panel_None" xml:space="preserve"><value>Arf</value></data>
+  <data name="Motion_Panel_Ports" xml:space="preserve"><value>Woof Yip</value></data>
+  <data name="Motion_Panel_PortFmt" xml:space="preserve"><value>Bark {0}</value></data>
+  <data name="Motion_Panel_Identify" xml:space="preserve"><value>Sniff</value></data>
+  <data name="Motion_Panel_RunPortSelfTest" xml:space="preserve"><value>Woof Bark Grr Arf Yip</value></data>
+  <data name="Motion_Panel_RunTravelSelfCheck" xml:space="preserve"><value>Woof Grr Rrrf</value></data>
+  <data name="Motion_Panel_Setup" xml:space="preserve"><value>Boof</value></data>
+  <data name="Motion_Panel_MaxStroke" xml:space="preserve"><value>Woof Bark Grr (%)</value></data>
+  <data name="Motion_Panel_RigLength" xml:space="preserve"><value>Woof Arf Yip (mm)</value></data>
+  <data name="Motion_Panel_RigWidth" xml:space="preserve"><value>Woof Arf Grr (mm)</value></data>
+  <data name="Motion_Panel_Apply" xml:space="preserve"><value>Arf!</value></data>
+  <data name="Motion_Panel_Lighting" xml:space="preserve"><value>Yowl</value></data>
+  <data name="Motion_Panel_Brightness" xml:space="preserve"><value>Howl (%)</value></data>
+  <data name="Motion_Panel_ZoneFmt" xml:space="preserve"><value>Woof {0} Bark</value></data>
+  <data name="Motion_Panel_ChangeColor" xml:space="preserve"><value>Grr!</value></data>
+  <data name="Motion_Phase_Disconnected" xml:space="preserve"><value>Whine</value></data>
+  <data name="Motion_Phase_Enrolling" xml:space="preserve"><value>Yip Yip</value></data>
+  <data name="Motion_Phase_Ready" xml:space="preserve"><value>Woof!</value></data>
+  <data name="Motion_Phase_SelfChecking" xml:space="preserve"><value>Sniff Sniff</value></data>
+  <data name="Motion_Phase_EnteringGame" xml:space="preserve"><value>Zoom Woof</value></data>
+  <data name="Motion_Phase_Game" xml:space="preserve"><value>Zoomies</value></data>
+  <data name="Motion_Phase_Disengaging" xml:space="preserve"><value>Sit</value></data>
+  <data name="Motion_Phase_PortSelfTest" xml:space="preserve"><value>Fetch Fetch</value></data>
+  <data name="Motion_Phase_Faulted" xml:space="preserve"><value>Grrr!</value></data>
+  <data name="Banner_MotionPluginDisabled_Title" xml:space="preserve"><value>SimHub Woof Grr Bark</value></data>
+  <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>MOZA Woof Bark Grr Arf Yip Rrrf Boof Snarf Howl Woof Bark!</value></data>
+  <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 Woof Grr SimHub Bark</value></data>
+  <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>MOZA Woof Bark Grr Arf Yip Rrrf Boof Snarf MOZA HMA150 Howl!</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>SimHub Woof Grr Bark</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>SimHub {0} Woof Bark {1}. Grr Arf Yip Rrrf Boof SimHub Howl!</value></data>
+  <data name="Motion_Panel_Effects" xml:space="preserve"><value>Woof Arf</value></data>
+  <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Grr (%)</value></data>
+  <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Yip (%)</value></data>
+  <data name="Motion_Effect_Pitch" xml:space="preserve"><value>Bark</value></data>
+  <data name="Motion_Effect_Roll" xml:space="preserve"><value>Arf</value></data>
+  <data name="Motion_Effect_Heave" xml:space="preserve"><value>Woof</value></data>
+  <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Yowl Bark</value></data>
+  <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Yowl Arf</value></data>
+  <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Grr Woof</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Boof yowff!!</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>BOOF YOWF!!</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Grr Brrr</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Boop Woof</value></data>
+  <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Yip!</value></data>
 </root>

@@ -1035,7 +1035,14 @@ namespace MozaPlugin.Devices.MBooster
         public readonly bool   AbsActive;
         public readonly bool   TcActive;
         public readonly double VehicleSpeedMs;
-        public readonly double AvgWheelSpeedMs;
+        // Per-wheel speeds (FeedbackData.WheelSpeed) for Wheel Spin / Lockup.
+        // HasWheelSpeeds is false when the game reader doesn't declare the
+        // WheelsSpeed capability (e.g. iRacing) — both effects then stay off.
+        public readonly bool   HasWheelSpeeds;
+        public readonly double MaxWheelSpeedMs;
+        public readonly double MinWheelSpeedMs;
+        // Slip reference: FeedbackData.GroundSpeed when reported, else VehicleSpeedMs.
+        public readonly double GroundSpeedMs;
         // Vertical chassis acceleration, in G — SimHub's StatusDataBase.
         // AccelerationHeave (nullable; 0 when a game doesn't report it).
         // There's no generic suspension-travel telemetry in SimHub at all
@@ -1081,7 +1088,8 @@ namespace MozaPlugin.Devices.MBooster
         public MBoosterTelemetrySnapshot(
             bool gameRunning, double rpm, double maxRpm, double idleRpm, double brake, double throttle,
             bool absActive, bool tcActive,
-            double vehicleSpeedMs, double avgWheelSpeedMs, double suspensionHeaveG, double longitudinalG,
+            double vehicleSpeedMs, bool hasWheelSpeeds, double maxWheelSpeedMs, double minWheelSpeedMs,
+            double groundSpeedMs, double suspensionHeaveG, double longitudinalG,
             double brakeTempC, int gearShiftSeq, bool gearIsNeutral)
         {
             GameRunning = gameRunning;
@@ -1093,7 +1101,10 @@ namespace MozaPlugin.Devices.MBooster
             AbsActive = absActive;
             TcActive = tcActive;
             VehicleSpeedMs = vehicleSpeedMs;
-            AvgWheelSpeedMs = avgWheelSpeedMs;
+            HasWheelSpeeds = hasWheelSpeeds;
+            MaxWheelSpeedMs = maxWheelSpeedMs;
+            MinWheelSpeedMs = minWheelSpeedMs;
+            GroundSpeedMs = groundSpeedMs;
             SuspensionHeaveG = suspensionHeaveG;
             LongitudinalG = longitudinalG;
             BrakeTempC = brakeTempC;
@@ -1102,6 +1113,6 @@ namespace MozaPlugin.Devices.MBooster
         }
 
         public static readonly MBoosterTelemetrySnapshot Empty =
-            new MBoosterTelemetrySnapshot(false, 0, 0, 800, 0, 0, false, false, 0, 0, 0, 0, 0, 0, false);
+            new MBoosterTelemetrySnapshot(false, 0, 0, 800, 0, 0, false, false, 0, false, 0, 0, 0, 0, 0, 0, 0, false);
     }
 }

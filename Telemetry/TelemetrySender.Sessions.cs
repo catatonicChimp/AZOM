@@ -34,8 +34,8 @@ namespace MozaPlugin.Telemetry
         /// True only while the wheel is ACTIVELY (re)advertising its channel catalog —
         /// a catalog chunk landed within the last <see cref="CatalogActiveWindowMs"/>.
         /// The half-duplex 115200 link is contended in that window (our tier-def burst
-        /// + the wheel's inbound catalog chunks), so collaborators throttle NON-ESSENTIAL
-        /// h2b traffic (the ~60 Hz LED stream) to avoid dropping inbound catalog chunks.
+        /// + the wheel's inbound catalog chunks). The wheel LED keepalive drops to
+        /// bitmask-only re-feeds and the first RPM LED pulses blue as a status indicator.
         ///
         /// SELF-CLEARING (falls false ~1.2 s after chunks stop). The prior
         /// phase/_coldStartWheelGatePending version was wrong in both directions: it

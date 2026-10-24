@@ -175,10 +175,11 @@ namespace MozaPlugin.Hardware
         /// store wedges into an unrecoverable read-failure storm (wheel-0x17.md
         /// § Param-store wedge) — that difference is the whole ballgame.
         /// </summary>
-        internal void PrimeWheelCfgFromDevice(string key, long deviceValue)
+        internal void PrimeWheelCfgFromDevice(string key, long deviceValue, string readCommand)
         {
             long desired = 0;
             bool reassert = false;
+            double verifyInMs = -1;
             lock (s_wheelCfgCacheLock)
             {
                 SyncWheelCfgCacheLocked();
@@ -195,21 +196,36 @@ namespace MozaPlugin.Hardware
                     return;
                 }
 
-                // Don't fight a write that hasn't had time to land.
-                if (s_wheelCfgLastWriteTicks.TryGetValue(key, out var lastWrite)
-                    && (System.DateTime.UtcNow.Ticks - lastWrite)
-                       < (long)(WheelCfgAdoptQuietMs * System.TimeSpan.TicksPerMillisecond))
-                    return;
-
-                s_wheelCfgCache[key] = deviceValue;
-                s_wheelCfgReassertCount.TryGetValue(key, out int tries);
-                if (tries < WheelCfgMaxReasserts
-                    && s_wheelCfgDesired.TryGetValue(key, out desired)
-                    && desired != deviceValue)
+                // Don't fight a write that hasn't had time to land — but don't trust it
+                // either: re-read once it should have, so a write that never reached the
+                // wheel is caught (bundle TPEA51GB: the telemetry sender's start flushed the
+                // connect apply's paddle-mode write, the only readback was queued before it,
+                // and nothing re-read the register).
+                double sinceMs = s_wheelCfgLastWriteTicks.TryGetValue(key, out var lastWrite)
+                    ? (System.DateTime.UtcNow.Ticks - lastWrite) / (double)System.TimeSpan.TicksPerMillisecond
+                    : double.MaxValue;
+                if (sinceMs < WheelCfgAdoptQuietMs)
                 {
-                    s_wheelCfgReassertCount[key] = tries + 1;
-                    reassert = true;
+                    verifyInMs = WheelCfgAdoptQuietMs - sinceMs + WheelCfgVerifySlackMs;
                 }
+                else
+                {
+                    s_wheelCfgCache[key] = deviceValue;
+                    s_wheelCfgReassertCount.TryGetValue(key, out int tries);
+                    if (tries < WheelCfgMaxReasserts
+                        && s_wheelCfgDesired.TryGetValue(key, out desired)
+                        && desired != deviceValue)
+                    {
+                        s_wheelCfgReassertCount[key] = tries + 1;
+                        reassert = true;
+                    }
+                }
+            }
+
+            if (verifyInMs >= 0)
+            {
+                ScheduleWheelCfgVerify(key, readCommand, verifyInMs);
+                return;
             }
 
             if (!reassert)
@@ -228,6 +244,39 @@ namespace MozaPlugin.Hardware
                 try { QueueWheelCfgWrite(key, value, () => _deviceManager.WriteSetting(key, (int)value)); }
                 catch (System.Exception ex) { MozaLog.Warn($"[AZOM] wheel-cfg re-assert '{key}': {ex.Message}"); }
             });
+            // Confirm the re-assert landed; a miss re-asserts again, up to WheelCfgMaxReasserts.
+            ScheduleWheelCfgVerify(key, readCommand,
+                WheelCfgFlushDelayMs + WheelCfgAdoptQuietMs + WheelCfgVerifySlackMs);
+        }
+
+        private const double WheelCfgVerifySlackMs = 250.0;
+        // One pending verify read per cache key. Guarded by _pendingWheelCfgLock.
+        private readonly System.Collections.Generic.Dictionary<string, System.Threading.Timer> _wheelCfgVerifyTimers
+            = new System.Collections.Generic.Dictionary<string, System.Threading.Timer>(System.StringComparer.Ordinal);
+
+        /// <summary>Re-read a wheel setting after <paramref name="delayMs"/>; its reply
+        /// comes back through <see cref="PrimeWheelCfgFromDevice"/>. Deduped per key.</summary>
+        private void ScheduleWheelCfgVerify(string key, string readCommand, double delayMs)
+        {
+            lock (_pendingWheelCfgLock)
+            {
+                if (_wheelCfgShutdown || _wheelCfgVerifyTimers.ContainsKey(key)) return;
+                System.Threading.Timer? timer = null;
+                timer = new System.Threading.Timer(_ =>
+                {
+                    lock (_pendingWheelCfgLock)
+                    {
+                        if (!_wheelCfgVerifyTimers.TryGetValue(key, out var t) || t != timer) return;
+                        _wheelCfgVerifyTimers.Remove(key);
+                        if (_wheelCfgShutdown) return;
+                    }
+                    timer?.Dispose();
+                    try { _deviceManager.ReadSetting(readCommand); }
+                    catch (System.Exception ex) { MozaLog.Warn($"[AZOM] wheel-cfg verify '{key}': {ex.Message}"); }
+                }, null, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+                _wheelCfgVerifyTimers[key] = timer;
+                timer.Change((long)System.Math.Max(1.0, delayMs), System.Threading.Timeout.Infinite);
+            }
         }
 
         /// <summary>
@@ -256,6 +305,14 @@ namespace MozaPlugin.Hardware
                 "wheel-rpm-brightness", "wheel-buttons-brightness", "wheel-knob-brightness",
                 "wheel-old-rpm-brightness", "dash-flags-brightness",
                 "wheel-rpm-indicator-mode", "wheel-set-rpm-display-mode", "wheel-knob-mode",
+            };
+
+        // Input settings the apply re-asserts and the readback verifies, kept out of
+        // the set above so the FSR1 apply suppression doesn't extend to them.
+        private static readonly System.Collections.Generic.HashSet<string> s_readbackVerifiedInputCfg =
+            new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal)
+            {
+                "wheel-paddles-mode", "wheel-clutch-point",
             };
 
         /// <summary>Flash-backed per the set above, plus the per-knob signal modes
@@ -346,14 +403,19 @@ namespace MozaPlugin.Hardware
         internal void Shutdown()
         {
             System.Timers.Timer? t;
+            System.Threading.Timer[] verifies;
             lock (_pendingWheelCfgLock)
             {
                 _wheelCfgShutdown = true;
                 _pendingWheelCfg.Clear();
                 t = _wheelCfgFlushTimer;
                 _wheelCfgFlushTimer = null;
+                verifies = System.Linq.Enumerable.ToArray(_wheelCfgVerifyTimers.Values);
+                _wheelCfgVerifyTimers.Clear();
             }
             try { t?.Stop(); t?.Dispose(); } catch { /* teardown is best-effort */ }
+            foreach (var v in verifies)
+                try { v.Dispose(); } catch { /* teardown is best-effort */ }
         }
 
         private static long Fnv(long h, long v) { unchecked { return (h ^ v) * 1099511628211L; } }
@@ -998,7 +1060,8 @@ namespace MozaPlugin.Hardware
                 // attach instead of dedup'ing against the previous rim's write.
                 // Wire form is 1/2/3 while the overlay stores the 0/1/2 display
                 // form — hence the +1, matching the UI handler.
-                if (paddles >= 0 && WheelCfgChangedForApply("wheel-paddles-mode", paddles))
+                // Cached in wire form so the wheel's readback primes the same key.
+                if (paddles >= 0 && WheelCfgChangedForApply("wheel-paddles-mode", paddles + 1))
                     _deviceManager.WriteSetting("wheel-paddles-mode", paddles + 1);
                 if (clutchPoint >= 0 && WheelCfgChangedForApply("wheel-clutch-point", clutchPoint))
                     _deviceManager.WriteSetting("wheel-clutch-point", clutchPoint);
@@ -1801,6 +1864,17 @@ namespace MozaPlugin.Hardware
             ApplySgpToHardware(profile);
             ApplyAb9ToHardware(profile);
             ApplyMBoosterToHardware(profile);
+            ApplyMotionToHardware(profile);
+        }
+
+        /// <summary>
+        /// HMA150 Motion Effects. The lane keeps them and writes them once its port is
+        /// open and the controller's current values are read, so this needs no connection.
+        /// </summary>
+        public void ApplyMotionToHardware(MozaProfile? profile)
+        {
+            if (!ProfileWritesAllowed) return;
+            MozaPlugin.PushMotionEffects(_plugin.MotionController, profile?.MotionEffects);
         }
 
         /// <summary>
@@ -1917,6 +1991,14 @@ namespace MozaPlugin.Hardware
             if (IsFlashBackedWheelCfg(command))
             {
                 QueueWheelCfgWrite(command, value, () => _deviceManager.WriteSetting(command, value), force);
+                return;
+            }
+            if (s_readbackVerifiedInputCfg.Contains(command))
+            {
+                // Record the user's pick as the intended value, else the readback
+                // re-assert would put the apply's value back. Always written: the
+                // cache is exactly what a lost write leaves wrong.
+                QueueWheelCfgWrite(command, value, () => _deviceManager.WriteSetting(command, value), force: true);
                 return;
             }
             _deviceManager.WriteSetting(command, value);

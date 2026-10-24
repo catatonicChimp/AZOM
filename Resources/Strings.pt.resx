@@ -152,8 +152,6 @@
   <data name="SliderLabel_EndstopFrontStiffness" xml:space="preserve"><value>Rigidez do limite frontal</value></data>
   <data name="SliderLabel_EndstopEndStiffness" xml:space="preserve"><value>Rigidez do limite final</value></data>
   <data name="Hint_NaturalFrictionPedalFeel" xml:space="preserve"><value>Simula uma força de atrito independente da saída do jogo.</value></data>
-  <data name="Section_SegmentedDamping" xml:space="preserve"><value>AMORTECIMENTO SEGMENTADO</value></data>
-  <data name="Subtitle_SegmentedDamping" xml:space="preserve"><value>Força de amortecimento independente da saída do jogo, por segmento de curso do pedal</value></data>
   <data name="Hint_SegmentedDampingExperimental" xml:space="preserve"><value>Simula uma força de amortecimento independente da saída do jogo. O curso do pedal é dividido em vários segmentos, cada um com um intervalo ajustável e o seu próprio amortecimento natural. Arraste um divisor para redimensionar um segmento; arraste dentro de um segmento para definir a sua quantidade de amortecimento.</value></data>
   <data name="Section_SegmentedDampingPressed" xml:space="preserve"><value>Ao Pressionar</value></data>
   <data name="Section_SegmentedDampingReleased" xml:space="preserve"><value>Ao Soltar</value></data>
@@ -238,7 +236,6 @@
   <data name="SliderLabel_EnableCoapServer" xml:space="preserve"><value>Ativar servidor CoAP SDK</value></data>
   <data name="SliderLabel_EnableUdpControl" xml:space="preserve"><value>Ativar servidor de controle UDP</value></data>
   <data name="Section_About" xml:space="preserve"><value>SOBRE</value></data>
-  <data name="Subtitle_About" xml:space="preserve"><value>// plugin de código aberto para SimHub</value></data>
   <data name="Label_AzomTitle" xml:space="preserve"><value>AZOM</value></data>
   <data name="Label_VersionPlaceholder" xml:space="preserve"><value>versão —</value></data>
   <data name="Hint_AboutDescription" xml:space="preserve"><value>Um plugin não oficial do SimHub que se comunica diretamente com o hardware MOZA Racing via serial — configuração de hardware, pipeline de efeitos de LED e streaming de painel. Sem afiliação com a MOZA / Gudsen Technology.</value></data>
@@ -252,6 +249,31 @@
   <data name="Tooltip_JoinDiscord" xml:space="preserve"><value>Entre no Discord do projeto</value></data>
   <data name="Tooltip_Sponsor" xml:space="preserve"><value>github.com/sponsors/giantorth</value></data>
   <data name="Tooltip_Kofi" xml:space="preserve"><value>ko-fi.com/giantorth</value></data>
+  <data name="Section_Guides" xml:space="preserve"><value>Guias</value></data>
+  <data name="Link_AllGuides" xml:space="preserve"><value>Todos os guias</value></data>
+  <data name="Guide_GettingStarted" xml:space="preserve"><value>Primeiros passos</value></data>
+  <data name="Guide_InstallPlugin" xml:space="preserve"><value>Instalar o plugin</value></data>
+  <data name="Guide_LinuxSetup" xml:space="preserve"><value>Configuração no Linux</value></data>
+  <data name="Guide_AddDevice" xml:space="preserve"><value>Adicionar seu dispositivo</value></data>
+  <data name="Guide_ConfigureWheelbase" xml:space="preserve"><value>Configurar a base</value></data>
+  <data name="Guide_LfeEffects" xml:space="preserve"><value>Efeitos LFE</value></data>
+  <data name="Guide_PedalsHandbrake" xml:space="preserve"><value>Pedais e freio de mão</value></data>
+  <data name="Guide_MBooster" xml:space="preserve"><value>mBooster: sensação do pedal e efeitos</value></data>
+  <data name="Guide_PedalHaptics" xml:space="preserve"><value>Háptica dos pedais</value></data>
+  <data name="Guide_Ab9Shifter" xml:space="preserve"><value>Câmbio ativo AB9</value></data>
+  <data name="Guide_HgpSgpShifters" xml:space="preserve"><value>Câmbios HGP e SGP</value></data>
+  <data name="Guide_Stalks" xml:space="preserve"><value>Alavancas multifunção</value></data>
+  <data name="Guide_ImportProfile" xml:space="preserve"><value>Importar um perfil</value></data>
+  <data name="Guide_WheelLedsKnobs" xml:space="preserve"><value>LEDs e botões rotativos do volante</value></data>
+  <data name="Guide_AtsrLeds" xml:space="preserve"><value>LEDs avançados com ATSR</value></data>
+  <data name="Guide_DashboardChannels" xml:space="preserve"><value>Painel e canais</value></data>
+  <data name="Guide_WheelFiles" xml:space="preserve"><value>Arquivos do volante e envio de painéis</value></data>
+  <data name="Guide_ControlsActions" xml:space="preserve"><value>Controles e ações</value></data>
+  <data name="Guide_ControlMapper" xml:space="preserve"><value>Mapeador de controles</value></data>
+  <data name="Guide_PropertiesActions" xml:space="preserve"><value>Referência de propriedades e ações</value></data>
+  <data name="Guide_SdkIracing" xml:space="preserve"><value>SDK e iRacing</value></data>
+  <data name="Guide_PluginOptions" xml:space="preserve"><value>Opções do plugin</value></data>
+  <data name="Guide_Diagnostics" xml:space="preserve"><value>Diagnóstico e relatórios de bugs</value></data>
   <data name="Label_UpdateAvailable" xml:space="preserve"><value>Atualização disponível</value></data>
   <data name="Button_OpenReleaseNotes" xml:space="preserve"><value>Abrir notas da versão</value></data>
   <data name="Button_SkipThisVersion" xml:space="preserve"><value>Pular esta versão</value></data>
@@ -264,6 +286,7 @@
   <data name="Label_CheckForUpdates" xml:space="preserve"><value>Verificar atualizações automaticamente</value></data>
   <data name="Label_ReleaseChannel" xml:space="preserve"><value>Canal de versões</value></data>
   <data name="Option_ReleaseChannelStable" xml:space="preserve"><value>Estável</value></data>
+  <data name="Label_FollowBetaChannel" xml:space="preserve"><value>Manter-se nas versões beta</value></data>
   <data name="Button_CheckNow" xml:space="preserve"><value>Verificar agora</value></data>
   <data name="Status_UpdateNeverChecked" xml:space="preserve"><value>Nunca verificado</value></data>
   <data name="Status_UpdateChecking" xml:space="preserve"><value>Verificando…</value></data>
@@ -497,7 +520,7 @@
   <data name="Import_CancelButton" xml:space="preserve"><value>CANCELAR</value></data>
   <data name="Import_NextButton" xml:space="preserve"><value>AVANÇAR</value></data>
   <data name="Import_BackButton" xml:space="preserve"><value>VOLTAR</value></data>
-  <data name="Import_BrowseDescription" xml:space="preserve"><value>Escolha um arquivo JSON de preset do PitHouse em qualquer lugar do sistema.</value></data>
+  <data name="Import_BrowseDescription" xml:space="preserve"><value>Escolha um arquivo JSON de preset do PitHouse ou do Motion Manager em qualquer lugar do sistema.</value></data>
   <data name="Import_Error_InvalidJson" xml:space="preserve"><value>O arquivo não é JSON válido: {0}</value></data>
   <data name="Import_Error_UnsupportedType" xml:space="preserve"><value>Tipo de preset "{0}" não suportado. Apenas presets de Motor e Pedais são suportados.</value></data>
   <data name="Status_Connected" xml:space="preserve"><value>Conectado</value></data>
@@ -800,4 +823,69 @@ Id: {2}</value></data>
   <data name="Option_SoftLimitMiddle" xml:space="preserve"><value>Médio</value></data>
   <data name="Option_SoftLimitHard" xml:space="preserve"><value>Rígido</value></data>
   <data name="SliderLabel_DeadzoneCompensation" xml:space="preserve"><value>Compensação de zona morta central</value></data>
+  <data name="Motion_Error_PluginUnavailable" xml:space="preserve"><value>A ligação ao controlador de movimento do plugin AZOM não está ativa.</value></data>
+  <data name="Motion_Error_NotConnected" xml:space="preserve"><value>MOZA Motion Controller não ligado</value></data>
+  <data name="Motion_Error_Enrolling" xml:space="preserve"><value>MOZA Motion Controller ainda está a arrancar</value></data>
+  <data name="Motion_Error_PortUnassignedFmt" xml:space="preserve"><value>A porta de atuador {0} não tem canto atribuído</value></data>
+  <data name="Motion_Error_PortDuplicateFmt" xml:space="preserve"><value>A porta de atuador {0} usa o canto {1}, que já está atribuído</value></data>
+  <data name="Motion_Error_ActuatorsMissingFmt" xml:space="preserve"><value>{0} de {1} atuadores ligados</value></data>
+  <data name="Motion_Error_PortConfigPending" xml:space="preserve"><value>Configuração das portas pendente: execute o autoteste das portas</value></data>
+  <data name="Motion_Error_FaultFmt" xml:space="preserve"><value>Falha do controlador de movimento: {0}</value></data>
+  <data name="Motion_Corner_FrontLeft" xml:space="preserve"><value>Frente esquerda</value></data>
+  <data name="Motion_Corner_FrontRight" xml:space="preserve"><value>Frente direita</value></data>
+  <data name="Motion_Corner_RearLeft" xml:space="preserve"><value>Traseira esquerda</value></data>
+  <data name="Motion_Corner_RearRight" xml:space="preserve"><value>Traseira direita</value></data>
+  <data name="Motion_Corner_None" xml:space="preserve"><value>Não atribuído</value></data>
+  <data name="Motion_Panel_Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Motion_Panel_Connection" xml:space="preserve"><value>Ligação</value></data>
+  <data name="Motion_Panel_NotConnected" xml:space="preserve"><value>Não ligado</value></data>
+  <data name="Motion_Panel_State" xml:space="preserve"><value>Fase</value></data>
+  <data name="Motion_Panel_Mode" xml:space="preserve"><value>Modo do controlador</value></data>
+  <data name="Motion_Panel_Firmware" xml:space="preserve"><value>Firmware</value></data>
+  <data name="Motion_Panel_Actuators" xml:space="preserve"><value>Atuadores</value></data>
+  <data name="Motion_Panel_Errors" xml:space="preserve"><value>Problemas</value></data>
+  <data name="Motion_Panel_None" xml:space="preserve"><value>Nenhum</value></data>
+  <data name="Motion_Panel_Ports" xml:space="preserve"><value>Portas dos atuadores</value></data>
+  <data name="Motion_Panel_PortFmt" xml:space="preserve"><value>Porta {0}</value></data>
+  <data name="Motion_Panel_Identify" xml:space="preserve"><value>Identificar</value></data>
+  <data name="Motion_Panel_RunPortSelfTest" xml:space="preserve"><value>Aplicar cantos e executar o autoteste das portas</value></data>
+  <data name="Motion_Panel_RunTravelSelfCheck" xml:space="preserve"><value>Executar a autoverificação de curso</value></data>
+  <data name="Motion_Panel_Setup" xml:space="preserve"><value>Configuração</value></data>
+  <data name="Motion_Panel_MaxStroke" xml:space="preserve"><value>Curso máximo disponível (%)</value></data>
+  <data name="Motion_Panel_RigLength" xml:space="preserve"><value>Distância entre atuadores frente–trás (mm)</value></data>
+  <data name="Motion_Panel_RigWidth" xml:space="preserve"><value>Distância entre atuadores esquerda–direita (mm)</value></data>
+  <data name="Motion_Panel_Apply" xml:space="preserve"><value>Aplicar</value></data>
+  <data name="Motion_Panel_Lighting" xml:space="preserve"><value>Iluminação</value></data>
+  <data name="Motion_Panel_Brightness" xml:space="preserve"><value>Brilho (%)</value></data>
+  <data name="Motion_Panel_ZoneFmt" xml:space="preserve"><value>Cor da zona {0}</value></data>
+  <data name="Motion_Panel_ChangeColor" xml:space="preserve"><value>Alterar</value></data>
+  <data name="Motion_Phase_Disconnected" xml:space="preserve"><value>Desligado</value></data>
+  <data name="Motion_Phase_Enrolling" xml:space="preserve"><value>A arrancar</value></data>
+  <data name="Motion_Phase_Ready" xml:space="preserve"><value>Pronto</value></data>
+  <data name="Motion_Phase_SelfChecking" xml:space="preserve"><value>Autoverificação de curso</value></data>
+  <data name="Motion_Phase_EnteringGame" xml:space="preserve"><value>A entrar no modo de jogo</value></data>
+  <data name="Motion_Phase_Game" xml:space="preserve"><value>Em funcionamento</value></data>
+  <data name="Motion_Phase_Disengaging" xml:space="preserve"><value>A parar</value></data>
+  <data name="Motion_Phase_PortSelfTest" xml:space="preserve"><value>Autoteste das portas</value></data>
+  <data name="Motion_Phase_Faulted" xml:space="preserve"><value>Falha</value></data>
+  <data name="Banner_MotionPluginDisabled_Title" xml:space="preserve"><value>O SimHub Motion não está ativado</value></data>
+  <data name="Banner_MotionPluginDisabled_Body" xml:space="preserve"><value>Está ligado um MOZA Motion Controller, mas o plugin Motion do SimHub não está ativado. Ative-o em Settings &gt; Plugins e depois adicione o controlador MOZA HMA150 em Motion.</value></data>
+  <data name="Banner_ProfileNotAddedMotion_Title" xml:space="preserve"><value>MOZA HMA150 não adicionado no SimHub Motion</value></data>
+  <data name="Banner_ProfileNotAddedMotion_Body" xml:space="preserve"><value>Está ligado um MOZA Motion Controller, mas a configuração ativa do SimHub Motion não tem nenhum controlador MOZA HMA150. Em Motion, adicione um controlador e escolha a predefinição MOZA HMA150.</value></data>
+  <data name="Banner_SimHubOutdated_Title" xml:space="preserve"><value>É necessário atualizar o SimHub</value></data>
+  <data name="Banner_SimHubOutdated_BodyFmt" xml:space="preserve"><value>O SimHub {0} é anterior à versão {1}. Algumas funções do plugin não funcionarão até atualizar o SimHub.</value></data>
+  <data name="Motion_Panel_Effects" xml:space="preserve"><value>Efeitos de movimento</value></data>
+  <data name="Motion_Panel_Intensity" xml:space="preserve"><value>Intensidade (%)</value></data>
+  <data name="Motion_Panel_Smoothness" xml:space="preserve"><value>Suavização (%)</value></data>
+  <data name="Motion_Effect_Pitch" xml:space="preserve"><value>Arfagem</value></data>
+  <data name="Motion_Effect_Roll" xml:space="preserve"><value>Rolagem</value></data>
+  <data name="Motion_Effect_Heave" xml:space="preserve"><value>Movimento vertical</value></data>
+  <data name="Motion_Effect_AccelPitch" xml:space="preserve"><value>Arfagem por aceleração</value></data>
+  <data name="Motion_Effect_AccelRoll" xml:space="preserve"><value>Rolagem por aceleração</value></data>
+  <data name="Motion_Effect_RoadDetail" xml:space="preserve"><value>Detalhe da estrada</value></data>
+  <data name="Label_EnableSegmentedDamping" xml:space="preserve"><value>Ativar amortecimento segmentado</value></data>
+  <data name="Section_PedalDamping" xml:space="preserve"><value>AMORTECIMENTO DO PEDAL</value></data>
+  <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibração do motor</value></data>
+  <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Feedback tátil</value></data>
+  <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Debounce dos botões (ms)</value></data>
 </root>
