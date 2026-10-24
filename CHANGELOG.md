@@ -18,6 +18,7 @@ All notable changes to the AZOM plugin are documented here.
 - **First RPM LED pulses blue while dashboard channels negotiate** at startup and on dashboard switches; wheel LEDs are no longer throttled meanwhile.
 - **AB9/AB6 tab shows the selected shift gate** with the engaged gear highlighted live.
 - **"Stay on beta releases" update option** follows the newest beta instead of falling back to stable.
+- **Wheel device pages show the wheel's serial number and firmware version,** plus the display's firmware on screen wheels.
 
 ## Fixed
 

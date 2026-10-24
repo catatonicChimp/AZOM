@@ -527,10 +527,31 @@ namespace MozaPlugin.Devices.Led
             return modelName.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase);
         }
 
-        public string GetSerialNumber() => "MOZA-VIRTUAL";
+        // Surfaced on the LEDs tab's connection status. ES wheels answer no serial
+        // read, so fall back to the MCU UID as the base does.
+        public string GetSerialNumber()
+        {
+            var d = MozaPlugin.Instance?.Data;
+            if (d == null) return "";
+            var serial = d.WheelSerialNumber;
+            if (!string.IsNullOrEmpty(serial)) return serial;
+            var uid = d.WheelMcuUid;
+            return uid == null || uid.Length == 0 ? "" : BitConverter.ToString(uid).Replace("-", "");
+        }
 
-        public string GetFirmwareVersion() =>
-            System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+        // Wheel and display MCUs run separate firmware; SimHub has one field for both.
+        public string GetFirmwareVersion()
+        {
+            var p = MozaPlugin.Instance;
+            var d = p?.Data;
+            if (p == null || d == null) return "";
+            var wheel = d.WheelFwVersionText;
+            // Display* fields are shared with a CM2 probe, so only claim them for a
+            // wheel that can have a screen.
+            if (p.WheelModelInfo?.HasDisplay == false || d.DisplayDeviceType.Length < 4)
+                return wheel;
+            return $"{wheel} (display {d.DisplayFwVersionText})";
+        }
 
         public object GetDriverInstance() => this;
 

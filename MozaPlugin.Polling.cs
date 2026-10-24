@@ -283,6 +283,35 @@ namespace MozaPlugin
                     "10-band EQ stay disabled (needs >= 1.2.10.10)");
         }
 
+        // Same budget as the base: ~25 s past wheel detect, one frame per round.
+        private const int WheelFwVersionProbeRetryLimit = 5;
+
+        /// <summary>
+        /// Re-ask for the wheel firmware while it is still unknown. The detect-time
+        /// identity cascade fires once and its group-0x04 reply is sometimes dropped,
+        /// leaving the wheel device page on "unknown" for the session.
+        /// New-protocol wheels only: an ES locks id 0x13, where group 0x04 answers
+        /// as the base. FSR1 answers no identity read, and each miss is a
+        /// param-store failure on that wheel.
+        /// </summary>
+        private void TickWheelFwVersionRetry()
+        {
+            if (!DetectionState.NewWheelDetected || IsFsr1DisplayWheel) return;
+            var data = _data;
+            if (data == null || data.WheelDeviceType.Length >= 4) return;
+            // Model name arrives with the detect cascade; until then FSR1 can't be ruled out.
+            if (string.IsNullOrEmpty(data.WheelModelName)) return;
+            if (data.WheelFwVersionProbeRetries >= WheelFwVersionProbeRetryLimit) return;
+            var dm = _deviceManager;
+            if (dm == null || !dm.IsConnected) return;
+
+            int attempt = Interlocked.Increment(ref data.WheelFwVersionProbeRetries);
+            dm.SendWheelFwVersionProbe();
+            MozaLog.Debug(
+                $"[AZOM] Wheel firmware still unknown — re-probing " +
+                $"({attempt}/{WheelFwVersionProbeRetryLimit})");
+        }
+
         private int _pollTickInProgress;
         private int _retryTickInProgress;
         private int _ledKeepaliveTickInProgress;
@@ -341,6 +370,7 @@ namespace MozaPlugin
             _connectionCoordinator?.PollBaseAux();
 
             TickBaseFwVersionRetry();
+            TickWheelFwVersionRetry();
 
             // CM2 / dashboard-pipeline reconcile runs REGARDLESS of the wheelbase
             // connection. DECOUPLED: a standalone-USB CM2 is driven by the dedicated

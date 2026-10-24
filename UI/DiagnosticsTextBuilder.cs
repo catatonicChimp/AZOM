@@ -513,6 +513,7 @@ namespace MozaPlugin.UI
             var sb = new StringBuilder();
             sb.AppendLine($"Model:          {Blank(d.WheelModelName)}");
             sb.AppendLine($"FW (sw):        {Blank(d.WheelSwVersion)}");
+            sb.AppendLine($"FW (numeric):   {d.WheelFwVersionText}  ({d.WheelFwVersionProbeRetries} re-probe round(s))");
             sb.AppendLine($"HW version:     {Blank(d.WheelHwVersion)}");
             sb.AppendLine($"HW sub:         {Blank(d.WheelHwSubVersion)}");
             sb.AppendLine($"Serial:         {Redact(d.WheelSerialNumber)}");
@@ -871,6 +872,7 @@ namespace MozaPlugin.UI
             var sb = new StringBuilder();
             sb.AppendLine($"Model:          {Blank(d.DisplayModelName)}");
             sb.AppendLine($"FW (sw):        {Blank(d.DisplaySwVersion)}");
+            sb.AppendLine($"FW (numeric):   {d.DisplayFwVersionText}");
             sb.AppendLine($"HW version:     {Blank(d.DisplayHwVersion)}");
             sb.AppendLine($"Serial:         {Redact(d.DisplaySerialNumber)}");
             sb.AppendLine($"Sub-devices:    {d.DisplaySubDeviceCount}");
