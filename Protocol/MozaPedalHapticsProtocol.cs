@@ -194,29 +194,21 @@ namespace MozaPlugin.Protocol
 
         /// <summary>
         /// Duration written into a streamed frame. An effect is held on by
-        /// re-sending inside this window; the value is generous because with many
-        /// channels live a single channel is only refreshed every few ticks (see
-        /// <see cref="MaxFramesPerTick"/>), and it must not lapse between two of
-        /// its own refreshes. It still bounds how long a motor runs if the host
-        /// dies — a deliberate deactivation sends an explicit disable instead, so
-        /// this never delays a normal stop.
+        /// re-sending inside this window, so it must comfortably outlast
+        /// <see cref="RefreshIntervalMs"/> even when a busy link stretches the
+        /// refresh. On the timed slots it also bounds how long a motor runs if
+        /// the host dies (slots 4 and 8 time out on update silence instead). A
+        /// deliberate deactivation sends an explicit disable, so this never
+        /// delays a normal stop.
         /// </summary>
         public const ushort StreamDurationMs = 500;
 
-        /// <summary>Motor-loop tick.</summary>
-        public const int StreamPeriodMs = 20;
-        /// <summary>
-        /// Frames emitted per tick, across all channels — a backstop, not a
-        /// normal operating constraint. Any realistic setup has a handful of
-        /// channels live at once, and up to eight are serviced every tick with
-        /// no throttling at all. The budget only engages beyond that, where a
-        /// flat refresh of all 27 would be 1350 frames/s (~23 kB/s, more than a
-        /// 115200 link carries and far more than a routed unit's share of a pipe
-        /// already streaming telemetry); there the round-robin degrades refresh
-        /// to ~80 ms rather than overrunning the link. Activation edges bypass
-        /// the budget, so an effect's attack is never delayed either way.
-        /// </summary>
-        public const int MaxFramesPerTick = 8;
+        /// <summary>Shortest gap between two updates of the same slot when only
+        /// its strength or frequency changed. Enable and disable edges ignore it.</summary>
+        public const int UpdateIntervalMs = 20;
+
+        /// <summary>An unchanged live slot is re-sent this often to hold it on.</summary>
+        public const int RefreshIntervalMs = 100;
 
         // Frame builders ----------------------------------------------------
 

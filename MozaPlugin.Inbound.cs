@@ -359,7 +359,7 @@ namespace MozaPlugin
             // are left alone rather than risk a mis-encoded prime silently swallowing a
             // real user change.) See HardwareApplier.PrimeWheelCfgFromDevice.
             if (r.Name != null && r.IntValue >= 0 && TryPrimableWheelCfgKey(r.Name, out var primeKey))
-                _hardwareApplier.PrimeWheelCfgFromDevice(primeKey, r.IntValue);
+                _hardwareApplier.PrimeWheelCfgFromDevice(primeKey, r.IntValue, r.Name);
 
             // Extended LED group presence: any response from a group proves it exists.
             if (r.Name != null)

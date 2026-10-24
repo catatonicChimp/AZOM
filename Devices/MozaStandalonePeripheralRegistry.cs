@@ -171,7 +171,7 @@ namespace MozaPlugin.Devices
             foreach (var c in snapshot)
             {
                 if (!c.IsConnected) continue;
-                try { c.PendingResponses.TickRetransmits(c.Connection.Send); }
+                try { c.PendingResponses.TickRetransmits(c.Connection.SendDeviceCommand); }
                 catch (Exception ex) { MozaLog.Warn($"[AZOM] Standalone {c.Category} retransmit tick failed: {ex.Message}"); }
             }
         }

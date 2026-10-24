@@ -527,7 +527,7 @@ Built inline by [`MozaMBoosterProtocol.BuildMotorFrame`](../../../Protocol/MozaM
 | ID  | Name      | ParamK | Trigger condition (host-side, doc § 4)                                                                   |
 | --- | --------- | ------ | -------------------------------------------------------------------------------------------------------- |
 | `1` | ABS       | 2000   | `absActive > 0.1` from SimHub                                                                            |
-| `2` | Lockup    | 2640   | Heavy brake (>0.8) + wheels < 30 % of vehicle speed (fallback: brake > 0.9 when wheel speed unavailable) |
+| `2` | Lockup    | 2640   | Heavy brake (>0.8) + slowest wheel < 30 % of ground speed; off when the game has no per-wheel speed      |
 | `3` | Threshold | 3080   | Rising edge on brake > 0.6; release at < 0.3 (hysteresis)                                                |
 | `4` | Engine    | 1000   | `rpm > 0.8 × idleRpm` — runs continuously                                                                |
 
@@ -1099,9 +1099,8 @@ verified.
 
 Unlike ABS/Engine/Road Texture, Lockup's *activation* gate is
 untouched — it's the most sophisticated of the four (wheel-slip
-detection: `brake > 0.8 && vehicleSpeed > 5 && avgWheelSpeed <
-vehicleSpeed * 0.3`, with a fallback for games that don't expose
-per-wheel speeds). Only the frequency computation changed; the
+detection: `brake > 0.8 && groundSpeed > 5 && minWheelSpeed <
+groundSpeed * 0.3`; see "Wheel-speed source" under Wheel Spin). Only the frequency computation changed; the
 detection heuristic that decides *whether* to fire is exactly what it
 was before. The sustained Test toggle bypasses that heuristic entirely
 (same substitution the old 1s pulse used — live brake position stands
@@ -1768,7 +1767,15 @@ Threshold's effect is applied host-side.
 
 Every calibration here uses the shared `-1`/`null` "not yet set / no
 override" sentinel, so a fresh profile never overwrites what is already
-on the device; the editor then shows the unit's own read-back.
+on the device; the editor then shows the unit's own read-back. Pedal Feel
+does the same (`SeedMBoosterPedalFeelRegisters`) for Travel, End Stop,
+Friction, plain Damping (`0xAD`) and Deadzone, re-checked every tab tick
+since the read-backs can land after the seed. It reads the cache of the
+unit the selected pedal writes to, and only when that pedal owns the
+singleton registers. Max Force, the feel-curve nodes and Segmented Damping
+(`0xB7`) are not in the read set, so they still show defaults. The singleton
+set and status block are read from every unit the roles map to
+(`ReadUnitRegisters`), so a chained unit seeds from its own read-back.
 
 ## Pedal Feel
 
@@ -1795,15 +1802,29 @@ Those two decodes give the **physical full scales: 12.0 press, 10.0
 release** (40 % of 12 = 4.8; 25 % of 10 = 2.5). Units unstated by the
 firmware.
 
-Pit House pushes both selectors on **every** config apply, and reads both
-back every cycle, so `ApplyMBoosterToHardware` does too
-(`MBoosterDeviceSettings.DampingPressPct`/`DampingReleasePct`, `-1` = no
-override as everywhere else). The two selectors are independent values here,
-unlike Natural Friction's pair which always carries the same number.
+The two selectors are independent values, unlike Natural Friction's pair
+which always carries the same number.
 
-In the 2026-09-08 captures `0xAD` and all three `0xB7` segments held the same
-40 %/25 %, so **which of the two wins when they disagree is not determined** —
-but replicating what Pit House writes needs no answer to that.
+Pit House 1.4.1.13 has no control for `0xAD` (moza-simulator, 2026-10-17). It
+writes a fixed default per role — Throttle 2/2, Brake 40/25, Clutch 13/4 —
+on connect and on every role change, and reads both selectors back every
+cycle. Segment edits send only `0xB7`; turning Segmented Damping off sends
+an all-zero `0xB7`. On launch it sends the saved `0xB7`, then the `0xAD`
+default, then `0xB7` again.
+
+User testing found the two are **latest-wins**: whichever of `0xAD` / `0xB7`
+was written last is the damping the pedal applies. So AZOM picks one by the
+Segmented Damping toggle (`SegmentedDamping.DampingEnabled`):
+
+- **On** — the plots show and only `0xB7` is written; the plain sliders are
+  hidden and their saved values are not applied.
+- **Off** — the plain sliders show. `0xB7` goes out all-zero, then `0xAD`
+  (`DampingPressPct`/`DampingReleasePct`, an unset one taken from the unit's
+  read-back) after it.
+
+`MBoosterDeviceController` tracks which of the two went out last per unit
+and forces the other through its skip-if-unchanged check when it has to
+become the latest (`SendSegmentedDampingIfChanged` / `SendPlainDamping`).
 
 ### `0xB2` is `softlimit_hardness`, and the value is a 0–1 fraction
 
@@ -2399,18 +2420,29 @@ acceleration-side counterpart to Lockup's braking-side heuristic (see
 "Lockup rebuild" above):
 
 ```text
-isSpinning = throttle > 0.8 && vehicleSpeed < 40 && avgWheelSpeed > vehicleSpeed * 1.3
+isSpinning = throttle > 0.8 && groundSpeed < 40
+          && maxWheelSpeed > groundSpeed * 1.3 && maxWheelSpeed - groundSpeed > 2
 ```
 
-gated to `vehicleSpeed < 40` m/s (~144 km/h) since wheelspin is a
+gated to `groundSpeed < 40` m/s (~144 km/h) since wheelspin is a
 low/mid-speed launch or corner-exit phenomenon, not something that
-should fire from flooring the throttle at speed in a tall gear. Same
-fallback rationale as Lockup: `AvgWheelSpeedMs` is currently always 0
-in this plugin (`MozaPlugin.DataUpdate` hardcodes it — no per-wheel
-speed telemetry is wired up yet), so the primary condition never
-actually fires yet; a fallback (`avgWheelSpeed <= 0 && throttle > 0.9 &&
-vehicleSpeed < 40`) carries the real behavior today, same as Lockup's
-own fallback does. The sustained Test toggle substitutes live throttle
+should fire from flooring the throttle at speed in a tall gear. The
+2 m/s absolute margin keeps ordinary launch slip near standstill out.
+
+**Wheel-speed source.** `MozaPlugin.DataUpdate` reads SimHub's
+`NewData.FeedbackData.WheelSpeed[4]` (km/h, written by the game reader)
+and passes the fastest/slowest wheel plus `FeedbackData.GroundSpeed`
+(falling back to `SpeedKmh`, which some readers derive from wheel
+speed). The arrays are only trusted when
+`GameManager.GetFeedbackCapabilities().WheelsSpeed` is true (cached per
+manager, refreshed once a second). SimHub 9.13 declares it for
+the Codemasters reader (F1 2017–25, EA WRC), rFactor 2 / LMU, RaceRoom, GT7, BeamNG, RBR,
+Project Motor Racing and Wreckfest 2, but not iRacing or AC/ACC. Without
+it, Wheel Spin and Lockup stay off: an earlier fallback fired from pedal
+position alone (throttle > 0.9 / brake > 0.9) and buzzed on every
+launch and hard stop (ticket BRE60X3R). `FeedbackData.WheelSlip` is not
+used; its scale differs per reader (AC slip magnitude, rF2
+`1 - gripFract`, F1 signed slip ratio). The sustained Test toggle substitutes live throttle
 position (via the same `EffectiveThrottle` helper Traction Control
 uses), gated at 80% throttle.
 

@@ -69,9 +69,9 @@ namespace MozaPlugin.Devices.Extensions
                 LinkedDevice.DeviceDescriptor?.DeviceTypeID ?? "");
             if (pedal != 0) _pedal = pedal;
 
-            if (!_registeredActive && MozaPlugin.Instance is { } plugin)
+            if (!_registeredActive)
             {
-                plugin.PedalHapticsDeviceExtensionStarted();
+                MozaPlugin.PedalHapticsDeviceExtensionStarted();
                 _registeredActive = true;
             }
 
@@ -217,7 +217,7 @@ namespace MozaPlugin.Devices.Extensions
 
             if (_registeredActive)
             {
-                MozaPlugin.Instance?.PedalHapticsDeviceExtensionEnded();
+                MozaPlugin.PedalHapticsDeviceExtensionEnded();
                 _registeredActive = false;
             }
         }

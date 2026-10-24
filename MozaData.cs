@@ -214,6 +214,11 @@ namespace MozaPlugin
         // Stalks settings tab's visibility).
         public volatile bool IsStalksConnected;
 
+        // AB9 / AB6 HID buttons (0-based) — one per gear, see Devices/Ab9Gear.cs.
+        public const int MaxAb9Buttons = 32;
+        public readonly bool[] Ab9ButtonStates = new bool[MaxAb9Buttons];
+        public volatile bool IsAb9HidConnected;
+
         // Handbrake button (separate HID device, only fires in button mode)
         public volatile bool HandbrakeButtonPressed;
 

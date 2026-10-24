@@ -77,6 +77,11 @@ namespace MozaPlugin
             _cm1Driver?.UpdateGameData(data.NewData);
             _cm1Driver?.SetGameRunning(data.GameRunning);
             _gearshift?.Tick(data);
+            if (_motionController?.IsStreaming == true)
+            {
+                try { _motionFeed.Update(pluginManager, data); }
+                catch (Exception ex) { MozaLog.Debug($"[AZOM/Motion] Feed: {ex.Message}"); }
+            }
 
             // Push SimHub's shared/master LED brightness to the wheel firmware group
             // brightness (rpm/buttons/knobs) when the user moves the slider. The wheel
@@ -193,7 +198,39 @@ namespace MozaPlugin
                     _ => false,
                 };
                 double vehicleMs = (nd?.SpeedKmh ?? 0.0) / 3.6;
-                double avgWheelMs = 0.0;
+                // Per-wheel speeds for Wheel Spin / Lockup. Only trusted when the
+                // game reader declares WheelsSpeed (FeedbackData.WheelSpeed is
+                // km/h); otherwise the arrays are just zeros and both effects
+                // stay silent. Slip is measured against ground speed where the
+                // reader has it, since SpeedKmh can itself be wheel-derived.
+                bool hasWheelSpeeds = false;
+                double maxWheelMs = 0.0, minWheelMs = 0.0, groundMs = vehicleMs;
+                var gameManager = pluginManager.GameManager;
+                int nowTick = Environment.TickCount;
+                if (!ReferenceEquals(gameManager, _mboosterCapsManager) || unchecked(nowTick - _mboosterCapsTick) >= 1000)
+                {
+                    _mboosterCapsManager = gameManager;
+                    _mboosterCapsTick = nowTick;
+                    try { _mboosterWheelsSpeedCap = gameManager?.GetFeedbackCapabilities()?.WheelsSpeed == true; }
+                    catch { _mboosterWheelsSpeedCap = false; }
+                }
+                var fb = nd?.FeedbackData;
+                double[]? wheelKmh = fb?.WheelSpeed;
+                if (_mboosterWheelsSpeedCap && data.GameRunning && wheelKmh != null && wheelKmh.Length >= 4)
+                {
+                    maxWheelMs = double.MinValue;
+                    minWheelMs = double.MaxValue;
+                    for (int w = 0; w < 4; w++)
+                    {
+                        double ms = Math.Abs(wheelKmh[w]) / 3.6;
+                        if (ms > maxWheelMs) maxWheelMs = ms;
+                        if (ms < minWheelMs) minWheelMs = ms;
+                    }
+                    hasWheelSpeeds = !double.IsNaN(maxWheelMs) && !double.IsNaN(minWheelMs);
+                    if (!hasWheelSpeeds) { maxWheelMs = 0.0; minWheelMs = 0.0; }
+                    double? groundKmh = fb!.GroundSpeed;
+                    if (groundKmh.HasValue && groundKmh.Value > 0) groundMs = groundKmh.Value / 3.6;
+                }
                 double idleRpm = 800.0;
                 // No generic suspension-travel telemetry exists in SimHub;
                 // AccelerationHeave (vertical G) is the closest proxy for
@@ -256,7 +293,10 @@ namespace MozaPlugin
                     absActive: absActive,
                     tcActive: tcActive,
                     vehicleSpeedMs: vehicleMs,
-                    avgWheelSpeedMs: avgWheelMs,
+                    hasWheelSpeeds: hasWheelSpeeds,
+                    maxWheelSpeedMs: maxWheelMs,
+                    minWheelSpeedMs: minWheelMs,
+                    groundSpeedMs: groundMs,
                     suspensionHeaveG: suspensionHeaveG,
                     longitudinalG: longitudinalG,
                     brakeTempC: brakeTempC,

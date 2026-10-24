@@ -46,6 +46,13 @@ namespace MozaPlugin
         // bool edge would when sampled by their slower ~20ms timer.
         private int _mboosterShiftSeq;
 
+        // Cached FeedbackCapabilities.WheelsSpeed for the active game manager
+        // (re-queried on manager change and at most once a second, since some
+        // readers compute capabilities from live state).
+        private IGameManager? _mboosterCapsManager;
+        private int _mboosterCapsTick;
+        private bool _mboosterWheelsSpeedCap;
+
         // Wheelbase LFE momentary test triggers (from the UI test buttons). No-op
         // when the firmware doesn't support LFE. Each plays a fixed pattern:
         // engine = 2 s sweep, ABS = 1 s burst, gearshift = two rapid bumps.

@@ -92,6 +92,8 @@ namespace MozaPlugin.UI
                 StalksWiperWrapToggle.IsChecked = cfg.WiperForwardWraps;
                 StalksIndMinBlinkSlider.Value = cfg.IndicatorMinBlinkSeconds;
                 StalksIndMinBlinkValue.Text = cfg.IndicatorMinBlinkSeconds.ToString();
+                StalksDebounceSlider.Value = cfg.DebounceMs;
+                StalksDebounceValue.Text = cfg.DebounceMs.ToString();
 
                 StalksWiperFwdKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperForwardKey);
                 StalksWiperBackKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperBackKey);
@@ -168,6 +170,16 @@ namespace MozaPlugin.UI
             int n = (int)Math.Round(e.NewValue);
             StalksIndMinBlinkValue.Text = n.ToString();
             _plugin.Settings.StalksTruckSim.IndicatorMinBlinkSeconds = n;
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksDebounceSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_suppressEvents) return;
+            int n = (int)Math.Round(e.NewValue);
+            StalksDebounceValue.Text = n.ToString();
+            _plugin.Settings.StalksTruckSim.DebounceMs = n;
             _plugin.SaveSettings();
             _plugin.ApplyStalksSettings();
         }

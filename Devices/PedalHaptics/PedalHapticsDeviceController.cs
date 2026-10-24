@@ -35,7 +35,7 @@ namespace MozaPlugin.Devices.PedalHaptics
         private readonly MozaSerialConnection _connection;
         private readonly bool _ownsConnection;
         private readonly Func<bool> _isShuttingDown;
-        private readonly PedalHapticsEffectWorker _worker;
+        private readonly PedalHapticsEffectScheduler _effects;
 
         private int _detected;      // 0/1, latched on the first vibration reply
         private int _probeAttempts;
@@ -77,7 +77,7 @@ namespace MozaPlugin.Devices.PedalHaptics
             _isShuttingDown = isShuttingDown ?? (() => false);
 
             _connection.MessageReceived += OnConnectionMessage;
-            _worker = new PedalHapticsEffectWorker(this, _isShuttingDown);
+            _effects = new PedalHapticsEffectScheduler(this, _isShuttingDown);
         }
 
         /// <summary>USB lane: owns its own CDC connection, selected by PID.</summary>
@@ -103,7 +103,7 @@ namespace MozaPlugin.Devices.PedalHaptics
                 LastPortName = portName,
             };
             _connection.MessageReceived += OnConnectionMessage;
-            _worker = new PedalHapticsEffectWorker(this, _isShuttingDown);
+            _effects = new PedalHapticsEffectScheduler(this, _isShuttingDown);
         }
 
         public bool IsConnected => _connection.IsConnected;
@@ -114,7 +114,7 @@ namespace MozaPlugin.Devices.PedalHaptics
         public bool SharesConnection(MozaSerialConnection connection)
             => ReferenceEquals(_connection, connection);
 
-        /// <summary>Open the USB lane and start the motor loop. Routed lanes use <see cref="StartWorker"/>.</summary>
+        /// <summary>Open the USB lane and start effect output. Routed lanes use <see cref="StartEffects"/>.</summary>
         public bool TryConnect()
         {
             if (!_ownsConnection) return _connection.IsConnected;
@@ -122,13 +122,16 @@ namespace MozaPlugin.Devices.PedalHaptics
             if (!_connection.Connect()) return false;
 
             PortName = _connection.LastPortName ?? PortName;
-            StartWorker();
+            StartEffects();
             SendPresenceProbe();
             return true;
         }
 
-        /// <summary>Start the motor loop — the registry calls this for a routed lane.</summary>
-        public void StartWorker() => _worker.Start();
+        /// <summary>Hand the effect state to the pipe's write loop — the registry calls this for a routed lane.</summary>
+        public void StartEffects()
+        {
+            if (!_disposed) _connection.AddPacedSource(_effects);
+        }
 
         /// <summary>
         /// Ask the unit whether one slot is enabled. Any well-formed
@@ -147,11 +150,9 @@ namespace MozaPlugin.Devices.PedalHaptics
         public int ProbeAttempts => System.Threading.Volatile.Read(ref _probeAttempts);
 
         /// <summary>
-        /// Send an effect frame. These go on the paced one-shot FIFO rather than
-        /// a latest-wins stream lane: every frame addresses a different
-        /// pedal+slot, so coalescing by lane would drop one slot's update in
-        /// favour of another's. The worker's per-tick budget is what keeps the
-        /// queue from growing, not the transport.
+        /// Queue an effect frame on the FIFO. Live effect output does not come
+        /// through here — the write loop pulls it from <see cref="PedalHapticsEffectScheduler"/>;
+        /// this is only for the final disables once that source is stopped.
         /// </summary>
         public void SendFrame(byte[] frame)
         {
@@ -169,15 +170,15 @@ namespace MozaPlugin.Devices.PedalHaptics
             _connection.Send(frame);
         }
 
-        /// <summary>Publish one pedal channel's latest ShakeIt output to the motor loop.</summary>
+        /// <summary>Publish one pedal channel's latest ShakeIt output to the effect scheduler.</summary>
         public void PostChannel(int pedalIndex, int channel, double gain01, double freqHz)
-            => _worker.PostChannel(pedalIndex, channel, gain01, freqHz);
+            => _effects.PostChannel(pedalIndex, channel, gain01, freqHz);
 
         /// <summary>Drop one pedal to silent (that device's provider Stop path).</summary>
-        public void ClearPedal(int pedalIndex) => _worker.ClearPedal(pedalIndex);
+        public void ClearPedal(int pedalIndex) => _effects.ClearPedal(pedalIndex);
 
         /// <summary>Drop every pedal to silent.</summary>
-        public void ClearAll() => _worker.ClearAll();
+        public void ClearAll() => _effects.ClearAll();
 
         private void OnConnectionMessage(byte[] data)
         {
@@ -227,8 +228,10 @@ namespace MozaPlugin.Devices.PedalHaptics
             if (_disposed) return;
             _disposed = true;
 
-            // Stop() sends the disable frames, so it must run before the pipe goes.
-            try { _worker.Dispose(); } catch { /* shutting down */ }
+            // Detach first so the write loop stops pulling, then queue the disables;
+            // both must happen before the pipe goes.
+            _connection.RemovePacedSource(_effects);
+            try { _effects.Stop(); } catch { /* shutting down */ }
 
             _connection.MessageReceived -= OnConnectionMessage;
             if (_ownsConnection)

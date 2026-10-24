@@ -47,6 +47,7 @@ namespace MozaPlugin.UI
                 using (_suppressor.Begin())
                 {
                     UpdateCheckEnabledToggle.IsChecked = s.UpdateCheckEnabled;
+                    if (FollowBetaToggle != null) FollowBetaToggle.IsChecked = s.FollowBetaChannel;
                     RepopulateChannelCombo();
                 }
 
@@ -506,6 +507,20 @@ namespace MozaPlugin.UI
             RefreshUpdateNotifications();
         }
 
+        // Beta-follow owns the channel pick, so the combo is locked while it's
+        // on; enabling it checks right away to jump onto the newest beta.
+        private void FollowBeta_Click(object sender, RoutedEventArgs e)
+        {
+            if (_suppressEvents) return;
+            var s = _plugin?.Settings;
+            if (s == null) return;
+            s.FollowBetaChannel = FollowBetaToggle?.IsChecked == true;
+            try { _plugin!.PersistSettings(); } catch { }
+            RepopulateChannelCombo();
+            if (s.FollowBetaChannel) _ = RunManualCheckAsync();
+            else RefreshUpdateNotifications();
+        }
+
         // Rebuilds the channel picker: Stable + one entry per open PR from the
         // cached release snapshot. Selection keys off the persisted channel id
         // (item Tag), so a snapshot refresh can't silently move the user onto
@@ -519,6 +534,7 @@ namespace MozaPlugin.UI
 
             using (_suppressor.Begin())
             {
+                UpdateChannelCombo.IsEnabled = s?.FollowBetaChannel != true;
                 UpdateChannelCombo.Items.Clear();
                 UpdateChannelCombo.Items.Add(new ComboBoxItem
                 {
@@ -676,6 +692,7 @@ namespace MozaPlugin.UI
 
             if (fetch.Snapshot != null)
             {
+                UpdateCheckService.ApplyBetaFollow(s, fetch.Snapshot);
                 var result = UpdateCheckService.ResolveChannel(
                     fetch.Snapshot, s.UpdateChannelId, out bool channelFound);
                 bool channelGone = !channelFound;
@@ -718,7 +735,8 @@ namespace MozaPlugin.UI
                         string current = DiagnosticsTextBuilder.GetPluginVersion();
                         bool upToDate = string.IsNullOrEmpty(result.LatestVersion)
                             || !UpdateCheckService.IsUpdateAvailable(
-                                result.LatestVersion, current, s.UpdateChannelId);
+                                result.LatestVersion, current, s.UpdateChannelId,
+                                s.FollowBetaChannel);
                         if (upToDate)
                             UpdateLastCheckedText.Text = Strings.Status_UpdateUpToDate;
                         else
