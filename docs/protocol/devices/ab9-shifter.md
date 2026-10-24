@@ -46,16 +46,18 @@ AB9 enumerates as its **own** Moza composite USB device (VID `0x346E` PID `0x100
 
 HID-IN (EP 0x83) is report ID `0x01`, 34 bytes: 8 × 16-bit axes (`0x30`..`0x37`, all idle `0x7FFF` in every capture) then 128 buttons, button 1 = bit 0 of byte 17. The engaged gear is a held button; the buttons name the **logical gear**, so the selected `D3` layout only decides where each gear sits in the gate.
 
-| Button (1-based) | Meaning | Source |
-|---|---|---|
-| 5 | R | `Launch and H-pattern gear engage` (7+R L1), `all_gears` |
-| 6..12 | gears 1..7 | same; gear 1 also `1-N` |
-| 13 | gear 8 (R+8) | inferred from the contiguous run, not captured |
-| 17 | sequential down (pull) | `SQ gear change` + `Moza AB9.xlsx` sheet 3 |
-| 18 | sequential up (push) | same |
-| 4 | set in every report, unchanged by gear or layout; meaning unknown | all |
+Current map, read off a live AB9 as SimHub joystick buttons (device owner, 2026-10-24). Indices are SimHub's 0-based `_Bnn`:
 
-No gear button held = neutral. Gear events line up 1:1 with the `Moza AB9.xlsx` timelines. Whether the AB6 reports the same map is unverified. Read by `MozaHidReader` (`MozaHidClass.Ab9`) into `MozaData.Ab9ButtonStates`, decoded by `Devices/Ab9Gear.cs`, drawn by `UI/Controls/Ab9GateView.cs`.
+| Button | Meaning |
+|---|---|
+| `B00` | R |
+| `B01`..`B08` | gears 1..8 |
+| `B12` | sequential push (gear down) |
+| `B13` | sequential pull (gear up) |
+
+No gear button held = neutral. Whether the AB6 reports the same map is unverified.
+
+The 2026-04/05 captures (`Launch and H-pattern gear engage`, `all_gears`, `1-N`, `SQ gear change`) show a **different** map: R = 1-based button 5, gears 1..7 = 6..12, sequential down/up = 17/18, and button 4 held in every report. Why the two differ is unresolved; the map above is the one the plugin uses. Read by `MozaHidReader` (`MozaHidClass.Ab9`) into `MozaData.Ab9ButtonStates`, decoded by `Devices/Ab9Gear.cs`, drawn by `UI/Controls/Ab9GateView.cs`.
 
 Address-disambiguation (only Moza devs in capture): wheelbase OUTs target dev IDs 0x13/0x14/0x15/0x17/0x19/0x1A/0x1B/0x1E (full sub-bus). AB9 OUTs target only `Main/Hub (0x12)` — confirms AB9 has its own internal "Main" with no sub-devices.
 
