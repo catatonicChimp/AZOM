@@ -55,23 +55,32 @@ namespace MozaPlugin.Telemetry
             }
         }
 
-        // Armed per Start cycle; closed for good once that cycle's first catalog
+        // Armed per Start cycle and per dashboard switch; closed for good once that
         // advertisement goes quiet, so later upkeep chunks don't reopen it.
         private volatile bool _initialNegotiationOpen;
         private int _initialNegotiationArmMs;
+        // Arm with no advertisement inside this window closes unused, so a later
+        // upkeep chunk can't be mistaken for it.
+        private const int InitialNegotiationArmTimeoutMs = 15000;
 
         /// <summary>
         /// <see cref="WheelInCatalogNegotiation"/> limited to the first advertisement
-        /// after a Start. Drives the wheel's negotiation status LED.
+        /// after a Start or dashboard switch. Drives the wheel's negotiation status LED.
         /// </summary>
         internal bool WheelInInitialCatalogNegotiation
         {
             get
             {
                 if (!_initialNegotiationOpen) return false;
+                int arm = Volatile.Read(ref _initialNegotiationArmMs);
                 int last = _catalogParser.LastActivityMs;
-                if (last == 0 || unchecked(last - Volatile.Read(ref _initialNegotiationArmMs)) < 0)
-                    return false;   // nothing advertised yet this cycle
+                if (last == 0 || unchecked(last - arm) < 0)
+                {
+                    // Nothing advertised yet since the arm.
+                    if (unchecked(Environment.TickCount - arm) >= InitialNegotiationArmTimeoutMs)
+                        _initialNegotiationOpen = false;
+                    return false;
+                }
                 if (WheelInCatalogNegotiation) return true;
                 _initialNegotiationOpen = false;
                 return false;
@@ -281,7 +290,11 @@ namespace MozaPlugin.Telemetry
         /// <summary>Arm the hot-switch tier-def re-emission burst. Called
         /// from <see cref="Display.WheelSlotTracker"/> when the wheel
         /// initiates a switch via the on-wheel controls.</summary>
-        internal void ArmHotSwitchBurst() => _hotSwitch.ArmBurst();
+        internal void ArmHotSwitchBurst()
+        {
+            _hotSwitch.ArmBurst();
+            ArmInitialNegotiation();
+        }
 
         internal void RaiseWheelInitiatedSwitch(int slot)
         {
@@ -383,6 +396,7 @@ namespace MozaPlugin.Telemetry
                 // 0x01/0x02/0x03 stay open. Preamble skipped because
                 // _tierDefPreambleSent stays true.
                 _hotSwitch.ArmBurst();
+                ArmInitialNegotiation();
                 MozaLog.Info(
                     $"[AZOM] SwitchToProfile slot={slotIndex}: HOT path — " +
                     $"{Lifecycle.HotSwitchCoordinator.MinEmissions}-" +
