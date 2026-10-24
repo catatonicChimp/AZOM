@@ -21,6 +21,7 @@ All notable changes to the AZOM plugin are documented here.
 
 ## Fixed
 
+- **Picking a profile applies it again on SimHub 9.13.3,** and switching games applies that game's profile instead of the previous one.
 - **Profile wheel settings such as paddle mode are no longer lost at connect** when dashboard telemetry starts at the same time; paddle mode, clutch point and knob modes are also re-checked against the wheel.
 - **Pedal haptics no longer lag seconds behind the game** with several ShakeIt effects active.
 - **GS V2 Pro wheels reporting "GS" show as MOZA GS V2 Pro again;** the leftover "MOZA GS" definition that hid it is removed, existing devices carry over.
