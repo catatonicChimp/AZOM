@@ -417,6 +417,7 @@
   <data name="Section_Display" xml:space="preserve"><value>显示</value></data>
   <data name="SliderLabel_DisplayBrightness" xml:space="preserve"><value>显示亮度</value></data>
   <data name="SliderLabel_StandbyTime" xml:space="preserve"><value>待机时间</value></data>
+  <data name="SliderLabel_SyncStatusLed" xml:space="preserve"><value>同步状态指示灯</value></data>
   <data name="Option_Time1Min" xml:space="preserve"><value>1 分钟</value></data>
   <data name="Option_Time2Min" xml:space="preserve"><value>2 分钟</value></data>
   <data name="Option_Time3Min" xml:space="preserve"><value>3 分钟</value></data>

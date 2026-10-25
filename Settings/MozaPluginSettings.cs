@@ -131,6 +131,11 @@ namespace MozaPlugin.Settings
         // VGS wheel display-rotation mode baseline (0=off, 1=smooth, 2=immediate).
         // Pushed via session-0x02 ff-record kind=5; VGS-only. Default off.
         public int DashDisplayRotation { get; set; } = 0;
+        // Catalog-negotiation status LED (first RPM LED pulse). Colour packed 0xRRGGBB.
+        private volatile bool _negotiationLedEnabled = true;
+        public bool NegotiationLedEnabled { get => _negotiationLedEnabled; set => _negotiationLedEnabled = value; }
+        private volatile int _negotiationLedColor = 0x0000FF;
+        public int NegotiationLedColor { get => _negotiationLedColor; set => _negotiationLedColor = value; }
 
         // CM2 dash (dual-screen): the dashboard the user selected for the CM2's
         // own pipeline, independent of the wheel's selection. Empty = catalog default.

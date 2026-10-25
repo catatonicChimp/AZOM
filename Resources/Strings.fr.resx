@@ -417,6 +417,7 @@
   <data name="Section_Display" xml:space="preserve"><value>AFFICHAGE</value></data>
   <data name="SliderLabel_DisplayBrightness" xml:space="preserve"><value>Luminosité de l'affichage</value></data>
   <data name="SliderLabel_StandbyTime" xml:space="preserve"><value>Délai de veille</value></data>
+  <data name="SliderLabel_SyncStatusLed" xml:space="preserve"><value>LED d'état de synchronisation</value></data>
   <data name="Option_Time1Min" xml:space="preserve"><value>1 minute</value></data>
   <data name="Option_Time2Min" xml:space="preserve"><value>2 minutes</value></data>
   <data name="Option_Time3Min" xml:space="preserve"><value>3 minutes</value></data>

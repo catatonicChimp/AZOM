@@ -297,7 +297,48 @@ namespace MozaPlugin.Devices.Ui
                     }
                     SelectWheelDisplayRotationByMode(r);
                 }
+
+                var s = _plugin.Settings;
+                if (s != null)
+                {
+                    SyncStatusLedPanel.Visibility = Visibility.Visible;
+                    SyncStatusLedToggle.IsChecked = s.NegotiationLedEnabled;
+                    int c = s.NegotiationLedColor;
+                    if (c != _shownSyncLedColor)
+                    {
+                        _shownSyncLedColor = c;
+                        SyncStatusLedSwatch.Background = SyncStatusLedBrush(c);
+                    }
+                }
             }
+        }
+
+        private int _shownSyncLedColor = -1;
+
+        private static SolidColorBrush SyncStatusLedBrush(int packed)
+        {
+            var rgb = MozaProfile.UnpackColor(packed);
+            return new SolidColorBrush(Color.FromRgb(rgb[0], rgb[1], rgb[2]));
+        }
+
+        private void SyncStatusLedToggle_Click(object sender, RoutedEventArgs e)
+        {
+            if (_suppressEvents || _plugin?.Settings == null) return;
+            _plugin.Settings.NegotiationLedEnabled = SyncStatusLedToggle.IsChecked == true;
+            _plugin.SaveSettings();
+        }
+
+        private void SyncStatusLedSwatch_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (_suppressEvents || _plugin?.Settings == null) return;
+            var rgb = MozaProfile.UnpackColor(_plugin.Settings.NegotiationLedColor);
+            var dialog = new ColorPickerDialog(rgb[0], rgb[1], rgb[2]) { Owner = Window.GetWindow(this) };
+            if (dialog.ShowDialog() != true) return;
+            int packed = (dialog.SelectedR << 16) | (dialog.SelectedG << 8) | dialog.SelectedB;
+            _plugin.Settings.NegotiationLedColor = packed;
+            _shownSyncLedColor = packed;
+            SyncStatusLedSwatch.Background = SyncStatusLedBrush(packed);
+            _plugin.SaveSettings();
         }
 
         // ===== Dashboard Telemetry =====

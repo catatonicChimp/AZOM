@@ -417,6 +417,7 @@
   <data name="Section_Display" xml:space="preserve"><value>MÀN HÌNH</value></data>
   <data name="SliderLabel_DisplayBrightness" xml:space="preserve"><value>Độ sáng màn hình</value></data>
   <data name="SliderLabel_StandbyTime" xml:space="preserve"><value>Thời gian chờ</value></data>
+  <data name="SliderLabel_SyncStatusLed" xml:space="preserve"><value>LED trạng thái đồng bộ</value></data>
   <data name="Option_Time1Min" xml:space="preserve"><value>1 phút</value></data>
   <data name="Option_Time2Min" xml:space="preserve"><value>2 phút</value></data>
   <data name="Option_Time3Min" xml:space="preserve"><value>3 phút</value></data>

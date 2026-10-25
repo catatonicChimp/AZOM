@@ -417,6 +417,7 @@
   <data name="Section_Display" xml:space="preserve"><value>ДИСПЛЕЙ</value></data>
   <data name="SliderLabel_DisplayBrightness" xml:space="preserve"><value>Яркость дисплея</value></data>
   <data name="SliderLabel_StandbyTime" xml:space="preserve"><value>Время ожидания</value></data>
+  <data name="SliderLabel_SyncStatusLed" xml:space="preserve"><value>Светодиод статуса синхронизации</value></data>
   <data name="Option_Time1Min" xml:space="preserve"><value>1 минута</value></data>
   <data name="Option_Time2Min" xml:space="preserve"><value>2 минуты</value></data>
   <data name="Option_Time3Min" xml:space="preserve"><value>3 минуты</value></data>

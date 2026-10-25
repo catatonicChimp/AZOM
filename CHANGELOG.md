@@ -2,6 +2,12 @@
 
 All notable changes to the AZOM plugin are documented here.
 
+## [1.7.2]
+
+## Added
+
+- **Sync Status LED can be turned off or recoloured** from the dashboard page's Display card.
+
 ## [1.7.1]
 
 ## Added

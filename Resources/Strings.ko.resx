@@ -417,6 +417,7 @@
   <data name="Section_Display" xml:space="preserve"><value>디스플레이</value></data>
   <data name="SliderLabel_DisplayBrightness" xml:space="preserve"><value>디스플레이 밝기</value></data>
   <data name="SliderLabel_StandbyTime" xml:space="preserve"><value>대기 시간</value></data>
+  <data name="SliderLabel_SyncStatusLed" xml:space="preserve"><value>동기화 상태 LED</value></data>
   <data name="Option_Time1Min" xml:space="preserve"><value>1분</value></data>
   <data name="Option_Time2Min" xml:space="preserve"><value>2분</value></data>
   <data name="Option_Time3Min" xml:space="preserve"><value>3분</value></data>

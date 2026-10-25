@@ -533,6 +533,7 @@ namespace MozaPlugin.Resources
         public static string Section_Display => Get("Section_Display");
         public static string SliderLabel_DisplayBrightness => Get("SliderLabel_DisplayBrightness");
         public static string SliderLabel_StandbyTime => Get("SliderLabel_StandbyTime");
+        public static string SliderLabel_SyncStatusLed => Get("SliderLabel_SyncStatusLed");
         public static string Option_Time1Min => Get("Option_Time1Min");
         public static string Option_Time2Min => Get("Option_Time2Min");
         public static string Option_Time3Min => Get("Option_Time3Min");
