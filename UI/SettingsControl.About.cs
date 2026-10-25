@@ -42,7 +42,18 @@ namespace MozaPlugin.UI
         private void AboutSponsorButton_Click(object sender, System.Windows.RoutedEventArgs e) => OpenExternalUrl(AboutSponsorUrl);
         private void AboutKofiButton_Click(object sender, System.Windows.RoutedEventArgs e)    => OpenExternalUrl(AboutKofiUrl);
 
-        // Slug under AboutGuidesUrl + title, in the site's guide order.
+        // Guide list published by the site at build time, in site order. Fetched
+        // once per AppDomain; the built-in list below shows until it arrives and
+        // stays if the fetch fails.
+        private const string AboutGuidesJsonUrl = AboutGuidesUrl + "guides.json";
+        private static volatile IReadOnlyList<(string Slug, string Title, string Url)>? s_siteGuides;
+        private static bool s_siteGuidesRequested;
+        // Raised on a pool thread once s_siteGuides is set.
+        private static event Action? s_siteGuidesUpdated;
+        private bool _siteGuidesHooked;
+
+        // Built-in fallback, and the localized titles for known slugs. Guides
+        // the site adds later show with the site's English title.
         private static readonly (string Slug, Func<string> Title)[] AboutGuides =
         {
             ("getting-started",             () => Strings.Guide_GettingStarted),
@@ -72,14 +83,90 @@ namespace MozaPlugin.UI
 
         private void InitAboutGuides()
         {
+            RenderAboutGuides();
+            // Hook from Loaded only and re-hook on every Loaded (update-banner
+            // pattern) so a control SimHub builds but never shows isn't pinned.
+            Loaded += OnLoadedHookSiteGuides;
+            Unloaded += OnUnloadedUnhookSiteGuides;
+            if (s_siteGuidesRequested) return;
+            s_siteGuidesRequested = true;
+            _ = FetchSiteGuidesAsync();
+        }
+
+        private void OnLoadedHookSiteGuides(object sender, RoutedEventArgs e)
+        {
+            if (_siteGuidesHooked) return;
+            s_siteGuidesUpdated += OnSiteGuidesUpdated;
+            _siteGuidesHooked = true;
+            // Subscribe before reading so a list landing in between isn't missed.
+            RenderAboutGuides();
+        }
+
+        private void OnUnloadedUnhookSiteGuides(object sender, RoutedEventArgs e)
+        {
+            if (!_siteGuidesHooked) return;
+            s_siteGuidesUpdated -= OnSiteGuidesUpdated;
+            _siteGuidesHooked = false;
+        }
+
+        private void OnSiteGuidesUpdated()
+            => _ = Dispatcher.BeginInvoke((Action)RenderAboutGuides);
+
+        private static async System.Threading.Tasks.Task FetchSiteGuidesAsync()
+        {
+            try
+            {
+                string json = await UpdateCheck.UpdateCheckService.Http
+                    .GetStringAsync(AboutGuidesJsonUrl).ConfigureAwait(false);
+                var list = new List<(string Slug, string Title, string Url)>();
+                foreach (var item in Newtonsoft.Json.Linq.JArray.Parse(json))
+                {
+                    string? slug = (string?)item["slug"];
+                    string? title = (string?)item["title"];
+                    string? url = (string?)item["url"];
+                    // Only open links on the guides site, whatever the file says.
+                    if (string.IsNullOrWhiteSpace(slug) || string.IsNullOrWhiteSpace(title)
+                        || url == null || !url.StartsWith(AboutGuidesUrl, StringComparison.Ordinal))
+                        continue;
+                    list.Add((slug!, title!, url));
+                }
+                if (list.Count == 0) return;
+                s_siteGuides = list;
+                s_siteGuidesUpdated?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                MozaLog.Warn($"[About] guide list fetch failed, using built-in list: {ex.Message}");
+            }
+        }
+
+        private void RenderAboutGuides()
+        {
             if (GuidesLeftColumn == null || GuidesRightColumn == null) return;
+            var guides = new List<(string Title, string Url)>();
+            if (s_siteGuides != null)
+            {
+                foreach (var g in s_siteGuides)
+                {
+                    string title = g.Title;
+                    foreach (var known in AboutGuides)
+                        if (known.Slug == g.Slug) { title = known.Title(); break; }
+                    guides.Add((title, g.Url));
+                }
+            }
+            else
+            {
+                foreach (var g in AboutGuides)
+                    guides.Add((g.Title(), AboutGuidesUrl + g.Slug + "/"));
+            }
+
             GuidesLeftColumn.Children.Clear();
             GuidesRightColumn.Children.Clear();
-            int leftCount = (AboutGuides.Length + 1) / 2;
-            for (int i = 0; i < AboutGuides.Length; i++)
+            int leftCount = (guides.Count + 1) / 2;
+            for (int i = 0; i < guides.Count; i++)
             {
-                string url = AboutGuidesUrl + AboutGuides[i].Slug + "/";
-                var link = new Hyperlink(new Run(AboutGuides[i].Title())) { ToolTip = url };
+                string url = guides[i].Url;
+                var link = new Hyperlink(new Run(guides[i].Title)) { ToolTip = url };
                 link.Click += (s, e) => OpenExternalUrl(url);
                 if (TryFindResource("CyanBrush") is Brush brush)
                     link.Foreground = brush;
