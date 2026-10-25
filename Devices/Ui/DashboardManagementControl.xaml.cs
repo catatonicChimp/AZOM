@@ -410,14 +410,11 @@ namespace MozaPlugin.Devices.Ui
                                 _plugin.ActiveTelemetryMzdashPath) + "]");
                 }
 
-                // Selection preference: the saved selection name first (updated
-                // by both UI picks and wheel-initiated switches via
-                // DashboardBindingCoordinator), the device-reported slot as
-                // fallback. Reported-slot-first made the combo snap BACK to the
-                // pre-switch dash on every pick: this populate runs from the
-                // DashboardSelectionChanged event immediately after a switch,
-                // before the wheel's type-04 slot echo lands, so the stale
-                // reported slot kept overriding the user's fresh choice.
+                // Selection preference: the device-reported slot once it matches the
+                // latest switch (ours echoed, or the device's own — the wheel lane
+                // never writes device switches to the saved name); otherwise the saved
+                // name, so a fresh pick doesn't snap back to the pre-switch dash
+                // before the echo lands; the stale reported slot as last resort.
                 string? savedName = IsCm2Target ? _plugin.ActiveCm2DashboardName : _plugin.ActiveTelemetryProfileName;
                 bool savedInList = false;
                 if (!string.IsNullOrEmpty(savedName))
@@ -431,16 +428,16 @@ namespace MozaPlugin.Devices.Ui
                         }
                     }
                 }
-                string? selectedName = savedInList ? savedName : null;
-                if (string.IsNullOrEmpty(selectedName)
-                    && sender != null && state != null && state.ConfigJsonList != null
+                string? reportedName = null;
+                if (sender != null && state != null && state.ConfigJsonList != null
                     && sender.WheelReportedSlot >= 0
                     && sender.WheelReportedSlot < state.ConfigJsonList.Count)
-                {
-                    string reportedName = state.ConfigJsonList[sender.WheelReportedSlot];
-                    if (!string.IsNullOrEmpty(reportedName))
-                        selectedName = reportedName;
-                }
+                    reportedName = state.ConfigJsonList[sender.WheelReportedSlot];
+                bool reportedCurrent = !string.IsNullOrEmpty(reportedName)
+                    && sender!.WheelReportedSlot == sender.LastEmittedKind4Slot;
+                string? selectedName = reportedCurrent ? reportedName
+                    : savedInList ? savedName
+                    : reportedName;
                 if (string.IsNullOrEmpty(selectedName))
                     selectedName = savedName;
                 if (!string.IsNullOrEmpty(selectedName))

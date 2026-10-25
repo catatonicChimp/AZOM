@@ -105,7 +105,6 @@ namespace MozaPlugin.UI.Import
                 // the mBooster tab's own row list — raw AxisCount is 3 on any
                 // chain-capable hub however many pedals are wired, and would
                 // label a sole pedal by axis order instead of its own Role.
-                int axisCount = c.ConnectedAxisCount;
                 var axes = c.ConnectedAxisIndices();
                 var types = c.AxisTypes;
 
@@ -116,7 +115,7 @@ namespace MozaPlugin.UI.Import
                 foreach (int axis in axes)
                 {
                     ++shown;
-                    var role = MozaMBoosterRegistry.ResolveAxisRole(s, axis, axisCount);
+                    var role = c.AxisRole(axis, s);
                     string pedalPart = multiplePedals
                         ? $"{deviceLabel} — {string.Format(global::MozaPlugin.Resources.Strings.Label_PedalAxis, shown)}"
                         : deviceLabel;

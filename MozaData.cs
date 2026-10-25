@@ -595,6 +595,21 @@ namespace MozaPlugin
             }
         }
 
+        /// <summary>Wheel firmware from its group-0x04 reply (<see cref="WheelDeviceType"/>).</summary>
+        public string WheelFwVersionText => FormatFwVersion(WheelDeviceType);
+
+        /// <summary>Display sub-device firmware from its 0x43-wrapped group-0x04 reply.</summary>
+        public string DisplayFwVersionText => FormatFwVersion(DisplayDeviceType);
+
+        // Group-0x04 replies share the base's wire order [major, minor, build, patch];
+        // MOZA shows major.minor.patch.build.
+        private static string FormatFwVersion(byte[]? b) =>
+            b == null || b.Length < 4 ? "unknown" : $"{b[0]}.{b[1]}.{b[3]}.{b[2]}";
+
+        // Wheel firmware re-probe rounds spent this session. Lives with the data
+        // it fills, so a fresh MozaData (plugin reload) gets a fresh budget.
+        public int WheelFwVersionProbeRetries;
+
         // The 10-band EQ (equalizer7-10, cmds 0x32..0x35) ships in the same
         // 1.2.10.10 firmware as LFE.
         public bool BaseSupportsEq10 => BaseSupportsLfe;
@@ -1435,6 +1450,7 @@ namespace MozaPlugin
             WheelKnobModeSupported = false;
             WheelMcuUid = System.Array.Empty<byte>();
             WheelDeviceType = System.Array.Empty<byte>();
+            WheelFwVersionProbeRetries = 0;
             WheelCapabilities = System.Array.Empty<byte>();
             WheelIdentity11 = System.Array.Empty<byte>();
             DisplayModelName = "";

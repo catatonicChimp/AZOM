@@ -247,6 +247,17 @@ namespace MozaPlugin.Devices
             SendRawProbe(0x04, GetDeviceId("main"), null);
         }
 
+        /// <summary>
+        /// Group-0x04 firmware query at the locked wheel id — the device-type frame of
+        /// <see cref="SendPithouseIdentityProbe"/> on its own. Untracked like that
+        /// cascade; the reply lands on <c>wheel-device-type</c>.
+        /// </summary>
+        public void SendWheelFwVersionProbe()
+        {
+            if (!_connection.IsConnected) return;
+            SendRawProbe(0x04, WheelDeviceId, new byte[] { 0x00, 0x00, 0x00, 0x00 });
+        }
+
         private void SendRawProbe(byte group, byte deviceId, byte[]? payload)
         {
             int payloadLen = payload?.Length ?? 0;

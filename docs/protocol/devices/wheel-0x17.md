@@ -11,7 +11,7 @@ Request payload is just the command ID byte with no value bytes. The device retu
 | model-name | `0x07` | `01` | e.g. `VGS`, `CS V2.1` (see [`../identity/known-wheel-models.md`](../identity/known-wheel-models.md)) |
 | hw-version | `0x08` | `01` | e.g. `RS21-W08-HW SM-C` |
 | hw-revision | `0x08` | `02` | e.g. `U-V12`, `U-V02` |
-| sw-version | `0x0F` | `01` | Firmware version string |
+| sw-version | `0x0F` | `01` | MCU part string, e.g. `RS21-W17-MC SW` — the numeric firmware is group `0x04` (see [`../identity/wheel-probe-sequence.md`](../identity/wheel-probe-sequence.md)) |
 | serial-a | `0x10` | `00` | Serial number first 16 chars |
 | serial-b | `0x10` | `01` | Serial number second 16 chars |
 

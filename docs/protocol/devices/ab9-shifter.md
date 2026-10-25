@@ -42,20 +42,18 @@ Captures: `usb-capture/AB9/{Shifter mode change,PitHouse settings change,Launch 
 
 AB9 enumerates as its **own** Moza composite USB device (VID `0x346E` PID `0x1000`), parallel to the wheelbase (PID `0x0006`). Same 3-interface layout: CDC ACM (EP 0x02 OUT / 0x82 IN, the Moza protocol bus) + HID (EP 0x03 OUT / 0x83 IN). Host writes to the AB9 use the AB9's own CDC pipe — they do **not** route through the wheelbase. HID-OUT (0x03) was never used in any capture; all configuration travels on CDC.
 
-### HID input report — gear buttons (2026-10-23)
+### HID input report — gear buttons (2026-10-24)
 
-HID-IN (EP 0x83) is report ID `0x01`, 34 bytes: 8 × 16-bit axes (`0x30`..`0x37`, all idle `0x7FFF` in every capture) then 128 buttons, button 1 = bit 0 of byte 17. The engaged gear is a held button; the buttons name the **logical gear**, so the selected `D3` layout only decides where each gear sits in the gate.
+HID-IN (EP 0x83) carries the gear as a held button; the buttons name the **logical gear**, so the selected `D3` layout only decides where each gear sits in the gate. Map verified by users on live AB9s; the AB6 is the same. Buttons as SimHub joystick buttons (0-based `_Bnn`):
 
-| Button (1-based) | Meaning | Source |
-|---|---|---|
-| 5 | R | `Launch and H-pattern gear engage` (7+R L1), `all_gears` |
-| 6..12 | gears 1..7 | same; gear 1 also `1-N` |
-| 13 | gear 8 (R+8) | inferred from the contiguous run, not captured |
-| 17 | sequential down (pull) | `SQ gear change` + `Moza AB9.xlsx` sheet 3 |
-| 18 | sequential up (push) | same |
-| 4 | set in every report, unchanged by gear or layout; meaning unknown | all |
+| Button | Meaning |
+|---|---|
+| `B00` | R |
+| `B01`..`B08` | gears 1..8 |
+| `B12` | sequential push (gear down) |
+| `B13` | sequential pull (gear up) |
 
-No gear button held = neutral. Gear events line up 1:1 with the `Moza AB9.xlsx` timelines. Whether the AB6 reports the same map is unverified. Read by `MozaHidReader` (`MozaHidClass.Ab9`) into `MozaData.Ab9ButtonStates`, decoded by `Devices/Ab9Gear.cs`, drawn by `UI/Controls/Ab9GateView.cs`.
+No gear button held = neutral. Read by `MozaHidReader` (`MozaHidClass.Ab9`) into `MozaData.Ab9ButtonStates`, decoded by `Devices/Ab9Gear.cs`, drawn by `UI/Controls/Ab9GateView.cs`.
 
 Address-disambiguation (only Moza devs in capture): wheelbase OUTs target dev IDs 0x13/0x14/0x15/0x17/0x19/0x1A/0x1B/0x1E (full sub-bus). AB9 OUTs target only `Main/Hub (0x12)` — confirms AB9 has its own internal "Main" with no sub-devices.
 

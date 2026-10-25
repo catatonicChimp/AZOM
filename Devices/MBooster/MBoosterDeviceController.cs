@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using MozaPlugin.Protocol;
 
 namespace MozaPlugin.Devices.MBooster
@@ -126,6 +127,11 @@ namespace MozaPlugin.Devices.MBooster
         // Channel → HID axis from the host's role map; identity until it is
         // read. Topology: kept across a port bounce like the heartbeat state.
         private volatile int[] _slotAxis = { 0, 1, 2 };
+        // _slotAxis came from the host's registers, not the identity default.
+        private volatile bool _deviceRoleMap;
+        private int _roleMapVersion;
+        /// <summary>Bumped whenever the channel→axis map changes.</summary>
+        public int RoleMapVersion => Volatile.Read(ref _roleMapVersion);
         private string _lastSlotAxisLogged = "0,1,2";
 
         // Which pedals the device reports physically connected, indexed by HID
@@ -359,10 +365,26 @@ namespace MozaPlugin.Devices.MBooster
         // lone pedal, up to 3 for a full chain. 0 until the first axis update.
         public int AxisCount { get; internal set; }
 
+        /// <summary>When this controller was created — the serial-wait clock for a
+        /// lane that never answers at all (see <see cref="SettingsGate"/>).</summary>
+        public DateTime CreatedAtUtc { get; } = DateTime.UtcNow;
+
+        /// <summary>False while the lane's settings entry is not final yet: until
+        /// the serial resolves, the lookup is keyed by the USB instance id, which
+        /// changes with the port, so it hands out a defaults placeholder whose
+        /// axis-order roles may not be the user's. Null = always ready.</summary>
+        internal Func<bool>? SettingsGate { get; set; }
+
+        public bool SettingsReady => SettingsGate?.Invoke() ?? true;
+
         /// <summary>Latest per-identity settings (role, display name, calibration).
-        /// Thin pass-through to the registry's settings lookup — returns null if no
-        /// row is recorded yet for this identity.</summary>
-        public MBoosterDeviceSettings? CurrentSettings => _settingsLookup();
+        /// Null until <see cref="SettingsReady"/> — consumers treat that as "no
+        /// roles, no effects", never as axis-order defaults.</summary>
+        public MBoosterDeviceSettings? CurrentSettings => SettingsReady ? _settingsLookup() : null;
+
+        /// <summary>The settings gate just opened — rebuild the role map, whose
+        /// single-pedal branch reads the role from the settings.</summary>
+        public void OnSettingsResolved() => RecomputeChainRoleMap();
 
         public event Action<byte[]>? MessageReceived
         {
@@ -541,7 +563,7 @@ namespace MozaPlugin.Devices.MBooster
             _workers = new MBoosterEffectWorker[motorIds.Length];
             for (int i = 0; i < motorIds.Length; i++)
                 _workers[i] = new MBoosterEffectWorker(
-                    this, _settingsLookup, _isShuttingDown, customEffectFormulaEvaluator,
+                    this, () => CurrentSettings, _isShuttingDown, customEffectFormulaEvaluator,
                     pedalAxisIndex: i, isPrimary: i == 0);
         }
 
@@ -587,7 +609,7 @@ namespace MozaPlugin.Devices.MBooster
             _workers = new MBoosterEffectWorker[MozaMBoosterProtocol.MotorDeviceIds.Length];
             for (int i = 0; i < _workers.Length; i++)
                 _workers[i] = new MBoosterEffectWorker(
-                    this, _settingsLookup, _isShuttingDown, customEffectFormulaEvaluator,
+                    this, () => CurrentSettings, _isShuttingDown, customEffectFormulaEvaluator,
                     pedalAxisIndex: i, isPrimary: i == 0);
         }
 
@@ -825,90 +847,206 @@ namespace MozaPlugin.Devices.MBooster
         }
 
         /// <summary>
-        /// Assign the motor pedal on <paramref name="axisIndex"/> a new role on
-        /// the hardware, the way Pit House does: each unit's 0x21/0x22/0x23
-        /// hold the role (1 T, 2 B, 3 C) of its local channels, the motor pedal
-        /// is channel B (0x22), and a chained unit hangs off the host's channel
-        /// T — Pit House writes the host's 0x21, then the unit's 0x22
-        /// (docs/protocol/devices/mbooster.md "pedal-role map"). Call BEFORE
-        /// the plugin's own role setting changes: the unit is found from the
-        /// axis's current role. False (nothing written) for a passive or
-        /// untyped axis, or a unit not placed yet.
+        /// Give the pedal on <paramref name="axisIndex"/> the role
+        /// <paramref name="newRoleIndex"/> on the hardware, on a lane whose roles
+        /// are the hardware's (<see cref="DeviceRolesKnown"/>). The host's
+        /// 0x21/0x22/0x23 hold the role (1 T, 2 B, 3 C) of its local channels
+        /// T/B/C and decide the HID axis each reports on. A connected pedal
+        /// already holding the role takes the old one, as the plugin always
+        /// did; an unconnected channel keeps its duplicate, as Pit House leaves
+        /// it. False (nothing written) until the heartbeat has typed and placed
+        /// both pedals.
         /// </summary>
-        public bool WritePedalRole(int axisIndex, int newRoleIndex)
-            => TryPedalRoleUnit(axisIndex, out byte dev) && WritePedalRoleTo(dev, newRoleIndex);
-
-        /// <summary>The unit holding the motor pedal on <paramref name="axisIndex"/>,
-        /// from its current role. False for a passive or untyped axis, or a
-        /// unit not placed yet. Resolve every unit of a swap before writing
-        /// any: each write makes the map stale until the next heartbeat.</summary>
-        public bool TryPedalRoleUnit(int axisIndex, out byte dev)
+        public bool AssignAxisRole(int axisIndex, int newRoleIndex)
         {
-            dev = 0;
-            var types = _axisTypes;
-            if (types == null || !AxisTypesComplete || axisIndex < 0 || axisIndex >= types.Length
-                || types[axisIndex] != 1)
-                return false;
-            return TryCalibDeviceForAxis(axisIndex, out dev);
+            if (newRoleIndex < 0 || newRoleIndex > 2 || !DeviceRolesKnown) return false;
+            var cur = HostChannelRoles();
+            if (cur == null) return false;
+            int chA = ConnectedChannel(cur, roleIndex: axisIndex);
+            if (chA < 0 || cur[chA] == newRoleIndex + 1) return false;
+            int oldRoleIndex = cur[chA] - 1;
+            var writes = new List<(int Ch, int Role)> { (chA, newRoleIndex) };
+            int chB = ConnectedChannel(cur, roleIndex: newRoleIndex);
+            if (chB >= 0) writes.Add((chB, oldRoleIndex));
+            foreach (var w in writes)
+                if (!TryChannelUnit(w.Ch, cur, out _, out _))
+                {
+                    MozaLog.Info($"[AZOM/mBooster] {ShortIdentity(Identity)} role change ax{axisIndex} {RoleName(oldRoleIndex)} -> {RoleName(newRoleIndex)} not written: channel {"TBC"[w.Ch]} not placed yet");
+                    return false;
+                }
+            return WriteChannelRoles(writes, cur, $"ax{axisIndex} {RoleName(oldRoleIndex)} -> {RoleName(newRoleIndex)}");
         }
 
         /// <summary>
-        /// Write the profile's role for the motor pedal on
-        /// <paramref name="axisIndex"/> to its unit when the unit's own 0x22
-        /// reads otherwise. The role is per profile in the plugin but one
-        /// register on the unit, so a profile switch or connect with a
-        /// different role left the unit reporting the old one (bug report
-        /// NPN9FR6W). Single-unit lanes only: there the unit is the host
-        /// whatever the role; on a chain the unit is found from the role,
-        /// which is exactly what disagrees. Skipped while the 0x22 read-back is
-        /// unknown or a role write is still waiting for the heartbeat. True if
+        /// Write roles the profile already holds to the motor pedals on the
+        /// given axes — lanes whose roles are the profile's (passive pedals
+        /// connected, routed lanes). Each active pedal gets its own role, a
+        /// passive or unplaced one nothing, as before. True if anything was
         /// written.
         /// </summary>
-        public bool SyncPedalRole(int axisIndex, int roleIndex)
+        public bool WriteAxisRoles(IList<(int Axis, int Role)> axisRoles)
         {
-            if (roleIndex < 0 || roleIndex > 2 || ActiveAxisCount != 1) return false;
-            var types = _axisTypes;
-            if (types == null || !AxisTypesComplete || axisIndex < 0 || axisIndex >= types.Length
-                || types[axisIndex] != 1)
-                return false;
-            byte dev = HostDeviceId;
-            int current = StatusValue(dev, "mbooster-status-22");
-            if (current < 1 || current > 3 || current == roleIndex + 1) return false;
-            lock (_pendingRoles)
-                foreach (var p in _pendingRoles.Values)
-                    if (p.Dev == dev) return false;
-            MozaLog.Info($"[AZOM/mBooster] {ShortIdentity(Identity)} unit reports {RoleName(current - 1)}, profile says {RoleName(roleIndex)}");
-            return WritePedalRoleTo(dev, roleIndex);
+            var cur = new int[3];
+            for (int ch = 0; ch < 3; ch++) cur[ch] = StatusValue(HostDeviceId, ChannelRoleRegister(ch));
+            var writes = new List<(int Ch, int Role)>();
+            foreach (var (axis, role) in axisRoles)
+            {
+                if (role < 0 || role > 2) continue;
+                int ch = ConnectedChannel(cur, axis: axis);
+                if (ch < 0 || cur[ch] == role + 1 || !TryChannelUnit(ch, cur, out _, out _)) continue;
+                writes.Add((ch, role));
+            }
+            return writes.Count > 0 && WriteChannelRoles(writes, cur, "profile roles");
         }
 
-        /// <summary>Write <paramref name="newRoleIndex"/> to the unit
-        /// <paramref name="dev"/> (see <see cref="WritePedalRole"/>).</summary>
-        public bool WritePedalRoleTo(byte dev, int newRoleIndex)
+        /// <summary>Write each (channel, role) on the host and, for a chained
+        /// unit's link channel, on the unit's own 0x22 — the host register of
+        /// the channel the heartbeat marks remote, not always 0x21
+        /// (docs/protocol/devices/mbooster.md "pedal-role map"). Every unit is
+        /// resolved against the pre-write roles before anything is sent.</summary>
+        private bool WriteChannelRoles(List<(int Ch, int Role)> writes, int[] cur, string what)
         {
-            if (newRoleIndex < 0 || newRoleIndex > 2) return false;
-            int value = newRoleIndex + 1;
-            bool chained = dev != HostDeviceId;
-            // Only one chain link is captured (host channel T); with several
-            // chained units which host channel each uses is unknown.
-            bool writeHostLink = chained && AnsweredChainIds().Count == 1;
+            var chained = new byte?[writes.Count];
+            for (int i = 0; i < writes.Count; i++)
+            {
+                if (!TryChannelUnit(writes[i].Ch, cur, out bool remote, out byte unit)) return false;
+                if (remote) chained[i] = unit;
+            }
+            var parts = new List<string>();
+            for (int i = 0; i < writes.Count; i++)
+            {
+                var (ch, role) = writes[i];
+                SendIntWrite(ChannelRoleRegister(ch), role + 1, HostDeviceId);
+                parts.Add($"host {"TBC"[ch]}={RoleName(role)}");
+                if (chained[i] == null) MarkPendingRole(role, HostDeviceId);
+            }
+            for (int i = 0; i < writes.Count; i++)
+            {
+                if (!(chained[i] is byte unit)) continue;
+                SendIntWrite("mbooster-status-22", writes[i].Role + 1, unit);
+                parts.Add($"0x{unit:x2}={RoleName(writes[i].Role)}");
+                MarkPendingRole(writes[i].Role, unit);
+            }
+            for (int i = 0; i < writes.Count; i++)
+                SendRead(ChannelRoleRegister(writes[i].Ch), HostDeviceId);
+            for (int i = 0; i < writes.Count; i++)
+                if (chained[i] is byte unit) SendRead("mbooster-status-22", unit);
+            MozaLog.Info($"[AZOM/mBooster] {ShortIdentity(Identity)} pedal role {what}: {string.Join(", ", parts)}");
+            return true;
+        }
+
+        /// <summary>The connected host channel holding <paramref name="roleIndex"/>,
+        /// or the one on <paramref name="axis"/> (through the channel→axis map
+        /// on a USB lane, the channel itself routed); -1 if none.</summary>
+        private int ConnectedChannel(int[] hostRoles, int roleIndex = -1, int axis = -1)
+        {
+            var connected = _slotConnected;
+            var map = _slotAxis;
+            for (int ch = 0; ch < 3; ch++)
+            {
+                if (connected == null || ch >= connected.Length || !connected[ch]) continue;
+                if (roleIndex >= 0 ? hostRoles[ch] == roleIndex + 1
+                    : (_ownsConnection ? map[ch] : ch) == axis)
+                    return ch;
+            }
+            return -1;
+        }
+
+        /// <summary>The motor behind a connected host channel: the host's own
+        /// (local active) or the chained unit on its link (remote active).
+        /// False for a passive channel, or before the heartbeat has typed and
+        /// placed it.</summary>
+        private bool TryChannelUnit(int channel, int[] hostRoles, out bool remote, out byte unit)
+        {
+            remote = false;
+            unit = HostDeviceId;
+            var types = _slotTypes;
+            var loc = _slotLocality;
+            if (!AxisTypesComplete || types == null || loc == null
+                || channel >= types.Length || channel >= loc.Length || types[channel] != 1)
+                return false;
+            if (loc[channel] == LocalityHost) return true;
+            if (loc[channel] != LocalityRemote) return false;
+            var chained = ChainedUnitOnChannel(channel, hostRoles);
+            if (chained == null) return false;
+            remote = true;
+            unit = chained.Value;
+            return true;
+        }
+
+        /// <summary>
+        /// Write the profile's role for the motor pedal to the host when the
+        /// host reports otherwise. The role is per profile in the plugin but one
+        /// register on the unit, so a profile switch or connect with a
+        /// different role left the unit reporting the old one (bug report
+        /// NPN9FR6W). Single-active-unit lanes only, and never while a role
+        /// write is still waiting for the heartbeat. On a lane whose roles are
+        /// the hardware's the profile's role is its lone pedal's
+        /// (<paramref name="loneRole"/>); otherwise the profile's role for that
+        /// axis (<paramref name="axisRole"/>). True if written.
+        /// </summary>
+        public bool SyncPedalRole(MBoosterRole loneRole, Func<int, MBoosterRole> axisRole)
+        {
+            if (ActiveAxisCount != 1) return false;
+            int axis = SoleActiveAxis();
+            if (axis < 0 || !IsAxisConnected(axis)) return false;
+            int roleIndex;
+            if (DeviceRolesKnown)
+            {
+                if (ConnectedAxisCount != 1) return false;
+                roleIndex = RoleIndexOf(loneRole);
+            }
+            else roleIndex = RoleIndexOf(axisRole(axis));
+            if (roleIndex < 0) return false;
+            var cur = new int[3];
+            for (int ch = 0; ch < 3; ch++) cur[ch] = StatusValue(HostDeviceId, ChannelRoleRegister(ch));
+            int pedalCh = ConnectedChannel(cur, axis: axis);
+            int current = pedalCh >= 0 && cur[pedalCh] >= 1 && cur[pedalCh] <= 3 ? cur[pedalCh] - 1 : -1;
+            if (current < 0 || current == roleIndex) return false;
+            lock (_pendingRoles)
+                if (_pendingRoles.Count > 0) return false;
+            MozaLog.Info($"[AZOM/mBooster] {ShortIdentity(Identity)} unit reports {RoleName(current)}, profile says {RoleName(roleIndex)}");
+            return DeviceRolesKnown
+                ? AssignAxisRole(axis, roleIndex)
+                : WriteAxisRoles(new[] { (axis, roleIndex) });
+        }
+
+        private static string ChannelRoleRegister(int channel) =>
+            channel == 0 ? "mbooster-status-21" : channel == 1 ? "mbooster-status-22" : "mbooster-status-23";
+
+        /// <summary>The chained unit hanging off host channel
+        /// <paramref name="channel"/>, or null. The heartbeat names the link
+        /// channel; with one remote channel and one answering unit that is the
+        /// unit, otherwise the unit whose own role matches the channel's.</summary>
+        private byte? ChainedUnitOnChannel(int channel, int[] hostRoles)
+        {
+            var loc = _slotLocality;
+            if (loc == null || channel >= loc.Length || loc[channel] != LocalityRemote) return null;
+            var chained = AnsweredChainIds();
+            int remotes = 0;
+            foreach (var l in loc) if (l == LocalityRemote) remotes++;
+            if (remotes == 1 && chained.Count == 1) return chained[0];
+            byte? match = null;
+            foreach (var id in chained)
+            {
+                if (StatusValue(id, "mbooster-status-22") != hostRoles[channel]) continue;
+                if (match != null) return null;
+                match = id;
+            }
+            return match;
+        }
+
+        private void MarkPendingRole(int roleIndex, byte dev)
+        {
             lock (_pendingRoles)
             {
                 foreach (var r in new List<int>(_pendingRoles.Keys))
                     if (_pendingRoles[r].Dev == dev) _pendingRoles.Remove(r);
-                _pendingRoles[newRoleIndex] = (dev, DateTime.UtcNow);
+                _pendingRoles[roleIndex] = (dev, DateTime.UtcNow);
             }
-            if (writeHostLink) SendIntWrite("mbooster-status-21", value, HostDeviceId);
-            SendIntWrite("mbooster-status-22", value, dev);
-            if (writeHostLink) SendRead("mbooster-status-21", HostDeviceId);
-            SendRead("mbooster-status-22", dev);
-            MozaLog.Info($"[AZOM/mBooster] {ShortIdentity(Identity)} pedal role -> {RoleName(newRoleIndex)} "
-                + $"on 0x{dev:x2} (0x22={value}"
-                + (writeHostLink ? $", host 0x21={value}" : chained ? ", host link not written: several chained units" : "")
-                + ")");
-            return true;
         }
 
-        // Roles written by WritePedalRole that the host heartbeat has not yet
+        // Roles written by AssignAxisRole that the host heartbeat has not yet
         // placed on the unit they were written to: role index → (unit, when).
         private readonly Dictionary<int, (byte Dev, DateTime AtUtc)> _pendingRoles =
             new Dictionary<int, (byte Dev, DateTime AtUtc)>();
@@ -961,23 +1099,77 @@ namespace MozaPlugin.Devices.MBooster
             return any;
         }
 
+        /// <summary>Role index (0=Throttle, 1=Brake, 2=Clutch, -1=unknown) a HID
+        /// axis currently holds — see <see cref="AxisRole(int, MBoosterDeviceSettings?)"/>.</summary>
+        public int RoleIndexForAxis(int axisIndex) => RoleIndexOf(AxisRole(axisIndex));
+
         /// <summary>
-        /// Role index (0=Throttle, 1=Brake, 2=Clutch, -1=unknown) a HID axis
-        /// currently holds. Resolved against the CONNECTED axis count, never
-        /// the raw HID axis count — a chain-capable hub reports 3-4 axes
-        /// regardless of how many pedals are wired, and passing the raw count
-        /// drops <see cref="MozaMBoosterRegistry.ResolveAxisRole"/> into its
-        /// axis-order fallback.
+        /// Whether a USB lane's roles come from the host's pedal-role map
+        /// (0x21/0x22/0x23): once read, each channel reports on the HID axis of
+        /// its role, so the axis IS the role (Rx Throttle, Ry Brake, Rz Clutch)
+        /// — what games see. Only lanes of active pedals (bug report 4J8FZ5AF);
+        /// a lane with a passive pedal connected, a routed lane (its axes are
+        /// its channels) or one whose pedal types aren't known keeps the
+        /// profile's roles.
         /// </summary>
-        public int RoleIndexForAxis(int axisIndex)
+        public bool DeviceRolesKnown => _ownsConnection && _deviceRoleMap && AllConnectedActive();
+
+        private bool AllConnectedActive()
         {
-            int axisCount = ConnectedAxisIndices().Count;
-            if (axisCount <= 0) axisCount = 1;
-            var role = MozaMBoosterRegistry.ResolveAxisRole(CurrentSettings, axisIndex, axisCount);
-            return role == MBoosterRole.Throttle ? 0
-                 : role == MBoosterRole.Brake ? 1
-                 : role == MBoosterRole.Clutch ? 2 : -1;
+            var types = AxisTypesComplete ? _slotTypes : _seededSlotTypes;
+            var connected = _slotConnected;
+            if (types == null || connected == null) return false;
+            for (int ch = 0; ch < 3 && ch < connected.Length; ch++)
+                if (connected[ch] && (ch >= types.Length || types[ch] != 1)) return false;
+            return true;
         }
+
+        /// <summary>The host's role (1 T, 2 B, 3 C) per channel T/B/C, or null
+        /// until all three have been read with no two connected channels on
+        /// one role (unconnected duplicates are normal — see
+        /// <see cref="AssignAxisRole"/>).</summary>
+        private int[]? HostChannelRoles()
+        {
+            var v = new int[3];
+            var seen = new bool[4];
+            var connected = _slotConnected;
+            for (int ch = 0; ch < 3; ch++)
+            {
+                v[ch] = StatusValue(HostDeviceId, ChannelRoleRegister(ch));
+                if (v[ch] < 1 || v[ch] > 3) return null;
+                if (connected != null && (ch >= connected.Length || !connected[ch])) continue;
+                if (seen[v[ch]]) return null;
+                seen[v[ch]] = true;
+            }
+            return v;
+        }
+
+        public MBoosterRole AxisRole(int axisIndex) => AxisRole(axisIndex, CurrentSettings);
+
+        /// <summary>
+        /// The role an axis holds: the device's own once
+        /// <see cref="DeviceRolesKnown"/> (a per-axis profile role goes stale
+        /// the moment a role write moves a pedal to another axis), else the
+        /// profile's, resolved against the CONNECTED axis count — see
+        /// <see cref="MozaMBoosterRegistry.ResolveAxisRole"/>.
+        /// </summary>
+        public MBoosterRole AxisRole(int axisIndex, MBoosterDeviceSettings? s)
+        {
+            if (DeviceRolesKnown)
+                return axisIndex == 0 ? MBoosterRole.Throttle
+                     : axisIndex == 1 ? MBoosterRole.Brake
+                     : axisIndex == 2 ? MBoosterRole.Clutch : MBoosterRole.Disabled;
+            int axisCount = ConnectedAxisCount;
+            if (axisCount <= 0) axisCount = 1;
+            return MozaMBoosterRegistry.ResolveAxisRole(s, axisIndex, axisCount);
+        }
+
+        /// <summary>The axis the pedal on <paramref name="axisIndex"/> reports
+        /// on once <see cref="AssignAxisRole"/> gives it
+        /// <paramref name="newRoleIndex"/>: the role's axis on a USB lane, the
+        /// same one on a routed lane.</summary>
+        public int AxisAfterRoleChange(int axisIndex, int newRoleIndex) =>
+            _ownsConnection ? newRoleIndex : axisIndex;
 
         /// <summary>
         /// Device id an axis's own PHYSICAL (per-unit) calibration writes go to
@@ -1056,11 +1248,10 @@ namespace MozaPlugin.Devices.MBooster
         private int MotorizedAxesWithRole(int roleIndex)
         {
             var s = CurrentSettings;
-            int axisCount = ConnectedAxisCount;
             int count = 0;
             for (int a = 0; a < AxisSlotCount; a++)
                 if (IsAxisConnected(a) && IsAxisMotorized(a)
-                    && RoleIndexOf(MozaMBoosterRegistry.ResolveAxisRole(s, a, axisCount)) == roleIndex)
+                    && RoleIndexOf(AxisRole(a, s)) == roleIndex)
                     count++;
             return count;
         }
@@ -1069,13 +1260,12 @@ namespace MozaPlugin.Devices.MBooster
         {
             if (roleIndex < 0) return false;
             var s = CurrentSettings;
-            int axisCount = ConnectedAxisCount;
             int raw = AxisSlotCount;
             int count = 0;
             for (int a = 0; a < raw; a++)
             {
                 if (!IsAxisConnected(a)) continue;
-                if (RoleIndexOf(MozaMBoosterRegistry.ResolveAxisRole(s, a, axisCount)) != roleIndex) continue;
+                if (RoleIndexOf(AxisRole(a, s)) != roleIndex) continue;
                 if (++count > 1) { LogRoleAmbiguityOnce(roleIndex); return true; }
             }
             return false;
@@ -1352,8 +1542,7 @@ namespace MozaPlugin.Devices.MBooster
             int soleActive = SoleActiveAxis();
             if (soleActive >= 0)
             {
-                var soleRole = MozaMBoosterRegistry.ResolveAxisRole(
-                    CurrentSettings, soleActive, ConnectedAxisCount);
+                var soleRole = AxisRole(soleActive);
                 int soleRoleIdx = RoleIndexOf(soleRole);
                 if (soleRoleIdx >= 0)
                 {
@@ -2084,6 +2273,7 @@ namespace MozaPlugin.Devices.MBooster
             string sig = string.Join(",", map);
             if (sig == _lastSlotAxisLogged) return;
             _lastSlotAxisLogged = sig;
+            Interlocked.Increment(ref _roleMapVersion);
             MozaLog.Info($"[AZOM/mBooster] {ShortIdentity(Identity)} pedal-role map moves channels to HID axes: "
                 + $"T→ax{map[0]} B→ax{map[1]} C→ax{map[2]}");
             RecomputeChainRoleMap();
@@ -2093,10 +2283,11 @@ namespace MozaPlugin.Devices.MBooster
         /// <summary>
         /// Channel → HID axis: the role (1 T, 2 B, 3 C) the host's 0x21/0x22/0x23
         /// give each channel, once all three have answered. Kept when the read
-        /// is incomplete (a port bounce clears the status block). Identity when
-        /// two connected channels would share an axis — not captured, so the
-        /// map can't say where they report. USB lanes only: a routed lane has
-        /// no HID of its own, its positions are mirrored in by role.
+        /// is incomplete (a port bounce clears the status block) or puts two
+        /// connected channels on one axis — not captured, so the map can't say
+        /// where they report; seen mid-swap, between a role write's two
+        /// registers. USB lanes only: a routed lane has no HID of its own, its
+        /// positions are mirrored in by role.
         /// </summary>
         private int[] ResolveSlotAxis()
         {
@@ -2104,9 +2295,8 @@ namespace MozaPlugin.Devices.MBooster
             int t = StatusValue(HostDeviceId, "mbooster-status-21");
             int b = StatusValue(HostDeviceId, "mbooster-status-22");
             int c = StatusValue(HostDeviceId, "mbooster-status-23");
-            if (t >= 1 && t <= 3 && b >= 1 && b <= 3 && c >= 1 && c <= 3)
-                _slotAxis = new[] { t - 1, b - 1, c - 1 };
-            var map = _slotAxis;
+            if (t < 1 || t > 3 || b < 1 || b > 3 || c < 1 || c > 3) return _slotAxis;
+            var map = new[] { t - 1, b - 1, c - 1 };
 
             var connected = _slotConnected;
             var used = new bool[3];
@@ -2115,11 +2305,13 @@ namespace MozaPlugin.Devices.MBooster
                 if (connected != null && (s >= connected.Length || !connected[s])) continue;
                 if (used[map[s]])
                 {
-                    LogChainEvidenceOnce($"pedal-role map {map[0] + 1}/{map[1] + 1}/{map[2] + 1} puts two connected channels on one axis — using channel order");
-                    return new[] { 0, 1, 2 };
+                    LogChainEvidenceOnce($"pedal-role map {t}/{b}/{c} puts two connected channels on one axis — keeping the previous map");
+                    return _slotAxis;
                 }
                 used[map[s]] = true;
             }
+            _slotAxis = map;
+            _deviceRoleMap = true;
             return map;
         }
 
@@ -2621,11 +2813,32 @@ namespace MozaPlugin.Devices.MBooster
             int idx = name == "mbooster-serial-a" ? 0 : name == "mbooster-serial-b" ? 1 : name == "mbooster-model-name" ? 2 : -1;
             if (idx < 0) return;
             string text = MozaData.ParseNullTerminatedString(bytes ?? Array.Empty<byte>());
+            string? completed = null;
             lock (_unitIdentity)
             {
                 if (!_unitIdentity.TryGetValue(dev, out var parts)) _unitIdentity[dev] = parts = new string[3];
+                string? before = !string.IsNullOrEmpty(parts[0]) && !string.IsNullOrEmpty(parts[1]) ? parts[0] + parts[1] : null;
                 parts[idx] = text;
+                if (idx < 2 && !string.IsNullOrEmpty(parts[0]) && !string.IsNullOrEmpty(parts[1]) && parts[0] + parts[1] != before)
+                    completed = parts[0] + parts[1];
             }
+            if (completed == null) return;
+            try { ChainUnitSerialResolved?.Invoke(completed); }
+            catch (Exception ex) { MozaLog.Debug($"[AZOM/mBooster] ChainUnitSerialResolved handler: {ex.Message}"); }
+        }
+
+        /// <summary>A chained unit's full serial is in (arg: serial).</summary>
+        public event Action<string>? ChainUnitSerialResolved;
+
+        /// <summary>Full serials of the chained units identified so far.</summary>
+        public List<string> ChainUnitSerials()
+        {
+            var list = new List<string>();
+            lock (_unitIdentity)
+                foreach (var kv in _unitIdentity)
+                    if (kv.Key != HostDeviceId && !string.IsNullOrEmpty(kv.Value[0]) && !string.IsNullOrEmpty(kv.Value[1]))
+                        list.Add(kv.Value[0] + kv.Value[1]);
+            return list;
         }
 
         /// <summary>Every unit on this lane for the diagnostics dump: the host

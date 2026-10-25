@@ -9,12 +9,12 @@ namespace MozaPlugin.Devices
         public const int Reverse = -1;
         public const int Neutral = 0;
 
-        // 0-based button indices. Gear 8 continues the 1..7 run (not captured).
-        private const int ReverseButton = 4;
-        private const int FirstGearButton = 5;
+        // 0-based button indices (SimHub's _Bnn numbering).
+        private const int ReverseButton = 0;
+        private const int FirstGearButton = 1;
         private const int MaxGear = 8;
-        private const int SeqDownButton = 16;
-        private const int SeqUpButton = 17;
+        private const int SeqDownButton = 12; // push
+        private const int SeqUpButton = 13;   // pull
 
         /// <summary>Engaged gear: <see cref="Reverse"/>, <see cref="Neutral"/> or 1..8.</summary>
         public static int FromButtons(bool[] buttons)

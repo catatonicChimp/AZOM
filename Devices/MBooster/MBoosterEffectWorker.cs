@@ -276,22 +276,12 @@ namespace MozaPlugin.Devices.MBooster
         /// This pedal's role — which motor its frames are addressed to
         /// (<see cref="TargetDevice"/>), which telemetry channel drives it,
         /// and whether the Brake-only (Brake Fade) and Clutch-only (Bite
-        /// Point) effects run at all.
-        ///
-        /// Resolved against the CONNECTED axis count, not raw
-        /// <see cref="MBoosterDeviceController.AxisCount"/>: a chain-capable
-        /// hub reports 3 axes with one pedal plugged in, and passing that 3
-        /// makes <see cref="MozaMBoosterRegistry.ResolveAxisRole"/> override
-        /// the pedal's OWN configured Role with the axis-order default. The UI
-        /// row list, the calibration writes and the position merge all resolve
-        /// against the connected count already; this used to pass the raw one,
-        /// so a sole pedal on axis 2 that the UI showed (and the user had set)
-        /// as Brake was a Clutch to this worker — Brake Fade silently dead,
-        /// Bite Point silently live, and its effects addressed by the wrong
-        /// role.
+        /// Point) effects run at all. Same resolver as the UI rows, the
+        /// calibration writes and the position merge
+        /// (<see cref="MBoosterDeviceController.AxisRole(int, MBoosterDeviceSettings?)"/>).
         /// </summary>
         private MBoosterRole PedalRole(MBoosterDeviceSettings? lane) =>
-            MozaMBoosterRegistry.ResolveAxisRole(lane, _pedalAxisIndex, _device.ConnectedAxisCount);
+            _device.AxisRole(_pedalAxisIndex, lane);
 
         /// <summary>This pedal's own shaped HID position (0..1).</summary>
         private double PedalHid() =>

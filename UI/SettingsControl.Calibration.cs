@@ -157,19 +157,7 @@ namespace MozaPlugin.UI
             var s = CurrentMBoosterSettings();
             var c = CurrentMBoosterController();
             if (s == null || c == null) return null;
-            // Resolve against the CONNECTED axis count, not the raw HID axis
-            // count (bug: a chain-capable hub exposes all 3 GenericDesktop
-            // axes even with only one pedal plugged in, so using the raw
-            // count here fell into ResolveAxisRole's axis-order fallback
-            // instead of reading the single pedal's own Role — silently
-            // showing "Throttle" for axis 0 regardless of what the Role
-            // dropdown said, and hiding the brake-only Sensor Output Ratio /
-            // Max Threshold sliders even for a pedal explicitly set to
-            // Brake). Same fix as RefreshMBoosterTab already applies when
-            // building the device row list.
-            int connectedAxisCount = c.ConnectedAxisIndices().Count;
-            if (connectedAxisCount <= 0) connectedAxisCount = 1;
-            var role = global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.ResolveAxisRole(s, _mboosterEffectPedalIndex, connectedAxisCount);
+            var role = c.AxisRole(_mboosterEffectPedalIndex, s);
             return role == global::MozaPlugin.Devices.MBooster.MBoosterRole.Throttle ? "throttle"
                  : role == global::MozaPlugin.Devices.MBooster.MBoosterRole.Brake ? "brake"
                  : role == global::MozaPlugin.Devices.MBooster.MBoosterRole.Clutch ? "clutch" : null;

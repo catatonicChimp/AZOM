@@ -97,11 +97,12 @@ Earlier note (still true for legacy fw): a build that streamed group-`0x32` sub
   made the CM2 visibly reload its dashboard.
 - It ALSO emits kind=4 records the host never sent: in Z45VF4BC, `slot=2` ~4 s after each
   host `slot=1` switch (three times) and once `slot=3` 1 s after the first of those, all
-  with page field 0 and no `b8` precursor (the W17's wheel-initiated signature). Whether
-  these announce a real dashboard change, a 1-based restatement of the host's slot, or
-  something else is unknown. The plugin logs them (`device kind=4 slot=N (not an echo…)`)
-  and does not follow them; a CM2 button switch is therefore still invisible to the plugin
-  (no type-04 follows either).
+  with page field 0 and no `b8` precursor. Each sits inside a burst of sess `0x01`
+  catalog records (within ~150 ms either side) — a real dashboard load. No type-04 follows, so
+  the device's own kind=4 is the only switch signal (same on the W17, bundle 3H6ZQRG2).
+  The plugin follows any non-echo kind=4 as a device-initiated switch
+  (`WheelSlotTracker.TryAbsorbKind4Echo` → `WheelInitiatedSwitch`) and treats it as
+  slot-confirmed, so no convergence nudge drags the CM2 back to the host's slot.
 - The CM2 is authoritative at boot: the reported slot becomes the saved selection and one
   kind=4 to that same slot binds it (the display latches value frames only after a
   host-initiated switch). A kind=4 to another slot only follows a user or car-profile choice.

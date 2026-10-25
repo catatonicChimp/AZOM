@@ -69,11 +69,6 @@ namespace MozaPlugin.UI
         // or it shows that pedal's values while edits go to the new one.
         private int _mboosterSeededPedalIndex = -1;
 
-        // How long after detection a lane's serial may take before its
-        // transport-keyed settings are taken as final (serial resolves in ~2s;
-        // a unit that never answers keeps that key for good).
-        private static readonly TimeSpan MBoosterSerialWait = TimeSpan.FromSeconds(10);
-
         // The exact MBoosterDeviceSettings INSTANCE last seeded from — not
         // just a string identity check, because MozaPlugin
         // .GetOrCreateMBoosterSettings can return a genuinely DIFFERENT
@@ -102,6 +97,7 @@ namespace MozaPlugin.UI
             if (_plugin == null) { MBoosterTab.Visibility = Visibility.Collapsed; return; }
             var registry = _plugin.MBoosterRegistry;
             if (registry == null) { MBoosterTab.Visibility = Visibility.Collapsed; return; }
+            FollowMBoosterRoleSwap(registry);
             var devices = registry.Devices;
             if (devices.Count == 0)
             {
@@ -221,7 +217,6 @@ namespace MozaPlugin.UI
                     {
                         var rowSettings = _plugin.GetOrCreateMBoosterSettings(c.Identity);
                         string deviceLabel = BuildMBoosterComboLabel(c);
-                        var connectedAxes = c.ConnectedAxisIndices();
                         var listedAxes = MBoosterTabAxes(registry, c);
 
                         // Only label rows "— Pedal N" when this device genuinely
@@ -235,12 +230,7 @@ namespace MozaPlugin.UI
                             string label = multiplePedals
                                 ? $"{deviceLabel} — {string.Format(Strings.Label_PedalAxis, shown)}"
                                 : deviceLabel;
-                            // Resolve against the CONNECTED axis count, not the
-                            // raw HID axis count — a chain-capable hub exposes
-                            // all 3 GenericDesktop axes even with only one pedal
-                            // plugged in, so raw axisCount would silently override
-                            // that pedal's own Role with the axis-order default.
-                            var role = global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.ResolveAxisRole(rowSettings, axis, connectedAxes.Count);
+                            var role = c.AxisRole(axis, rowSettings);
                             bool isSelected = string.Equals(c.Identity, _mboosterSelectedIdentity, StringComparison.OrdinalIgnoreCase)
                                 && axis == _mboosterEffectPedalIndex;
                             _mboosterDeviceRows.Add(new MBoosterDeviceRow(c.Identity, axis, label, isSelected, role,
@@ -255,12 +245,9 @@ namespace MozaPlugin.UI
                     {
                         var rowController = registry.FindByIdentity(row.Identity);
                         var rowSettings = _plugin.GetOrCreateMBoosterSettings(row.Identity);
-                        int axisCount = rowController?.AxisSlotCount ?? 1;
-                        int connectedAxisCount = 0;
-                        if (rowController != null)
-                            for (int axis = 0; axis < axisCount; axis++)
-                                if (rowController.IsAxisConnected(axis)) connectedAxisCount++;
-                        row.RoleIndex = (int)global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.ResolveAxisRole(rowSettings, row.AxisIndex, connectedAxisCount);
+                        row.RoleIndex = rowController != null
+                            ? (int)rowController.AxisRole(row.AxisIndex, rowSettings)
+                            : (int)global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.ResolveAxisRole(rowSettings, row.AxisIndex, 1);
                         row.IsSelected = string.Equals(row.Identity, _mboosterSelectedIdentity, StringComparison.OrdinalIgnoreCase)
                             && row.AxisIndex == _mboosterEffectPedalIndex;
                     }
@@ -306,7 +293,7 @@ namespace MozaPlugin.UI
             // transport-keyed placeholder, and edits made to it only survive
             // the re-key as merge conflicts. Not seeded either, so the
             // placeholder's defaults never show as if they were saved values.
-            bool settingsResolved = _plugin != null && _plugin.IsMBoosterSettingsResolved(selected, MBoosterSerialWait);
+            bool settingsResolved = _plugin != null && _plugin.IsMBoosterSettingsResolved(selected);
             MBoosterDevicePanel.IsEnabled = settingsResolved;
             MBoosterDeviceRowsList.IsEnabled = settingsResolved;
             if (!settingsResolved) return;
@@ -517,18 +504,22 @@ namespace MozaPlugin.UI
             var controller = _plugin.MBoosterRegistry?.FindByIdentity(identity);
             int axisCount = controller?.AxisSlotCount ?? 1;
             int connectedAxisCount = controller?.ConnectedAxisCount ?? 1;
+            if (controller != null && controller.DeviceRolesKnown)
+            {
+                ChangeMBoosterDeviceRole(identity, controller, s, axisIndex, role);
+                return;
+            }
             int partner = MBoosterRoleSwapPartner(s, connectedAxisCount, axisCount, axisIndex, role, out var partnerRole);
-            // A motor pedal's role lives on its unit (register 0x22) — write it
-            // there too, as Pit House does. Before the setting changes: the
-            // unit is found from the axis's current role, so both units of a
-            // swap are resolved before either is written.
-            byte unit = 0, partnerUnit = 0;
-            bool writeUnit = role != MBoosterRole.Disabled && controller != null
-                && controller.TryPedalRoleUnit(axisIndex, out unit);
-            bool writePartnerUnit = partner >= 0 && partnerRole != MBoosterRole.Disabled && controller != null
-                && controller.TryPedalRoleUnit(partner, out partnerUnit);
-            if (writeUnit) controller!.WritePedalRoleTo(unit, MBoosterDeviceController.RoleIndexOf(role));
-            if (writePartnerUnit) controller!.WritePedalRoleTo(partnerUnit, MBoosterDeviceController.RoleIndexOf(partnerRole));
+            // A motor pedal's role lives on its unit — write it there too, as
+            // Pit House does. Both pedals of a swap are resolved before either
+            // is written; a passive pedal keeps the profile-only role.
+            if (controller != null)
+            {
+                var writes = new List<(int Axis, int Role)>();
+                if (role != MBoosterRole.Disabled) writes.Add((axisIndex, MBoosterDeviceController.RoleIndexOf(role)));
+                if (partner >= 0 && partnerRole != MBoosterRole.Disabled) writes.Add((partner, MBoosterDeviceController.RoleIndexOf(partnerRole)));
+                if (writes.Count > 0) controller.WriteAxisRoles(writes);
+            }
             SetMBoosterPedalRole(s, connectedAxisCount, axisCount, axisIndex, role);
             if (partner >= 0)
             {
@@ -586,6 +577,65 @@ namespace MozaPlugin.UI
                 using (_suppressor.Begin())
                     SeedMBoosterConfigControls(PeekMBoosterEffectTarget());
             }
+        }
+
+        /// <summary>
+        /// Role change on a lane whose roles the hardware holds
+        /// (<see cref="MBoosterDeviceController.DeviceRolesKnown"/>): swap it
+        /// on the units — the pedal moves to the new role's HID axis and the
+        /// pedal holding that role takes the old one. Disabled is not a role the
+        /// hardware has, so it is refused. A lone pedal's role is also kept on
+        /// the profile (see <see cref="MBoosterDeviceController.SyncPedalRole"/>).
+        /// </summary>
+        private void ChangeMBoosterDeviceRole(string identity, MBoosterDeviceController controller,
+            MBoosterDeviceSettings s, int axisIndex, MBoosterRole role)
+        {
+            int roleIdx = MBoosterDeviceController.RoleIndexOf(role);
+            bool motorized = controller.IsAxisMotorized(axisIndex);
+            bool lone = controller.ConnectedAxisCount <= 1;
+            if (roleIdx < 0 || !controller.AssignAxisRole(axisIndex, roleIdx))
+            {
+                RefreshMBoosterTab();
+                return;
+            }
+            if (lone) s.Role = role;
+            int newAxis = controller.AxisAfterRoleChange(axisIndex, roleIdx);
+            if (newAxis != axisIndex && string.Equals(identity, _mboosterSelectedIdentity, StringComparison.OrdinalIgnoreCase))
+                _mboosterRoleFollow = (identity, axisIndex, newAxis, controller.RoleMapVersion, DateTime.UtcNow + TimeSpan.FromSeconds(3));
+
+            // The pedal now reports on newAxis, so its config is that axis's.
+            // Clamp it to this pedal's hardware range; the re-apply that
+            // follows the role-map read-back pushes it to the right unit.
+            var cfg = global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.GetOrCreatePedalConfig(
+                s, newAxis, lone ? newAxis : controller.SoleConnectedAxis());
+            if (cfg != null)
+            {
+                MBoosterUiConstants.ForceRanges(motorized, out float mfMin, out float mfMax, out float dzMin, out float dzMax);
+                if (cfg.MaxForceKg >= 0) cfg.MaxForceKg = Math.Max(mfMin, Math.Min(mfMax, cfg.MaxForceKg));
+                if (cfg.DeadzoneKg >= 0) cfg.DeadzoneKg = Math.Max(dzMin, Math.Min(dzMax, cfg.DeadzoneKg));
+            }
+            _plugin!.SaveSettings();
+        }
+
+        // A role swap the selection follows once the host's role-map read-back
+        // moves the pedals: (lane, axis A, axis B, map version at the write,
+        // give-up time).
+        private (string Identity, int A, int B, int Version, DateTime Until)? _mboosterRoleFollow;
+
+        private void FollowMBoosterRoleSwap(MozaMBoosterRegistry registry)
+        {
+            var follow = _mboosterRoleFollow;
+            if (follow == null) return;
+            var (identity, a, b, version, until) = follow.Value;
+            var c = registry.FindByIdentity(identity);
+            if (c == null || DateTime.UtcNow > until) { _mboosterRoleFollow = null; return; }
+            if (c.RoleMapVersion == version) return;
+            _mboosterRoleFollow = null;
+            if (!string.Equals(identity, _mboosterSelectedIdentity, StringComparison.OrdinalIgnoreCase)) return;
+            if (_mboosterEffectPedalIndex == a) _mboosterEffectPedalIndex = b;
+            else if (_mboosterEffectPedalIndex == b) _mboosterEffectPedalIndex = a;
+            else return;
+            _mboosterUiSeeded = false;
         }
 
         // Auto-sleep timeout, 0 = off. Lane-wide: stored on the device

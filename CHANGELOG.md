@@ -15,12 +15,17 @@ All notable changes to the AZOM plugin are documented here.
 - **In-app updates restart SimHub automatically** once the install finishes.
 - **Stalk button debounce slider** in truck-sim mode, for levers whose contacts bounce.
 - **Guides card on the Help tab** links every online guide.
-- **First RPM LED pulses blue while dashboard channels negotiate;** wheel LEDs are no longer throttled meanwhile.
+- **First RPM LED pulses blue while dashboard channels negotiate** at startup and on dashboard switches; wheel LEDs are no longer throttled meanwhile.
 - **AB9/AB6 tab shows the selected shift gate** with the engaged gear highlighted live.
 - **"Stay on beta releases" update option** follows the newest beta instead of falling back to stable.
+- **Wheel device pages show the wheel's serial number and firmware version,** plus the display's firmware on screen wheels.
 
 ## Fixed
 
+- **Dashboard switches made on the wheel or CM2 are followed** instead of being ignored or switched back.
+- **Chained mBooster pedal roles no longer flip incorrectly** when changed.
+- **mBooster settings follow the pedals** whichever USB port or chained unit is plugged in.
+- **Picking a profile applies it again on SimHub 9.13.3,** and switching games applies that game's profile instead of the previous one.
 - **Profile wheel settings such as paddle mode are no longer lost at connect** when dashboard telemetry starts at the same time; paddle mode, clutch point and knob modes are also re-checked against the wheel.
 - **Pedal haptics no longer lag seconds behind the game** with several ShakeIt effects active.
 - **GS V2 Pro wheels reporting "GS" show as MOZA GS V2 Pro again;** the leftover "MOZA GS" definition that hid it is removed, existing devices carry over.
