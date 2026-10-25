@@ -1051,8 +1051,9 @@ namespace MozaPlugin.Devices.MBooster
         // See docs/protocol/devices/mbooster.md "Road Texture".
         public readonly double SuspensionHeaveG;
         // Longitudinal chassis acceleration, in G — SimHub's
-        // StatusDataBase.AccelerationSurge (nullable; 0 when a game doesn't
-        // report it). Positive = accelerating, negative = braking. Drives
+        // StatusDataBase.AccelerationSurge (m/s², braking positive) negated
+        // and divided by 9.80665 (0 when a game doesn't report it).
+        // Positive = accelerating, negative = braking. Drives
         // the G-Force (Inertial Pedal Feel) effect — see
         // MBoosterEffectWorker.UpdateGForceRequest and
         // docs/protocol/devices/mbooster.md "G-Force".

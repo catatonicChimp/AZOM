@@ -8,6 +8,10 @@ All notable changes to the AZOM plugin are documented here.
 
 - **Sync Status LED can be turned off or recoloured** from the dashboard page's Display card.
 
+## Fixed
+
+- **mBooster G-Force pushes the right way and scales with real G,** instead of slamming to full travel in reverse.
+
 ## [1.7.1]
 
 ## Added
