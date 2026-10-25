@@ -31,20 +31,10 @@ namespace MozaPlugin.Hardware
             // "throttle" slot, which is wrong for a mBooster used as a brake or
             // clutch (and for a chain whose master pedal isn't the throttle) —
             // the calibration silently landed on the wrong pedal's command.
-            // The role is the master pedal's (axis 0): ResolveAxisRole gives the
-            // legacy Role for a single unit or the chain default/override
-            // otherwise. Per-pedal calibration for the OTHER chained pedals is a
-            // follow-up (needs a per-pedal settings UI); this fixes the routing
-            // for the pedal the current single calibration set configures.
+            // Each axis's role comes from MBoosterDeviceController.AxisRole,
+            // the same resolver as the UI rows, the position merge and the
+            // effect workers.
             int axisCount = controller.AxisSlotCount;
-            // Roles resolve against the CONNECTED pedal count, never raw
-            // axisCount above (which is the loop bound, and is 3 on any
-            // chain-capable hub regardless of how many pedals are plugged in
-            // — passing it would override a sole pedal's own configured Role
-            // with the axis-order default and write its calibration under the
-            // wrong throttle-/brake-/clutch- command prefix). Same convention
-            // as the UI row list, the position merge and the effect workers.
-            int roleAxisCount = controller.ConnectedAxisCount;
             // Apply EACH hosted pedal's calibration to its role-specific command.
             // Pedal 0 (master) keeps its calibration in the flat fields (the
             // existing UI); the additional chained pedals (axes 1+) store theirs
@@ -60,13 +50,10 @@ namespace MozaPlugin.Hardware
             // the role-keyed writes below then land under the role the unit
             // reports. Only a role the profile sets — never the axis-order
             // default, and never Disabled.
-            for (int axis = 0; axis < axisCount && axis < global::MozaPlugin.Devices.MBooster.MBoosterDeviceController.MaxAxes; axis++)
-            {
-                if (connectedAxes != null && (axis >= connectedAxes.Length || !connectedAxes[axis]))
-                    continue;
-                if (global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.TryExplicitAxisRole(s, axis, roleAxisCount, out var desired))
-                    controller.SyncPedalRole(axis, global::MozaPlugin.Devices.MBooster.MBoosterDeviceController.RoleIndexOf(desired));
-            }
+            int roleAxisCount = controller.ConnectedAxisCount;
+            controller.SyncPedalRole(s.Role, axis =>
+                global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.TryExplicitAxisRole(s, axis, roleAxisCount, out var desired)
+                    ? desired : global::MozaPlugin.Devices.MBooster.MBoosterRole.Disabled);
 
             PinPartialOutputMappings(controller, s);
 
@@ -74,7 +61,7 @@ namespace MozaPlugin.Hardware
             {
                 if (connectedAxes != null && (axis >= connectedAxes.Length || !connectedAxes[axis]))
                     continue;
-                var role = global::MozaPlugin.Devices.MBooster.MozaMBoosterRegistry.ResolveAxisRole(s, axis, roleAxisCount);
+                var role = controller.AxisRole(axis, s);
                 string? prefix =
                     role == global::MozaPlugin.Devices.MBooster.MBoosterRole.Throttle ? "throttle"
                     : role == global::MozaPlugin.Devices.MBooster.MBoosterRole.Brake ? "brake"
@@ -292,7 +279,6 @@ namespace MozaPlugin.Hardware
         {
             var all = _plugin.MBoosterSettingsInAllProfiles(controller.Identity);
             if (!all.Contains(current)) all.Add(current);
-            int roleAxisCount = controller.ConnectedAxisCount;
             int soleAxis = controller.SoleConnectedAxis();
             var connectedAxes = controller.ConnectedAxes;
             int pinned = 0;
@@ -303,7 +289,7 @@ namespace MozaPlugin.Hardware
                         continue;
                     var cfg = PedalConfigForAxis(s, axis, soleAxis);
                     if (cfg == null || !MozaMBoosterRegistry.IsPartialOutputMapping(cfg)) continue;
-                    var role = MozaMBoosterRegistry.ResolveAxisRole(s, axis, roleAxisCount);
+                    var role = controller.AxisRole(axis, s);
                     int roleIdx = MBoosterDeviceController.RoleIndexOf(role);
                     if (roleIdx < 0 || !controller.TryConfigDeviceForRole(roleIdx, axis, out byte dev)) continue;
                     string prefix = role.ToString().ToLowerInvariant();

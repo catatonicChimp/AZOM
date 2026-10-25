@@ -349,8 +349,9 @@ namespace MozaPlugin
             _mboosterSerialByIdentity[identity] = "mbooster:" + serial;
             try
             {
-                var settings = GetOrCreateMBoosterSettings(identity); // resolves + migrates current profile
                 var controller = _mboosterRegistry?.FindByIdentity(identity);
+                if (controller != null) AdoptChainMBoosterSettings(identity, controller.ChainUnitSerials());
+                var settings = GetOrCreateMBoosterSettings(identity); // resolves + migrates current profile
                 if (controller != null)
                 {
                     // Replug on a NEW port: the transport-identity connectivity
@@ -361,10 +362,72 @@ namespace MozaPlugin
                     controller.SeedConnectedAxes(LookupMBoosterKnownPedals(identity));
                     controller.SeedChainRoles(LookupMBoosterKnownChainRoles(identity));
                     controller.SeedAxisTypes(LookupMBoosterKnownPedalTypes(identity));
+                    controller.OnSettingsResolved();
                     _hardwareApplier.ApplyMBoosterToHardware(controller, settings);
                 }
             }
             catch (Exception ex) { MozaLog.Warn($"[AZOM/mBooster] serial re-key for {MBoosterDeviceController.ShortIdentity(identity)}: {ex.Message}"); }
+        }
+
+        /// <summary>
+        /// A chained unit identified itself. Settings are keyed by the unit on
+        /// USB, so re-cabling the chain so another unit is on USB starts the
+        /// lane on a fresh key; when that key holds nothing real yet and this
+        /// chained unit's serial keys a real entry (it was the USB unit before),
+        /// the lane takes that entry over. Runs on the connection read thread.
+        /// </summary>
+        private void OnMBoosterChainUnitSerialResolved(string identity, string chainSerial)
+        {
+            if (IsShuttingDown || string.IsNullOrEmpty(identity) || string.IsNullOrEmpty(chainSerial)) return;
+            if (!_mboosterSerialByIdentity.ContainsKey(identity)) return; // OnMBoosterSerialResolved adopts then
+            try
+            {
+                if (!AdoptChainMBoosterSettings(identity, new List<string> { chainSerial })) return;
+                var controller = _mboosterRegistry?.FindByIdentity(identity);
+                if (controller != null && IsMBoosterSettingsResolved(controller))
+                    _hardwareApplier.ApplyMBoosterToHardware(controller, GetOrCreateMBoosterSettings(identity));
+            }
+            catch (Exception ex) { MozaLog.Warn($"[AZOM/mBooster] chain settings for {MBoosterDeviceController.ShortIdentity(identity)}: {ex.Message}"); }
+        }
+
+        /// <summary>Move a chained unit's settings entry to the lane's key in
+        /// every profile where the lane's own entry is absent or an untouched
+        /// placeholder and exactly one chained unit has a real entry. True if
+        /// anything moved.</summary>
+        private bool AdoptChainMBoosterSettings(string identity, List<string> chainSerials)
+        {
+            if (chainSerials == null || chainSerials.Count == 0) return false;
+            if (!_mboosterSerialByIdentity.TryGetValue(identity, out var laneKey)) return false;
+            bool moved = false;
+            lock (_mboosterSettingsLock)
+            {
+                var profiles = _settings?.ProfileStore?.Profiles;
+                if (profiles == null) return false;
+                foreach (var profile in profiles)
+                {
+                    var dict = profile?.MBoosterSettings;
+                    if (dict == null) continue;
+                    if (dict.TryGetValue(laneKey, out var own) && own != null && !IsUntouchedMBoosterPlaceholder(own)) continue;
+                    string? from = null;
+                    foreach (var serial in chainSerials)
+                    {
+                        string key = "mbooster:" + serial;
+                        if (string.Equals(key, laneKey, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!dict.TryGetValue(key, out var e) || e == null || IsUntouchedMBoosterPlaceholder(e)) continue;
+                        if (from != null) { from = null; break; } // two candidates: not ours to pick
+                        from = key;
+                    }
+                    if (from == null) continue;
+                    var adopted = dict[from];
+                    if (own != null) MergeMBoosterSettings(from: own, into: adopted, conflicts: new List<string>());
+                    dict[laneKey] = adopted;
+                    dict.Remove(from);
+                    moved = true;
+                    MozaLog.Info($"[AZOM/mBooster] {MBoosterDeviceController.ShortIdentity(identity)}: profile '{profile!.Name}' settings follow the chain from '{from}' to '{laneKey}'");
+                }
+            }
+            if (moved) SaveSettings();
+            return moved;
         }
 
         /// <summary>Persisted last-known pedal connectivity for a lane —
@@ -484,13 +547,20 @@ namespace MozaPlugin
         /// has been detected for <paramref name="serialWait"/> without one — a
         /// unit that never answers the serial read keeps its transport key for
         /// good. Edits made before this land on a placeholder.
+        /// <paramref name="requireDetected"/> false (role resolution, effects)
+        /// also releases a lane that never answers at all after the wait from
+        /// creation, so its HID input still merges as it always did.
         /// </summary>
-        internal bool IsMBoosterSettingsResolved(MBoosterDeviceController c, TimeSpan serialWait)
+        internal bool IsMBoosterSettingsResolved(MBoosterDeviceController c, bool requireDetected = true)
         {
             if (c == null) return false;
             if (_mboosterSerialByIdentity.ContainsKey(c.Identity)) return true;
-            return c.Detected && DateTime.UtcNow - c.DetectedAtUtc >= serialWait;
+            if (c.Detected) return DateTime.UtcNow - c.DetectedAtUtc >= MBoosterSerialWait;
+            return !requireDetected && DateTime.UtcNow - c.CreatedAtUtc >= MBoosterSerialWait;
         }
+
+        // Serial normally resolves in ~2 s; past this the transport key is final.
+        internal static readonly TimeSpan MBoosterSerialWait = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Live connectivity parsed from the device's own diagnostic. Persist
@@ -947,9 +1017,16 @@ namespace MozaPlugin
             if (IsShuttingDown || controller == null) return;
             try
             {
-                MozaLog.Info($"[AZOM/mBooster] Applying settings for {MBoosterDeviceController.ShortIdentity(controller.Identity)} (experimental calibration surface)");
-                var s = GetOrCreateMBoosterSettings(controller.Identity);
-                _hardwareApplier.ApplyMBoosterToHardware(controller, s);
+                // Until the serial resolves the lookup is keyed by the port, so
+                // a new port would apply a defaults placeholder. The serial
+                // re-key applies instead, or the timeout below if none comes.
+                if (IsMBoosterSettingsResolved(controller))
+                {
+                    MozaLog.Info($"[AZOM/mBooster] Applying settings for {MBoosterDeviceController.ShortIdentity(controller.Identity)} (experimental calibration surface)");
+                    _hardwareApplier.ApplyMBoosterToHardware(controller, GetOrCreateMBoosterSettings(controller.Identity));
+                }
+                else
+                    ScheduleMBoosterSerialTimeout(controller);
                 // Always issue a calibration read burst on detect so the panel
                 // can populate (or so we learn the device ignored them).
                 controller.RequestCalibrationReads();
@@ -958,6 +1035,29 @@ namespace MozaPlugin
             {
                 MozaLog.Warn($"[AZOM/mBooster] OnDetected for {controller.Identity}: {ex.Message}");
             }
+        }
+
+        /// <summary>A unit that never answers the serial read keeps its transport
+        /// key: once the wait from detection has passed, open the gate the
+        /// serial re-key would have opened.</summary>
+        private void ScheduleMBoosterSerialTimeout(MBoosterDeviceController controller)
+        {
+            DateTime detectedAt = controller.DetectedAtUtc;
+            var delay = detectedAt + MBoosterSerialWait - DateTime.UtcNow;
+            if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
+            Task.Delay(delay + TimeSpan.FromMilliseconds(50)).ContinueWith(_ =>
+            {
+                try
+                {
+                    if (IsShuttingDown || !controller.Detected || controller.DetectedAtUtc != detectedAt) return;
+                    if (_mboosterSerialByIdentity.ContainsKey(controller.Identity)) return;
+                    if (_mboosterRegistry?.FindByIdentity(controller.Identity) != controller) return;
+                    MozaLog.Info($"[AZOM/mBooster] {MBoosterDeviceController.ShortIdentity(controller.Identity)} no serial after {MBoosterSerialWait.TotalSeconds:0} s — applying port-keyed settings");
+                    controller.OnSettingsResolved();
+                    _hardwareApplier.ApplyMBoosterToHardware(controller, GetOrCreateMBoosterSettings(controller.Identity));
+                }
+                catch (Exception ex) { MozaLog.Warn($"[AZOM/mBooster] serial timeout for {MBoosterDeviceController.ShortIdentity(controller.Identity)}: {ex.Message}"); }
+            }, TaskScheduler.Default);
         }
 
 

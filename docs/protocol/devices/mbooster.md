@@ -460,6 +460,15 @@ its serial has resolved (re-keying the transport-keyed placeholder), or
 (`MozaPlugin.IsMBoosterSettingsResolved`). An edit on the placeholder
 only survives the re-key as a merge conflict.
 
+Role resolution, the position merge, the effect workers and the
+connect/profile-switch apply wait for the same gate
+(`MBoosterDeviceController.SettingsReady`; `CurrentSettings` is null until
+then, and an axis whose role isn't the hardware's yet resolves Disabled). The instance id changes with the
+USB port, so on a new port the placeholder's axis-order defaults
+(Throttle, Brake, …) used to stand in for the chain's saved roles until
+the serial arrived. A lane that never answers at all is released 10 s
+after controller creation so its HID input still merges.
+
 The HID interface exposes 3–4 axes regardless of how many pedals are
 wired, and a sole pedal reports on its **role's** axis (brake → Ry =
 axis 1), not axis 0. The host `0x12` retains calibration registers for
@@ -1546,17 +1555,47 @@ host's `0x22` reads otherwise — a role the profile sets, never the axis-order
 default, so a role chosen in Pit House survives an untouched profile
 (`MBoosterDeviceController.SyncPedalRole`;
 bug report NPN9FR6W started in a profile with the brake set to Throttle while
-the unit read Brake). Single-unit lanes only — on a chain the unit is found
-from the role, which is what disagrees — and never while a role write is
-waiting for the heartbeat. A passive pedal's role lives on the host's channel
-register (`0x21`/`0x23`); no capture shows Pit House writing one, so the
-plugin doesn't.
+the unit read Brake). Single-active-unit lanes only, and never while a role
+write is waiting for the heartbeat. A passive pedal's role lives on the host's
+channel register (`0x21`/`0x23`); no capture shows Pit House writing one, so
+the plugin doesn't.
+
+**Writing a chained pedal's role** (bug report 4J8FZ5AF). A role write goes to
+the edited pedal's host channel register — `0x22` for the host's own motor
+pedal; for a chained unit, the host register of the channel the heartbeat
+marks **remote**, then the unit's `0x22` (`WriteChannelRoles`). 4J8FZ5AF's
+chain hangs off host channel **C** (`Clutch=remote`, `PD Linked:[T 0 B 1 C 1]`),
+not T as in every earlier capture; the plugin always wrote `0x21`, so the
+chained pedal kept reporting as Clutch through the host's `0x23`. With one
+remote channel and one answering chained unit the link is that unit; with
+several, the unit whose own `0x22` matches the channel's role.
+
+**On a lane of active pedals the roles are the hardware's.** Once the host's
+map has been read, a USB lane whose connected pedals are all active takes an
+axis's role from it — axis = role, see below — not from the per-axis profile
+setting (`MBoosterDeviceController.DeviceRolesKnown` / `AxisRole`). The
+per-axis `AxisRoles` went stale on every role write there, since the write
+moves the pedal to another axis: 4J8FZ5AF's labels named the host's brake
+"Clutch" and the chained clutch "Throttle", and the next edit started from
+those. A role edit there (`AssignAxisRole`) swaps with the connected pedal
+already holding the new role; an unconnected channel is left holding a
+duplicate, as Pit House leaves it. Lanes with a passive pedal connected, and
+routed lanes, keep the profile's roles and write each active pedal's role as
+before (`WriteAxisRoles`).
+
+**Settings follow the chain.** A lane's settings are keyed by the serial of
+the unit on USB. In 4J8FZ5AF the chain was re-cabled so the other unit is on
+USB; the previous lane key is now the chained `0x1e`'s serial
+(`chain-probe … mbooster-serial-a/-b`), so the lane started on a fresh entry.
+When the USB unit's key holds no real values and exactly one chained unit's
+serial keys a real entry, the plugin moves that entry to the lane
+(`MozaPlugin.AdoptChainMBoosterSettings`), per profile.
 
 **Duplicate roles are allowed.** Pit House, setting the host's Brake to
 Throttle while the chained unit was Throttle (2026-09-29), wrote only the host
 (`22 00 01` plus the throttle role's stored config and throttle min/max /
 y1-y4) and logged both units as `role= "Throttle"`, no conflict. The plugin
-likewise writes only the edited pedal. Its role map is keyed by role, so for a
+swaps only with another connected motor pedal. Its role map is keyed by role, so for a
 shared role: a passive pedal's writes go to the host, a role's sole motor pedal
 keeps the map's placement, and two motor pedals on one role get no config
 writes (logged) — the map cannot tell them apart. The host heartbeat reports
@@ -1583,10 +1622,11 @@ moved Rx), which is why axis = channel held until now. The plugin keeps the
 heartbeat state (connectivity, types, locality, and their persisted seeds)
 indexed by channel and derives the axis-indexed views through the host's map
 (`MBoosterDeviceController.RederiveAxisViews`), USB lanes only. It keeps the
-last complete map across a port bounce. If two connected channels would land
-on one axis, it falls back to channel order (logged). A role write moves the
-pedal's axis with it; the `0x22` read-back re-routes the lane. Before this,
-COM8 read 0, and a role write on a standalone unit would do the same.
+last complete map across a port bounce, and when two connected channels would
+land on one axis (logged) — seen between a role swap's two register
+read-backs. A role write moves the pedal's axis with it; the read-back
+re-routes the lane. Before this, COM8 read 0, and a role write on a standalone
+unit would do the same.
 
 ### Firmware error reports — group `0x0E`, sub `03` / `04`
 

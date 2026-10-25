@@ -54,6 +54,8 @@ namespace MozaPlugin.Devices.MBooster
         private readonly Action<string, byte[]>? _onChainRolesResolved;
         private readonly Func<string, byte[]?>? _axisTypesSeedLookup;
         private readonly Action<string, byte[]>? _onAxisTypesResolved;
+        private readonly Func<MBoosterDeviceController, bool>? _settingsReady;
+        private readonly Action<string, string>? _onChainUnitSerialResolved;
         private readonly Func<bool>? _pedalSlotDetected;
 
         // Highest merged position (0..100) each role has reached this session —
@@ -217,7 +219,9 @@ namespace MozaPlugin.Devices.MBooster
             Action<string, byte[]>? onChainRolesResolved = null,
             Func<bool>? pedalSlotDetected = null,
             Func<string, byte[]?>? axisTypesSeedLookup = null,
-            Action<string, byte[]>? onAxisTypesResolved = null)
+            Action<string, byte[]>? onAxisTypesResolved = null,
+            Func<MBoosterDeviceController, bool>? settingsReady = null,
+            Action<string, string>? onChainUnitSerialResolved = null)
         {
             _data = data ?? throw new ArgumentNullException(nameof(data));
             _settingsLookup = settingsLookup ?? throw new ArgumentNullException(nameof(settingsLookup));
@@ -232,6 +236,8 @@ namespace MozaPlugin.Devices.MBooster
             _pedalSlotDetected = pedalSlotDetected;
             _axisTypesSeedLookup = axisTypesSeedLookup;
             _onAxisTypesResolved = onAxisTypesResolved;
+            _settingsReady = settingsReady;
+            _onChainUnitSerialResolved = onChainUnitSerialResolved;
         }
 
         /// <summary>
@@ -276,6 +282,12 @@ namespace MozaPlugin.Devices.MBooster
                         isShuttingDown: _isShuttingDown,
                         customEffectFormulaEvaluator: _customEffectFormulaEvaluator,
                         containerId: kvp.Value.ContainerId);
+                    if (_settingsReady != null) c.SettingsGate = () => _settingsReady(c);
+                    c.ChainUnitSerialResolved += ser =>
+                    {
+                        try { _onChainUnitSerialResolved?.Invoke(c.Identity, ser); }
+                        catch (Exception ex) { MozaLog.Debug($"[AZOM/mBooster] OnChainUnitSerialResolved: {ex.Message}"); }
+                    };
                     // Wire rising-edge detection to the plugin-level handler
                     // (applies profile, reads calibration, etc.).
                     c.DetectedRisingEdge += () => OnControllerDetected(c);
@@ -432,6 +444,12 @@ namespace MozaPlugin.Devices.MBooster
             lock (_lock)
             {
                 if (_byIdentity.ContainsKey(c.Identity)) return;
+                if (_settingsReady != null) c.SettingsGate = () => _settingsReady(c);
+                c.ChainUnitSerialResolved += ser =>
+                {
+                    try { _onChainUnitSerialResolved?.Invoke(c.Identity, ser); }
+                    catch (Exception ex) { MozaLog.Debug($"[AZOM/mBooster] OnChainUnitSerialResolved: {ex.Message}"); }
+                };
                 c.DetectedRisingEdge += () => OnControllerDetected(c);
                 c.FirmwareLogLine += line => OnFirmwareLogLine(c, line);
                 c.SerialResolved += (id, ser) =>
@@ -535,20 +553,13 @@ namespace MozaPlugin.Devices.MBooster
                         // them back in by role so the UI bars/curve markers and
                         // the workers' live-position feeds (test toggles, Brake
                         // Fade) track the real pedal.
-                        var s = _settingsLookup(c.Identity);
+                        var s = c.CurrentSettings;
                         int axisCount = c.AxisCount > 0 ? c.AxisCount : 3;
                         if (axisCount > MBoosterDeviceController.MaxAxes) axisCount = MBoosterDeviceController.MaxAxes;
-                        // Role resolution uses the CONNECTED count (see
-                        // MBoosterDeviceController.ConnectedAxisCount), not the
-                        // loop bound above — otherwise this mirrors positions
-                        // in under the axis-order default role instead of the
-                        // pedal's own, disagreeing with the merge below and
-                        // with what the workers play.
-                        int roleAxisCount = c.ConnectedAxisCount;
                         for (int a = 0; a < axisCount; a++)
                         {
                             double v;
-                            switch (ResolveAxisRole(s, a, roleAxisCount))
+                            switch (c.AxisRole(a, s))
                             {
                                 case MBoosterRole.Throttle: v = _data.ThrottlePosition / 100.0; break;
                                 case MBoosterRole.Brake:    v = _data.BrakePosition / 100.0; break;
@@ -623,7 +634,7 @@ namespace MozaPlugin.Devices.MBooster
             // Only Max Threshold is still applied here. Per-axis: the master
             // (axis 0) uses the lane's flat fields, each chained pedal its
             // own per-pedal entry.
-            var laneSettings = _settingsLookup(c.Identity);
+            var laneSettings = c.CurrentSettings;
             IMBoosterPedalConfig? cfg = laneSettings;
             if (axisIndex > 0)
             {
@@ -1087,24 +1098,13 @@ namespace MozaPlugin.Devices.MBooster
                     // HID path — merging the mirrored copies back would just
                     // echo (or, before the mirror ticks, zero) the real values.
                     if (c.IsRouted) continue;
-                    var s = _settingsLookup(c.Identity);
+                    var s = c.CurrentSettings;
                     int rawAxisCount = c.AxisSlotCount;
-
-                    // Resolve roles against how many axes are ACTUALLY wired,
-                    // not the raw HID axis count — a chain-capable hub's report
-                    // descriptor exposes all 3 GenericDesktop axes even when
-                    // only one pedal is physically plugged in, so raw AxisCount
-                    // can't tell a real chain from a single connected pedal.
-                    // Getting this wrong silently overrides that pedal's own
-                    // Role with the axis-order default (see IsAxisConnected).
-                    int connectedAxisCount = 0;
-                    for (int a = 0; a < rawAxisCount; a++)
-                        if (c.IsAxisConnected(a)) connectedAxisCount++;
 
                     for (int a = 0; a < rawAxisCount; a++)
                     {
                         if (!c.IsAxisConnected(a)) continue;
-                        var role = ResolveAxisRole(s, a, connectedAxisCount);
+                        var role = c.AxisRole(a, s);
                         if (role == MBoosterRole.Disabled) continue;
                         // MozaData position fields are int (0..100, the same scale
                         // the existing HID reader writes). Round explicitly.
@@ -1146,11 +1146,13 @@ namespace MozaPlugin.Devices.MBooster
         /// Rx(0x33)/Ry(0x34)/Rz(0x35), which ascending-sorted give index 0/1/2,
         /// and Moza maps Rx→throttle, Ry→brake, Rz→clutch (see
         /// MozaHidClass.Pedals). The user remaps via the UI if a given unit's
-        /// wiring differs.
+        /// wiring differs. Null settings (lane not ready, see
+        /// <see cref="MBoosterDeviceController.SettingsReady"/>) is Disabled.
         /// </summary>
         internal static MBoosterRole ResolveAxisRole(MBoosterDeviceSettings? s, int axisIndex, int axisCount)
         {
-            var roles = s?.AxisRoles;
+            if (s == null) return MBoosterRole.Disabled;
+            var roles = s.AxisRoles;
             if (roles != null && axisIndex >= 0 && axisIndex < roles.Length)
                 return roles[axisIndex];
             if (axisCount <= 1)

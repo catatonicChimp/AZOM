@@ -23,6 +23,8 @@ All notable changes to the AZOM plugin are documented here.
 ## Fixed
 
 - **Dashboard switches made on the wheel or CM2 are followed** instead of being ignored or switched back.
+- **Chained mBooster pedal roles no longer flip incorrectly** when changed.
+- **mBooster settings follow the pedals** whichever USB port or chained unit is plugged in.
 - **Picking a profile applies it again on SimHub 9.13.3,** and switching games applies that game's profile instead of the previous one.
 - **Profile wheel settings such as paddle mode are no longer lost at connect** when dashboard telemetry starts at the same time; paddle mode, clutch point and knob modes are also re-checked against the wheel.
 - **Pedal haptics no longer lag seconds behind the game** with several ShakeIt effects active.

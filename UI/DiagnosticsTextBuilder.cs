@@ -292,7 +292,7 @@ namespace MozaPlugin.UI
                     : d.IsConnected ? "connected (probing)"
                                     : "disconnected";
                 var s = d.CurrentSettings;
-                string roleStr = s != null ? s.Role.ToString() : "(no settings row)";
+                string roleStr = s != null ? s.Role.ToString() : "(waiting for serial)";
                 string livePort = d.Connection?.LastPortName ?? "";
                 string port = string.IsNullOrEmpty(livePort) ? d.PortName : livePort;
                 sb.AppendLine(
@@ -319,14 +319,14 @@ namespace MozaPlugin.UI
                     for (int a = 0; a < d.AxisSlotCount; a++)
                     {
                         string flag = connected == null ? "?" : (a < connected.Length && connected[a] ? "+" : "-");
-                        roleParts.Add($"ax{a}[{flag}]={MozaMBoosterRegistry.ResolveAxisRole(s, a, d.ConnectedAxisCount)}");
+                        roleParts.Add($"ax{a}[{flag}]={d.AxisRole(a, s)}");
                     }
                     // Roles resolve against the CONNECTED count — the count the
                     // effect workers, calibration writes and position merge all
                     // use. Reporting the raw-count answer here (as this did)
                     // makes a bundle disagree with the pipeline it's meant to
                     // explain, which is how a role mix-up stays hidden.
-                    sb.AppendLine($"        axes={d.AxisCount}  connected={d.ConnectedAxisCount}  roles=[{string.Join(", ", roleParts)}]");
+                    sb.AppendLine($"        axes={d.AxisCount}  connected={d.ConnectedAxisCount}  roles({(d.DeviceRolesKnown ? "device" : "profile")})=[{string.Join(", ", roleParts)}]");
                 }
                 AppendMBoosterPedalConfig(sb, registry, d, s);
                 AppendMBoosterStatusRegisters(sb, d);
@@ -411,7 +411,7 @@ namespace MozaPlugin.UI
                 string type = types == null || a >= types.Length ? "?"
                             : types[a] == 1 ? "active"
                             : types[a] == 2 ? "passive" : "unknown";
-                var role = MozaMBoosterRegistry.ResolveAxisRole(s, a, d.ConnectedAxisCount);
+                var role = d.AxisRole(a, s);
                 // Resolve by ROLE, the way the effect worker and HardwareApplier
                 // actually address this pedal — the axis-index resolver can
                 // disagree with the role map, and then this line names a device

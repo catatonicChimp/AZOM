@@ -152,7 +152,7 @@ namespace MozaPlugin.UI
         {
             if (!passive) return true;
             var t = _passivePedals[role];
-            return t != null && _plugin.IsMBoosterSettingsResolved(t.Value.Controller, MBoosterSerialWait);
+            return t != null && _plugin.IsMBoosterSettingsResolved(t.Value.Controller);
         }
 
         /// <summary>

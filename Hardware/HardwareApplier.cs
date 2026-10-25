@@ -1903,6 +1903,8 @@ namespace MozaPlugin.Hardware
             if (registry == null) return;
             foreach (var controller in registry.Devices)
             {
+                // Not final yet — the serial re-key / timeout applies it.
+                if (!_plugin.IsMBoosterSettingsResolved(controller)) continue;
                 var s = _plugin.GetOrCreateMBoosterSettings(controller.Identity);
                 ApplyMBoosterToHardware(controller, s);
             }
