@@ -926,4 +926,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>开启：{0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>巡航</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>开关：按住时开启（切换键）</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>远光灯：切换（推）</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>雨刷间歇 {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>雨刷间歇加快</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>雨刷间歇减慢</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>间歇档位</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>间歇</value></data>
 </root>

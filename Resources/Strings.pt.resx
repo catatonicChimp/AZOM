@@ -925,4 +925,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Ligado: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruzeiro</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Interruptor: ligado enquanto pressionado (tecla de alternância)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Farol alto: alternar (empurrar)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Intervalo do limpador {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Intervalo mais rápido</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Intervalo mais lento</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Estágios de intervalo</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Intervalo</value></data>
 </root>

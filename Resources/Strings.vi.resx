@@ -926,4 +926,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Bật: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Ga tự động</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Công tắc: bật khi giữ (phím bật/tắt)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Đèn pha: bật/tắt (đẩy)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Khoảng gạt mưa {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Khoảng gạt nhanh hơn</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Khoảng gạt chậm hơn</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Số mức khoảng gạt</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Khoảng</value></data>
 </root>

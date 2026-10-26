@@ -925,4 +925,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>켜짐: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>크루즈</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>스위치: 누르는 동안 켜짐 (토글 키)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>상향등: 토글 (밀기)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>와이퍼 간격 {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>와이퍼 간격 빠르게</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>와이퍼 간격 느리게</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>간격 단계</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>간격</value></data>
 </root>

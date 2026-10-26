@@ -107,7 +107,7 @@ namespace MozaPlugin.UI
             Key = ShowsKeyCapture ? _keyStored : "",
         };
 
-        public static List<StalkOptionItem> BuildOptions(int wiperStageCount, int lightStageCount)
+        public static List<StalkOptionItem> BuildOptions(int wiperStageCount, int lightStageCount, int intervalStageCount)
         {
             var list = new List<StalkOptionItem>
             {
@@ -122,8 +122,11 @@ namespace MozaPlugin.UI
             };
             for (int i = 0; i < Math.Max(1, wiperStageCount); i++)
                 list.Add(new StalkOptionItem(StalkActionKind.WiperStage, i, string.Format(Strings.StalkKind_WiperStage, i)));
+            for (int i = 0; i < Math.Max(1, intervalStageCount); i++)
+                list.Add(new StalkOptionItem(StalkActionKind.WiperIntervalStage, i, string.Format(Strings.StalkKind_WiperIntervalStage, i)));
             for (int i = 0; i < Math.Max(1, lightStageCount); i++)
                 list.Add(new StalkOptionItem(StalkActionKind.LightStage, i, string.Format(Strings.StalkKind_LightStage, i)));
+            list.Add(new StalkOptionItem(StalkActionKind.HighBeamToggle, 0, Strings.StalkKind_HighBeamToggle));
             list.Add(new StalkOptionItem(StalkActionKind.HighBeamOn, 0, Strings.StalkKind_HighBeamOn));
             list.Add(new StalkOptionItem(StalkActionKind.HighBeamNeutral, 0, Strings.StalkKind_HighBeamNeutral));
             list.Add(new StalkOptionItem(StalkActionKind.HighBeamFlash, 0, Strings.StalkKind_HighBeamFlash));
@@ -141,7 +144,8 @@ namespace MozaPlugin.UI
         {
             var kind = a?.Kind ?? StalkActionKind.None;
             int stage = a?.Stage ?? 0;
-            bool staged = kind == StalkActionKind.WiperStage || kind == StalkActionKind.LightStage;
+            bool staged = kind == StalkActionKind.WiperStage || kind == StalkActionKind.LightStage
+                || kind == StalkActionKind.WiperIntervalStage;
             foreach (var o in options)
                 if (o.Kind == kind && (!staged || o.Stage == stage)) return o;
             return options[0];

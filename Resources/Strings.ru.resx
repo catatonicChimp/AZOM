@@ -926,4 +926,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Вкл.: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Круиз</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Переключатель: вкл., пока нажат (клавиша-переключатель)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Дальний свет: переключить (толчок)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Интервал дворников {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Интервал быстрее</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Интервал медленнее</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Ступени интервала</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Интервал</value></data>
 </root>

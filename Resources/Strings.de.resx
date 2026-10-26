@@ -926,4 +926,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>An: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Tempomat</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Schalter: an solange gedrückt (Umschalttaste)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Fernlicht: umschalten (drücken)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Wischintervall {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Wischintervall schneller</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Wischintervall langsamer</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Intervallstufen</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Intervall</value></data>
 </root>

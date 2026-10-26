@@ -984,5 +984,11 @@ namespace MozaPlugin.Resources
         public static string StalksView_TogglesOn => Get("StalksView_TogglesOn");
         public static string StalksView_Cruise => Get("StalksView_Cruise");
         public static string StalkKind_ToggleHold => Get("StalkKind_ToggleHold");
+        public static string StalkKind_HighBeamToggle => Get("StalkKind_HighBeamToggle");
+        public static string StalkKind_WiperIntervalStage => Get("StalkKind_WiperIntervalStage");
+        public static string Label_WiperIntervalFasterKey => Get("Label_WiperIntervalFasterKey");
+        public static string Label_WiperIntervalSlowerKey => Get("Label_WiperIntervalSlowerKey");
+        public static string SliderLabel_WiperIntervalStageCount => Get("SliderLabel_WiperIntervalStageCount");
+        public static string StalksView_Interval => Get("StalksView_Interval");
     }
 }

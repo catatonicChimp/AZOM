@@ -8,9 +8,10 @@ All notable changes to the AZOM plugin are documented here.
 
 - **Sync Status LED can be turned off or recoloured** from the dashboard page's Display card.
 - **Stalks live view** shows the indicators, lights, high beam, wipers and cruise control as you move the stalks, with what the game is showing next to where each lever sits.
-- **Stalks keep the game in step with the lever position,** not the number of presses: a latched high-beam stalk drives the game's on/off toggle, and levers moved while the game was alt-tabbed are caught up when it regains focus.
+- **Stalks keep the game in step with the lever position,** not the number of presses: levers moved while the game was alt-tabbed are caught up when it regains focus, and the high-beam push toggles cleanly with flash released at neutral.
 - **Cruise control on the stalks:** a short press resumes or sets when cruise is off and steps the speed when it's on; holding the lever sends a big step, repeated while held.
-- **"Switch on" / "Switch off" stalk actions** let two stalk positions drive any single toggle key in the game.
+- **"Switch on" / "Switch off" stalk actions** let two stalk positions drive any single toggle key in the game (e.g. rear wiper off/on), and **"on while held"** covers a latched single-button switch such as fog lights.
+- **Intermittent wiper frequency** positions are synced to the game with faster/slower keys.
 - **Stalk keyboard sync works with any game,** by listing the game's program names; it still defaults to ETS2/ATS. Indicators can be set to "hold while on" for games that need it, and wipers work with a single forward-only cycle key.
 - **`AZOM.Stalks.*` properties** for indicators, high beam, light and wiper stages, and cruise control.
 - **Right-click a key box to clear it.**

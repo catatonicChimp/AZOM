@@ -933,4 +933,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>On: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Switch: on while held (toggle key)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>High beam: toggle (push)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Wiper interval {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Wiper interval faster</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Wiper interval slower</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Interval stages</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Interval</value></data>
 </root>

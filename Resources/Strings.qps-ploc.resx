@@ -916,4 +916,10 @@
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Woof: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Awoo!</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Wuf Wuf!</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Woof!</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Yap {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Arf!</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Yip!</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Bork!</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Grr!</value></data>
 </root>

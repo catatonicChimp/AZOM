@@ -64,13 +64,14 @@ namespace MozaPlugin.Devices.StalksTruckSim
         /// position so returning there drops the flash.</summary>
         ReleaseHeld = 10,
 
-        /// <summary>High-beam lever pushed to its latched ON position. The game's
+        /// <summary>High-beam lever pushed to a latched ON position (for a lever
+        /// that stays there; see <see cref="HighBeamToggle"/> for a sprung one). The game's
         /// high-beam key is a toggle, so it is tapped only when the tracked game state
         /// is off — the lever position, not the press count, decides the outcome.</summary>
         HighBeamOn = 11,
 
-        /// <summary>High-beam lever at neutral: switches a tracked-on high beam off
-        /// (one toggle tap) and releases a held flash.</summary>
+        /// <summary>High-beam lever at neutral: releases a held flash, and switches the
+        /// high beam off when the lever is leaving a latched ON position.</summary>
         HighBeamNeutral = 12,
 
         /// <summary>High-beam lever pulled to flash: holds the flash key down until the
@@ -103,6 +104,16 @@ namespace MozaPlugin.Devices.StalksTruckSim
         /// lights): pressing switches the game's toggle key <see cref="StalkAction.Key"/>
         /// on, releasing switches it off — both only when the tracked state differs.</summary>
         ToggleHold = 19,
+
+        /// <summary>Spring-loaded high-beam push: each press flips the high beam
+        /// (one tap of the high-beam key). Use instead of <see cref="HighBeamOn"/>
+        /// when the forward position springs back, as on the MOZA stalks.</summary>
+        HighBeamToggle = 20,
+
+        /// <summary>Select an intermittent-wiper frequency stage: the controller steps
+        /// the game's interval to <see cref="StalkAction.Stage"/> with the interval
+        /// faster/slower keys.</summary>
+        WiperIntervalStage = 21,
     }
 
     /// <summary>

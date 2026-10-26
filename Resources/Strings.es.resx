@@ -931,4 +931,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Encendido: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Crucero</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Interruptor: encendido mientras se mantiene (tecla de alternar)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Luz larga: alternar (empujar)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Intervalo de limpiaparabrisas {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Intervalo más rápido</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Intervalo más lento</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Etapas de intervalo</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Intervalo</value></data>
 </root>

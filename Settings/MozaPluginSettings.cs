@@ -854,6 +854,12 @@ namespace MozaPlugin.Settings
         /// <summary>Repeat interval of the held step while the lever stays held (ms).</summary>
         public int CruiseRepeatMs { get; set; } = 400;
 
+        // Intermittent-wiper frequency (MOZA buttons 14-18). Keys unset by default;
+        // an empty slower key steps forward around the ring instead.
+        public int WiperIntervalStageCount { get; set; } = 5;
+        public string WiperIntervalFasterKey { get; set; } = "";
+        public string WiperIntervalSlowerKey { get; set; } = "";
+
         // Stage models.
         public int WiperStageCount { get; set; } = 4;
         public bool WiperForwardWraps { get; set; } = false;   // ETS2 wiper key does not wrap
@@ -888,6 +894,9 @@ namespace MozaPlugin.Settings
                 CruiseUpBigKey = CruiseUpBigKey,
                 CruiseDownBigKey = CruiseDownBigKey,
                 CruiseCancelKey = CruiseCancelKey,
+                WiperIntervalStageCount = WiperIntervalStageCount,
+                WiperIntervalFasterKey = WiperIntervalFasterKey,
+                WiperIntervalSlowerKey = WiperIntervalSlowerKey,
                 CruiseHoldMs = CruiseHoldMs,
                 CruiseRepeatMs = CruiseRepeatMs,
                 WiperStageCount = WiperStageCount,
@@ -928,8 +937,8 @@ namespace MozaPlugin.Settings
                 { 0, new StalkAction { Kind = StalkActionKind.LightStage, Stage = 0 } }, // btn1 lights off
                 { 1, new StalkAction { Kind = StalkActionKind.LightStage, Stage = 1 } }, // btn2 accessory
                 { 2, new StalkAction { Kind = StalkActionKind.LightStage, Stage = 2 } }, // btn3 headlights
-                { 3, new StalkAction { Kind = StalkActionKind.HighBeamOn } },            // btn4 high beam (latched)
-                { 4, new StalkAction { Kind = StalkActionKind.HighBeamNeutral } },       // btn5 neutral: high beam off, flash released
+                { 3, new StalkAction { Kind = StalkActionKind.HighBeamToggle } },        // btn4 high beam push (sprung): toggle
+                { 4, new StalkAction { Kind = StalkActionKind.HighBeamNeutral } },       // btn5 neutral: flash released
                 { 5, new StalkAction { Kind = StalkActionKind.HighBeamFlash } },         // btn6 flash: hold J until neutral (btn5)
                 { 7, new StalkAction { Kind = StalkActionKind.IndicatorRight } },        // btn8 right
                 { 8, new StalkAction { Kind = StalkActionKind.IndicatorCancel } },       // btn9 neutral/cancel

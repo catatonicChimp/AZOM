@@ -929,4 +929,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Attivi: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Interruttore: acceso finché premuto (tasto alternato)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Abbaglianti: alterna (spingi)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Intervallo tergicristallo {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Intervallo più veloce</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Intervallo più lento</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Livelli di intervallo</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Intervallo</value></data>
 </root>

@@ -28,6 +28,7 @@ namespace MozaControls
         public string WipersLabel { get; set; } = "Wipers";
         public string HighBeamLabel { get; set; } = "High beam";
         public string SwipeLabel { get; set; } = "Swipe";
+        public string IntervalLabel { get; set; } = "Interval";
         public string TogglesLabel { get; set; } = "On: {0}";
         public string CruiseLabel { get; set; } = "Cruise";
         public string OnLabel { get; set; } = "On";
@@ -129,6 +130,9 @@ namespace MozaControls
             WiperSwipe = s.WiperSwipe,
             WiperStage = s.WiperSwipe ? -1 : s.WiperLever,
             WiperStageCount = s.WiperStageCount,
+            WiperIntervalLever = s.WiperIntervalLever,
+            WiperIntervalStage = s.WiperIntervalLever,
+            WiperIntervalStageCount = s.WiperIntervalStageCount,
             LightLever = s.LightLever,
             LightStage = s.LightLever,
             LightStageCount = s.LightStageCount,
@@ -220,8 +224,27 @@ namespace MozaControls
                 Pill(dc, new Point(x0 + i * pitch, cy), u * 0.7, i.ToString(CultureInfo.InvariantCulture),
                     filled: s.WiperStage == i, ring: s.WiperLever == i && !s.WiperSwipe, glowAmber: false);
 
-            double sy = r.Top + r.Height * 0.80;
-            var ft = Label(SwipeLabel, u * 0.85, s.WiperSwipe ? _cyan : _muted);
+            // Intermittent frequency: a row of small marks, once a stage has been reported.
+            if (s.WiperIntervalLever >= 0 || s.WiperIntervalStage > 0)
+            {
+                int m = Math.Max(1, s.WiperIntervalStageCount);
+                double iy = r.Top + r.Height * 0.72;
+                var lt = Label(IntervalLabel, u * 0.7, _muted);
+                double dotPitch = u * 0.75;
+                double total = lt.Width + u * 0.4 + m * dotPitch;
+                double x = r.Left + (r.Width - total) / 2;
+                dc.DrawText(lt, new Point(x, iy - lt.Height / 2));
+                x += lt.Width + u * 0.4 + dotPitch / 2;
+                for (int i = 0; i < m; i++)
+                {
+                    var c = new Point(x + i * dotPitch, iy);
+                    bool filled = s.WiperIntervalStage == i;
+                    dc.DrawEllipse(filled ? _cyan : _track, s.WiperIntervalLever == i && !filled ? _cyanPen : null, c, u * 0.22, u * 0.22);
+                }
+            }
+
+            double sy = r.Top + r.Height * 0.90;
+            var ft = Label(SwipeLabel, u * 0.8, s.WiperSwipe ? _cyan : _muted);
             dc.DrawText(ft, new Point(r.Left + (r.Width - ft.Width) / 2, sy - ft.Height / 2));
         }
 

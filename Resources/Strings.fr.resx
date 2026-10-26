@@ -926,4 +926,10 @@ Id : {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Actif : {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Régulateur</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Interrupteur : allumé tant que maintenu (touche bascule)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Feux de route : bascule (pousser)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Intervalle essuie-glace {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Intervalle plus rapide</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Intervalle plus lent</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Niveaux d'intervalle</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Intervalle</value></data>
 </root>

@@ -49,6 +49,11 @@ namespace MozaPlugin.Devices.StalksTruckSim
         public int WiperStage { get; internal set; }
         public int WiperStageCount { get; internal set; } = 1;
 
+        /// <summary>Intermittent-wiper frequency lever stage, -1 until reported.</summary>
+        public int WiperIntervalLever { get; internal set; } = -1;
+        public int WiperIntervalStage { get; internal set; }
+        public int WiperIntervalStageCount { get; internal set; } = 1;
+
         /// <summary>Light knob stage, -1 until a light position has been reported.</summary>
         public int LightLever { get; internal set; } = -1;
         public int LightStage { get; internal set; }
@@ -97,6 +102,10 @@ namespace MozaPlugin.Devices.StalksTruckSim
         private bool _wiperSwipe;
         private int _lightLever = -1;
         private HighBeamLever _hbLever;
+        // Wanted high-beam state: set by a latched lever position or a sprung toggle
+        // push; null until either has been used (then high beam is never reconciled).
+        private bool? _hbWant;
+        private int _intervalLever = -1;
         private readonly Dictionary<string, bool> _toggleLever = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         // Game (tracked) state.
@@ -107,6 +116,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
         private int _wiperStage;
         private int _lightStage;
         private bool _highBeam;
+        private int _intervalStage;
         private readonly Dictionary<string, bool> _toggleGame = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private bool _cruiseActive;
 
@@ -130,6 +140,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
             _lightStage = WrapStage(_lightStage, _cfg.LightStageCount);
             if (_wiperLever >= 0) _wiperLever = WrapStage(_wiperLever, _cfg.WiperStageCount);
             if (_lightLever >= 0) _lightLever = WrapStage(_lightLever, _cfg.LightStageCount);
+            _intervalStage = WrapStage(_intervalStage, _cfg.WiperIntervalStageCount);
+            if (_intervalLever >= 0) _intervalLever = WrapStage(_intervalLever, _cfg.WiperIntervalStageCount);
             // A blink scheduled under the old style/keys must not fire under the new ones.
             _pendingCancel = IndicatorSide.None;
         }
@@ -153,7 +165,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
             {
                 if (_wiperLever >= 0 && !_wiperSwipe && _wiperLever != _wiperStage) return true;
                 if (_lightLever >= 0 && _lightLever != _lightStage) return true;
-                if (_hbLever != HighBeamLever.Unknown && (_hbLever == HighBeamLever.On) != _highBeam) return true;
+                if (_intervalLever >= 0 && _intervalLever != _intervalStage) return true;
+                if (_hbWant.HasValue && _hbWant.Value != _highBeam) return true;
                 foreach (var kv in _toggleLever)
                     if (GameToggle(kv.Key) != kv.Value) return true;
                 return false;
@@ -200,6 +213,10 @@ namespace MozaPlugin.Devices.StalksTruckSim
                         _wiperLever = _wiperStage;
                     }
                     break;
+                case StalkActionKind.WiperIntervalStage:
+                    _intervalLever = WrapStage(action.Stage, cfg.WiperIntervalStageCount);
+                    if (deliver) ConvergeInterval(_intervalLever, output);
+                    break;
                 case StalkActionKind.LightStage:
                     _lightLever = WrapStage(action.Stage, cfg.LightStageCount);
                     if (deliver) ConvergeLight(_lightLever, output);
@@ -220,15 +237,24 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
                 case StalkActionKind.HighBeamOn:
                     _hbLever = HighBeamLever.On;
+                    _hbWant = true;
                     Up(cfg.HighBeamFlashKey, output);
                     if (deliver) ConvergeHighBeam(output);
                     break;
+                case StalkActionKind.HighBeamToggle:
+                    // Sprung push: the lever comes straight back to neutral, so the
+                    // press itself is the request — flip what we want.
+                    _hbWant = !(_hbWant ?? _highBeam);
+                    if (deliver) ConvergeHighBeam(output);
+                    break;
                 case StalkActionKind.HighBeamNeutral:
+                    if (_hbLever == HighBeamLever.On) _hbWant = false;
                     _hbLever = HighBeamLever.Neutral;
                     Up(cfg.HighBeamFlashKey, output);
                     if (deliver) ConvergeHighBeam(output);
                     break;
                 case StalkActionKind.HighBeamFlash:
+                    if (_hbLever == HighBeamLever.On) _hbWant = false;
                     _hbLever = HighBeamLever.Flash;
                     if (deliver)
                     {
@@ -356,7 +382,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
         {
             if (_wiperLever >= 0 && !_wiperSwipe) ConvergeWiper(_wiperLever, output);
             if (_lightLever >= 0) ConvergeLight(_lightLever, output);
-            if (_hbLever != HighBeamLever.Unknown) ConvergeHighBeam(output);
+            if (_intervalLever >= 0) ConvergeInterval(_intervalLever, output);
+            if (_hbWant.HasValue) ConvergeHighBeam(output);
             foreach (var key in new List<string>(_toggleLever.Keys)) ConvergeToggle(key, output);
         }
 
@@ -374,6 +401,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
             _wiperStage = 0;
             _lightStage = 0;
             _highBeam = false;
+            // A latched lever still wants high beam; a sprung toggle starts over off.
+            if (_hbWant.HasValue) _hbWant = _hbLever == HighBeamLever.On;
             _cruiseActive = false;
             _toggleGame.Clear();
         }
@@ -408,6 +437,9 @@ namespace MozaPlugin.Devices.StalksTruckSim
                 WiperSwipe = _wiperSwipe,
                 WiperStage = _wiperStage,
                 WiperStageCount = Math.Max(1, _cfg.WiperStageCount),
+                WiperIntervalLever = _intervalLever,
+                WiperIntervalStage = _intervalStage,
+                WiperIntervalStageCount = Math.Max(1, _cfg.WiperIntervalStageCount),
                 LightLever = _lightLever,
                 LightStage = _lightStage,
                 LightStageCount = Math.Max(1, _cfg.LightStageCount),
@@ -517,6 +549,16 @@ namespace MozaPlugin.Devices.StalksTruckSim
             _wiperStage = WrapStage(target, _cfg.WiperStageCount);
         }
 
+        private void ConvergeInterval(int target, List<StalkKeyCommand> output)
+        {
+            // Faster key steps up; no slower key → step forward around the ring.
+            bool hasBack = !string.IsNullOrEmpty(_cfg.WiperIntervalSlowerKey);
+            var steps = StageCycle.PlanSteps(_intervalStage, target, _cfg.WiperIntervalStageCount, !hasBack, hasBack);
+            foreach (var s in steps)
+                Tap(s > 0 ? _cfg.WiperIntervalFasterKey : _cfg.WiperIntervalSlowerKey, output);
+            _intervalStage = WrapStage(target, _cfg.WiperIntervalStageCount);
+        }
+
         private void ConvergeLight(int target, List<StalkKeyCommand> output)
         {
             // Light knob uses a single forward-only cycle key (wraps).
@@ -528,7 +570,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
         private void ConvergeHighBeam(List<StalkKeyCommand> output)
         {
-            bool want = _hbLever == HighBeamLever.On;
+            bool want = _hbWant ?? _highBeam;
             if (want == _highBeam) return;
             Tap(_cfg.HighBeamKey, output);
             _highBeam = want;

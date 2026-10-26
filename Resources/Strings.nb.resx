@@ -931,4 +931,10 @@ Id: {2}</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>På: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
   <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Bryter: på mens den holdes (vekslingstast)</value></data>
+  <data name="StalkKind_HighBeamToggle" xml:space="preserve"><value>Fjernlys: veksle (skyv)</value></data>
+  <data name="StalkKind_WiperIntervalStage" xml:space="preserve"><value>Viskerintervall {0}</value></data>
+  <data name="Label_WiperIntervalFasterKey" xml:space="preserve"><value>Viskerintervall raskere</value></data>
+  <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Viskerintervall saktere</value></data>
+  <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Intervalltrinn</value></data>
+  <data name="StalksView_Interval" xml:space="preserve"><value>Intervall</value></data>
 </root>

@@ -72,6 +72,7 @@ namespace MozaPlugin.UI
             v.WipersLabel = Strings.StalksView_Wipers;
             v.HighBeamLabel = Strings.StalksView_HighBeam;
             v.SwipeLabel = Strings.StalksView_Swipe;
+            v.IntervalLabel = Strings.StalksView_Interval;
             v.TogglesLabel = Strings.StalksView_TogglesOn;
             v.CruiseLabel = Strings.StalksView_Cruise;
             v.OnLabel = Strings.Option_On;
@@ -83,7 +84,7 @@ namespace MozaPlugin.UI
         private void BuildStalkRows()
         {
             var cfg = _plugin.Settings.StalksTruckSim ?? new StalkTruckSimSettings();
-            _stalkOptions = StalkRow.BuildOptions(cfg.WiperStageCount, cfg.LightStageCount);
+            _stalkOptions = StalkRow.BuildOptions(cfg.WiperStageCount, cfg.LightStageCount, cfg.WiperIntervalStageCount);
             _stalkRows.Clear();
             int max = Math.Min(MozaData.MaxStalksButtons, 28);
             for (int i = 0; i < max; i++)
@@ -108,6 +109,10 @@ namespace MozaPlugin.UI
                 StalksLightStageSlider.Value = cfg.LightStageCount;
                 StalksLightStageValue.Text = cfg.LightStageCount.ToString();
                 StalksWiperWrapToggle.IsChecked = cfg.WiperForwardWraps;
+                StalksIntervalStageSlider.Value = cfg.WiperIntervalStageCount;
+                StalksIntervalStageValue.Text = cfg.WiperIntervalStageCount.ToString();
+                StalksIntervalFasterKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperIntervalFasterKey);
+                StalksIntervalSlowerKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperIntervalSlowerKey);
                 StalksIndMinBlinkSlider.Value = cfg.IndicatorMinBlinkSeconds;
                 StalksIndMinBlinkValue.Text = cfg.IndicatorMinBlinkSeconds.ToString();
                 StalksDebounceSlider.Value = cfg.DebounceMs;
@@ -152,6 +157,8 @@ namespace MozaPlugin.UI
             else if (ReferenceEquals(box, StalksIndLeftKeyBox)) cfg.IndicatorLeftKey = key;
             else if (ReferenceEquals(box, StalksIndRightKeyBox)) cfg.IndicatorRightKey = key;
             else if (ReferenceEquals(box, StalksHighBeamKeyBox)) cfg.HighBeamKey = key;
+            else if (ReferenceEquals(box, StalksIntervalFasterKeyBox)) cfg.WiperIntervalFasterKey = key;
+            else if (ReferenceEquals(box, StalksIntervalSlowerKeyBox)) cfg.WiperIntervalSlowerKey = key;
             else if (ReferenceEquals(box, StalksFlashKeyBox)) cfg.HighBeamFlashKey = key;
             else if (ReferenceEquals(box, StalksCruiseResumeKeyBox)) cfg.CruiseResumeKey = key;
             else if (ReferenceEquals(box, StalksCruiseSetKeyBox)) cfg.CruiseSetKey = key;
@@ -253,6 +260,17 @@ namespace MozaPlugin.UI
             int n = (int)Math.Round(e.NewValue);
             StalksLightStageValue.Text = n.ToString();
             _plugin.Settings.StalksTruckSim.LightStageCount = n;
+            RebuildStalkOptionsPreservingSelection();
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksIntervalStageSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_suppressEvents) return;
+            int n = (int)Math.Round(e.NewValue);
+            StalksIntervalStageValue.Text = n.ToString();
+            _plugin.Settings.StalksTruckSim.WiperIntervalStageCount = n;
             RebuildStalkOptionsPreservingSelection();
             _plugin.SaveSettings();
             _plugin.ApplyStalksSettings();
