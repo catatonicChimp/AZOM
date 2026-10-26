@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Standalone check of Devices/StalksTruckSim/StalkStateMachine.cs (no SimHub,
+       no hardware). Run: dotnet run --project tools/stalk-state-machine-check
+       gen.py copies StalkTruckSimSettings out of Settings/MozaPluginSettings.cs
+       first (that file drags in the rest of the plugin otherwise). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>CS8632;CS8618</NoWarn>
+  </PropertyGroup>
+  <Target Name="GenSettings" BeforeTargets="CoreCompile">
+    <Exec Command="python3 gen.py || python gen.py" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+  <ItemGroup>
+    <Compile Include="../../Devices/StalksTruckSim/StalkStateMachine.cs" />
+    <Compile Include="../../Devices/StalksTruckSim/StageCycle.cs" />
+    <Compile Include="../../Devices/StalksTruckSim/StalkAction.cs" />
+    <Compile Include="gen/Settings.cs" />
+    <Compile Include="Tests.cs" />
+  </ItemGroup>
+</Project>
