@@ -3547,7 +3547,7 @@
                                           Title="{x:Static res:Strings.Section_StalksLiveView}"
                                           Subtitle="{x:Static res:Strings.Subtitle_StalksLiveView}"
                                           Icon="{StaticResource IconShift}">
-                            <ctrl:StalksView x:Name="StalksLiveView" Height="140" Margin="0,4"/>
+                            <ctrl:StalksView x:Name="StalksLiveView" Height="170" Margin="0,4"/>
                         </ctrl:SectionCard>
 
                         <!-- Keyboard-sync key mapping (visible only in keyboard-sync mode) -->

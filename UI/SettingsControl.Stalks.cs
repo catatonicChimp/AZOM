@@ -77,6 +77,7 @@ namespace MozaPlugin.UI
             v.OnLabel = Strings.Option_On;
             v.OffLabel = Strings.Option_Off;
             v.Poll = () => _plugin?.StalksController?.Snapshot;
+            v.RawPoll = () => _data?.StalksButtonStates;
         }
 
         private void BuildStalkRows()

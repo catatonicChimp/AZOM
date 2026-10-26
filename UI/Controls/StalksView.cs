@@ -17,6 +17,11 @@ namespace MozaControls
     {
         public Func<StalkStateSnapshot?>? Poll { get; set; }
 
+        /// <summary>Raw stalk button states, drawn as a strip of dots so every
+        /// press shows, mapped or not.</summary>
+        public Func<bool[]?>? RawPoll { get; set; }
+        public int RawButtonCount { get; set; } = 28;
+
         // Section captions, set from code so they follow the plugin language.
         public string IndicatorsLabel { get; set; } = "Indicators";
         public string LightsLabel { get; set; } = "Lights";
@@ -43,8 +48,11 @@ namespace MozaControls
         private readonly Pen _trackPen, _cyanPen, _greenPen;
         private readonly Typeface _face = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
         private bool _hooked;
+        private StalkStateSnapshot? _source;
         private StalkStateSnapshot? _state;
         private bool _blinkOn;
+        private uint _rawMask;
+        private const double RawStripHeight = 30;
 
         public StalksView()
         {
@@ -85,20 +93,59 @@ namespace MozaControls
         private void OnFrame(object? sender, EventArgs e)
         {
             if (!IsVisible || Poll == null) return;
-            var s = Poll() ?? StalkStateSnapshot.Empty;
+            var src = Poll() ?? StalkStateSnapshot.Empty;
+            if (!ReferenceEquals(_source, src))
+            {
+                _source = src;
+                _state = src.KeyboardSync ? src : LeverView(src);
+                _dirty = true;
+            }
+            var s = _state!;
             bool blink = s.IndicatorLit != IndicatorSide.None
                 && (Environment.TickCount / BlinkHalfPeriodMs) % 2 == 0;
-            if (ReferenceEquals(_state, s) && _blinkOn == blink) return;
-            _state = s;
+
+            uint mask = 0;
+            var raw = RawPoll?.Invoke();
+            if (raw != null)
+                for (int i = 0; i < Math.Min(32, raw.Length); i++)
+                    if (raw[i]) mask |= 1u << i;
+
+            if (_blinkOn == blink && _rawMask == mask && !_dirty) return;
+            _dirty = false;
             _blinkOn = blink;
+            _rawMask = mask;
             InvalidateVisual();
         }
+
+        private bool _dirty = true;
+
+        // Button-box mode drives no game state, so show the levers themselves as
+        // the live (filled) marks.
+        private static StalkStateSnapshot LeverView(StalkStateSnapshot s) => new StalkStateSnapshot
+        {
+            IndicatorLever = s.IndicatorLever,
+            IndicatorLit = s.IndicatorLever,
+            WiperLever = s.WiperLever,
+            WiperSwipe = s.WiperSwipe,
+            WiperStage = s.WiperSwipe ? -1 : s.WiperLever,
+            WiperStageCount = s.WiperStageCount,
+            LightLever = s.LightLever,
+            LightStage = s.LightLever,
+            LightStageCount = s.LightStageCount,
+            HighBeamLever = s.HighBeamLever,
+            HighBeamOn = s.HighBeamLever == HighBeamLever.On,
+            FlashHeld = s.HighBeamLever == HighBeamLever.Flash,
+            CruiseLever = s.CruiseLever,
+        };
 
         protected override void OnRender(DrawingContext dc)
         {
             double w = ActualWidth, h = ActualHeight;
             if (w <= 0 || h <= 0) return;
             var s = _state ?? StalkStateSnapshot.Empty;
+
+            DrawRawStrip(dc, w, h);
+            h = Math.Max(1, h - RawStripHeight);
 
             // Four panels: indicators · lights · wipers · cruise (narrower).
             double col = w / 3.6;
@@ -188,6 +235,31 @@ namespace MozaControls
             DrawChevron(dc, new Point(cx, cy + u * 0.9), u * 0.7, up: false, lit: s.CruiseLever < 0);
             var ft = Label((s.CruiseActive ? OnLabel : OffLabel).ToUpperInvariant(), u * 0.85, s.CruiseActive ? _green : _muted);
             dc.DrawText(ft, new Point(cx - ft.Width / 2, r.Top + r.Height * 0.80 - ft.Height / 2));
+        }
+
+        // Every stalk button as a numbered dot along the bottom, lit while pressed.
+        private void DrawRawStrip(DrawingContext dc, double w, double h)
+        {
+            int n = Math.Max(1, Math.Min(32, RawButtonCount));
+            double pitch = w / n;
+            double r = Math.Max(3, Math.Min(pitch * 0.3, 6));
+            double y = h - r - 4;
+            for (int i = 0; i < n; i++)
+            {
+                var c = new Point(pitch * (i + 0.5), y);
+                bool on = (_rawMask & (1u << i)) != 0;
+                if (on)
+                {
+                    dc.DrawEllipse(_greenGlow, null, c, r + 3, r + 3);
+                    dc.DrawEllipse(_green, null, c, r, r);
+                }
+                else dc.DrawEllipse(_track, null, c, r, r);
+                if (on || (i + 1) % 5 == 0 || i == 0)
+                {
+                    var ft = Label((i + 1).ToString(CultureInfo.InvariantCulture), 8, on ? _green : _muted);
+                    dc.DrawText(ft, new Point(c.X - ft.Width / 2, y - r - ft.Height));
+                }
+            }
         }
 
         // ---- primitives ------------------------------------------------------------

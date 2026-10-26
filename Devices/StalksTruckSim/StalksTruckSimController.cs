@@ -25,7 +25,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
         private readonly object _lock = new object();
 
         // Config snapshot (guarded by _lock).
-        private StalkMode _mode = StalkMode.ButtonBox;
+        private volatile StalkMode _mode = StalkMode.ButtonBox;
         private StalkTruckSimSettings _cfg = new StalkTruckSimSettings();
 
         // Fast gates (read on the HID thread).
@@ -265,7 +265,9 @@ namespace MozaPlugin.Devices.StalksTruckSim
             try { _cancelTimer.Change(dueIn, Timeout.Infinite); }
             catch (ObjectDisposedException) { }
 
-            _snapshot = _machine.Snapshot();
+            var snap = _machine.Snapshot();
+            snap.KeyboardSync = _mode == StalkMode.TruckSim;
+            _snapshot = snap;
         }
 
         /// <summary>Force the game wipers to stage 0 and re-sync the tracker

@@ -34,6 +34,10 @@ namespace MozaPlugin.Devices.StalksTruckSim
     {
         public static readonly StalkStateSnapshot Empty = new StalkStateSnapshot();
 
+        /// <summary>Keyboard sync is on, so the game fields are being driven. In
+        /// button-box mode only the lever fields mean anything.</summary>
+        public bool KeyboardSync { get; internal set; }
+
         public IndicatorSide IndicatorLever { get; internal set; }
         public IndicatorSide IndicatorLit { get; internal set; }
         /// <summary>Lever is back at neutral but the blinker is held for the minimum blink time.</summary>
