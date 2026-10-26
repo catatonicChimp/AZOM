@@ -936,4 +936,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Το πλήκτρο ενεργοποιεί το cruise</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Έτοιμο</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Διακόπτης: εναλλαγή (ώθηση)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Εκκαθάριση</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Δεν βρέθηκαν ρόλοι κουμπιών Control Mapper</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Κουμπί χειριστηρίου (ρόλος Control Mapper)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Δεξί κλικ σε ένα πεδίο πλήκτρου για αποστολή κουμπιού χειριστηρίου: επιλέξτε ρόλο κουμπιού του SimHub Control Mapper και το Control Mapper τον πατά στην εικονική έξοδο χειριστηρίου (vJoy ή χειριστήριο Arduino του SimHub).</value></data>
 </root>

@@ -208,7 +208,8 @@ namespace MozaControls
             if (s.TogglesOn.Count > 0)
             {
                 var names = new List<string>();
-                foreach (var k in s.TogglesOn) names.Add(KeyCodes.DisplayName(KeyCodes.Parse(k)));
+                foreach (var k in s.TogglesOn)
+                    names.Add(StalkOutput.IsRole(k) ? StalkOutput.RoleName(k) : KeyCodes.DisplayName(KeyCodes.Parse(k)));
                 var tt = Label(string.Format(TogglesLabel, string.Join(", ", names)), u * 0.75, _green);
                 dc.DrawText(tt, new Point(r.Left + (r.Width - tt.Width) / 2, r.Bottom - tt.Height - 2));
             }

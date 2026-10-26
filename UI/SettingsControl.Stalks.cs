@@ -79,6 +79,12 @@ namespace MozaPlugin.UI
             v.OffLabel = Strings.Option_Off;
             v.ReadyLabel = Strings.StalksView_CruiseReady;
             v.Poll = () => _plugin?.StalksController?.Snapshot;
+            // Right-click menu of every key box: SimHub Control Mapper button roles.
+            MozaControls.KeyCaptureBox.RoleSource = () =>
+            {
+                try { return (IReadOnlyList<string>?)_plugin?.PluginManagerInstance?.GetControlMapperInterface()?.GetAvailableButtonRoles() ?? Array.Empty<string>(); }
+                catch { return Array.Empty<string>(); }
+            };
             v.RawPoll = () => _data?.StalksButtonStates;
         }
 
@@ -112,34 +118,34 @@ namespace MozaPlugin.UI
                 StalksWiperWrapToggle.IsChecked = cfg.WiperForwardWraps;
                 StalksIntervalStageSlider.Value = cfg.WiperIntervalStageCount;
                 StalksIntervalStageValue.Text = cfg.WiperIntervalStageCount.ToString();
-                StalksIntervalFasterKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperIntervalFasterKey);
-                StalksIntervalSlowerKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperIntervalSlowerKey);
+                StalksIntervalFasterKeyBox.StoredKey = cfg.WiperIntervalFasterKey ?? "";
+                StalksIntervalSlowerKeyBox.StoredKey = cfg.WiperIntervalSlowerKey ?? "";
                 StalksIndMinBlinkSlider.Value = cfg.IndicatorMinBlinkSeconds;
                 StalksIndMinBlinkValue.Text = cfg.IndicatorMinBlinkSeconds.ToString();
                 StalksDebounceSlider.Value = cfg.DebounceMs;
                 StalksDebounceValue.Text = cfg.DebounceMs.ToString();
 
-                StalksWiperFwdKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperForwardKey);
-                StalksWiperBackKeyBox.KeyCode = KeyCodes.Parse(cfg.WiperBackKey);
-                StalksLightCycleKeyBox.KeyCode = KeyCodes.Parse(cfg.LightCycleKey);
-                StalksIndLeftKeyBox.KeyCode = KeyCodes.Parse(cfg.IndicatorLeftKey);
-                StalksIndRightKeyBox.KeyCode = KeyCodes.Parse(cfg.IndicatorRightKey);
-                StalksHighBeamKeyBox.KeyCode = KeyCodes.Parse(cfg.HighBeamKey);
-                StalksFlashKeyBox.KeyCode = KeyCodes.Parse(cfg.HighBeamFlashKey);
+                StalksWiperFwdKeyBox.StoredKey = cfg.WiperForwardKey ?? "";
+                StalksWiperBackKeyBox.StoredKey = cfg.WiperBackKey ?? "";
+                StalksLightCycleKeyBox.StoredKey = cfg.LightCycleKey ?? "";
+                StalksIndLeftKeyBox.StoredKey = cfg.IndicatorLeftKey ?? "";
+                StalksIndRightKeyBox.StoredKey = cfg.IndicatorRightKey ?? "";
+                StalksHighBeamKeyBox.StoredKey = cfg.HighBeamKey ?? "";
+                StalksFlashKeyBox.StoredKey = cfg.HighBeamFlashKey ?? "";
                 StalksGameProcessesBox.Text = cfg.GameProcesses ?? "";
 
                 StalksIndStyleCombo.SelectedIndex = cfg.IndicatorStyle == IndicatorStyle.Hold ? 1 : 0;
                 StalksIndMinBlinkRow.Visibility = cfg.IndicatorStyle == IndicatorStyle.Hold
                     ? Visibility.Collapsed : Visibility.Visible;
 
-                StalksCruiseResumeKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseResumeKey);
-                StalksCruiseSetKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseSetKey);
-                StalksCruiseUpKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseUpKey);
-                StalksCruiseDownKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseDownKey);
-                StalksCruiseUpBigKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseUpBigKey);
-                StalksCruiseDownBigKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseDownBigKey);
-                StalksCruiseCancelKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseCancelKey);
-                StalksCruiseMainKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseMainKey);
+                StalksCruiseResumeKeyBox.StoredKey = cfg.CruiseResumeKey ?? "";
+                StalksCruiseSetKeyBox.StoredKey = cfg.CruiseSetKey ?? "";
+                StalksCruiseUpKeyBox.StoredKey = cfg.CruiseUpKey ?? "";
+                StalksCruiseDownKeyBox.StoredKey = cfg.CruiseDownKey ?? "";
+                StalksCruiseUpBigKeyBox.StoredKey = cfg.CruiseUpBigKey ?? "";
+                StalksCruiseDownBigKeyBox.StoredKey = cfg.CruiseDownBigKey ?? "";
+                StalksCruiseCancelKeyBox.StoredKey = cfg.CruiseCancelKey ?? "";
+                StalksCruiseMainKeyBox.StoredKey = cfg.CruiseMainKey ?? "";
                 StalksCruiseMainEngagesToggle.IsChecked = cfg.CruiseMainEngages;
                 StalksCruiseHoldSlider.Value = cfg.CruiseHoldMs;
                 StalksCruiseHoldValue.Text = cfg.CruiseHoldMs.ToString();
@@ -153,7 +159,7 @@ namespace MozaPlugin.UI
             if (_suppressEvents) return;
             if (!(sender is MozaControls.KeyCaptureBox box)) return;
             var cfg = _plugin.Settings.StalksTruckSim;
-            string key = KeyCodes.Encode((ushort)box.KeyCode);
+            string key = box.StoredKey;
             if (ReferenceEquals(box, StalksWiperFwdKeyBox)) cfg.WiperForwardKey = key;
             else if (ReferenceEquals(box, StalksWiperBackKeyBox)) cfg.WiperBackKey = key;
             else if (ReferenceEquals(box, StalksLightCycleKeyBox)) cfg.LightCycleKey = key;

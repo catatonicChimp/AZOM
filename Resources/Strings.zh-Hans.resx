@@ -937,4 +937,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>开/关键直接启用巡航</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>就绪</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>开关：切换（按）</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>清除</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>未找到 Control Mapper 按钮角色</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>控制器按钮（Control Mapper 角色）</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>右键单击任意按键框可改为发送控制器按钮：选择 SimHub Control Mapper 按钮角色，Control Mapper 会在其虚拟控制器输出（vJoy 或 SimHub Arduino 控制器）上按下它。</value></data>
 </root>

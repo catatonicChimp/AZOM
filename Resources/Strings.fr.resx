@@ -937,4 +937,8 @@ Id : {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>La touche active le régulateur</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Prêt</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Interrupteur : bascule (appui)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Effacer</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Aucun rôle de bouton Control Mapper trouvé</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Bouton de manette (rôle Control Mapper)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Clic droit sur une case de touche pour envoyer un bouton de manette : choisissez un rôle de bouton du Control Mapper de SimHub, qui l'appuie sur sa manette virtuelle (vJoy ou manette Arduino SimHub).</value></data>
 </root>

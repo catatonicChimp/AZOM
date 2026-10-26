@@ -14,6 +14,7 @@ All notable changes to the AZOM plugin are documented here.
 - **Intermittent wiper frequency** positions are synced to the game with faster/slower keys.
 - **Stalk keyboard sync works with any game,** by listing the game's program names; it still defaults to ETS2/ATS. Indicators can be set to "hold while on" for games that need it, and wipers work with a single forward-only cycle key.
 - **`AZOM.Stalks.*` properties** for indicators, high beam, light and wiper stages, and cruise control.
+- **Stalks can press controller buttons instead of keys:** right-click a key box and pick a SimHub Control Mapper button role, and Control Mapper presses it on its virtual controller output (vJoy or a SimHub Arduino controller). Keys and roles can be mixed.
 - **Right-click a key box to clear it.**
 
 ## Fixed

@@ -22,6 +22,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
     internal sealed class StalksTruckSimController : IDisposable
     {
         private readonly KeyboardSender _kb = new KeyboardSender();
+        // Bindings starting "role:" go to SimHub Control Mapper instead of the keyboard.
+        private readonly RoleSender _roles;
         private readonly object _lock = new object();
 
         // Config snapshot (guarded by _lock).
@@ -53,8 +55,11 @@ namespace MozaPlugin.Devices.StalksTruckSim
         // thread, the timers and DataUpdate. Taken before _lock, never inside it.
         private readonly object _edgeLock = new object();
 
-        public StalksTruckSimController()
+        /// <param name="getControlMapper">Returns SimHub's ControlMapperInterface, or
+        /// null while unavailable; used for "role:" bindings.</param>
+        public StalksTruckSimController(Func<object?> getControlMapper)
         {
+            _roles = new RoleSender(getControlMapper);
             _kb.SetForegroundProcesses(ParseProcesses(StalkTruckSimSettings.DefaultGameProcesses));
             _cancelTimer = new Timer(OnCancelTimer, null, Timeout.Infinite, Timeout.Infinite);
             _lockoutTimer = new Timer(OnLockoutTimer, null, Timeout.Infinite, Timeout.Infinite);
@@ -74,6 +79,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
                 _cfg = cfg;
                 _kb.HoldMs = Math.Max(1, _cfg.KeyHoldMs);
                 _kb.GapMs = Math.Max(0, _cfg.KeyGapMs);
+                _roles.HoldMs = Math.Max(60, _cfg.KeyHoldMs);
+                _roles.GapMs = Math.Max(60, _cfg.KeyGapMs);
                 _debounceMs = Math.Max(0, _cfg.DebounceMs);
             }
             _kb.SetForegroundProcesses(procs);
@@ -91,6 +98,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
                     // would drain them before the worker wakes.
                     _kb.Flush();
                     _kb.ReleaseAll();
+                    _roles.ReleaseAll();
                 }
                 PublishLocked();
             }
@@ -113,6 +121,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
                     _machine.ForgetHeld();
                     _kb.Flush();
                     _kb.ReleaseAll();
+                    _roles.ReleaseAll();
                     PublishLocked();
                 }
                 return;
@@ -248,10 +257,13 @@ namespace MozaPlugin.Devices.StalksTruckSim
             {
                 switch (c.Op)
                 {
+                    case StalkKeyOp.ReleaseAll: _kb.ReleaseAll(); _roles.ReleaseAll(); break;
+                    case StalkKeyOp.Tap when StalkOutput.IsRole(c.Key): _roles.Tap(StalkOutput.RoleName(c.Key)); break;
+                    case StalkKeyOp.Down when StalkOutput.IsRole(c.Key): _roles.Down(StalkOutput.RoleName(c.Key)); break;
+                    case StalkKeyOp.Up when StalkOutput.IsRole(c.Key): _roles.Up(StalkOutput.RoleName(c.Key)); break;
                     case StalkKeyOp.Tap: _kb.Tap(c.Key); break;
                     case StalkKeyOp.Down: _kb.KeyDown(c.Key); break;
                     case StalkKeyOp.Up: _kb.KeyUp(c.Key); break;
-                    case StalkKeyOp.ReleaseAll: _kb.ReleaseAll(); break;
                 }
             }
         }
@@ -308,6 +320,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
             try { _lockoutTimer.Dispose(); } catch { }
             try { _cancelTimer.Dispose(); } catch { }
             try { _kb.Dispose(); } catch { }
+            try { _roles.Dispose(); } catch { }
         }
     }
 }

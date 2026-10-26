@@ -944,4 +944,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>On/off key engages cruise</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Ready</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Switch: toggle (push)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>No Control Mapper button roles found</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Controller button (Control Mapper role)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Right-click any key box to send a controller button instead: pick a SimHub Control Mapper button role, and Control Mapper presses it on its virtual controller output (vJoy or a SimHub Arduino controller).</value></data>
 </root>

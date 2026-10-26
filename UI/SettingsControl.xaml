@@ -3565,6 +3565,7 @@
                         <!-- Keyboard-sync key mapping (visible only in keyboard-sync mode) -->
                         <StackPanel x:Name="StalksTruckSimPanel" Visibility="Collapsed">
                             <ctrl:SectionCard Title="{x:Static res:Strings.Section_StalksGameKeys}"
+                                              Subtitle="{x:Static res:Strings.Hint_StalksControllerOutput}"
                                               Icon="{StaticResource IconShift}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -3742,7 +3743,7 @@
                                                               ItemsSource="{Binding Options}"
                                                               SelectedItem="{Binding Selected, Mode=TwoWay}"/>
                                                     <ctrl:KeyCaptureBox Grid.Column="2" Width="120" Margin="4,1"
-                                                                        KeyCode="{Binding KeyCode, Mode=TwoWay}"
+                                                                        StoredKey="{Binding StoredKey, Mode=TwoWay}"
                                                                         Visibility="{Binding ShowsKeyCapture, Converter={StaticResource BoolToVisibility}}"/>
                                                 </Grid>
                                             </DataTemplate>

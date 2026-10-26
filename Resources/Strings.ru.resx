@@ -937,4 +937,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Клавиша включает круиз</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Готов</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Переключатель: переключить (нажатие)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Очистить</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Роли кнопок Control Mapper не найдены</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Кнопка контроллера (роль Control Mapper)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Щёлкните правой кнопкой по полю клавиши, чтобы отправлять кнопку контроллера: выберите роль кнопки Control Mapper в SimHub, и Control Mapper нажмёт её на своём виртуальном контроллере (vJoy или Arduino-контроллер SimHub).</value></data>
 </root>

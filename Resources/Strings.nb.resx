@@ -942,4 +942,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>På/av-tast aktiverer cruise</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Klar</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Bryter: veksle (trykk)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Fjern</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Fant ingen Control Mapper-knapperoller</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Kontrollerknapp (Control Mapper-rolle)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Høyreklikk en tastboks for å sende en kontrollerknapp i stedet: velg en SimHub Control Mapper-knapperolle, så trykker Control Mapper den på sin virtuelle kontrollerutgang (vJoy eller en SimHub Arduino-kontroller).</value></data>
 </root>

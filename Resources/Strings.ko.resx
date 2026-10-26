@@ -936,4 +936,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>켜기 키로 크루즈 작동</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>대기</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>스위치: 토글 (누르기)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>지우기</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Control Mapper 버튼 역할이 없습니다</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>컨트롤러 버튼 (Control Mapper 역할)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>키 상자를 마우스 오른쪽 버튼으로 클릭하면 대신 컨트롤러 버튼을 보낼 수 있습니다: SimHub Control Mapper 버튼 역할을 선택하면 Control Mapper가 가상 컨트롤러 출력(vJoy 또는 SimHub Arduino 컨트롤러)에서 누릅니다.</value></data>
 </root>

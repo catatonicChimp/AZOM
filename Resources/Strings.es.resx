@@ -942,4 +942,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>La tecla activa el crucero</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Listo</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Interruptor: alternar (pulsar)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Borrar</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>No se encontraron roles de botón de Control Mapper</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Botón de mando (rol de Control Mapper)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Haz clic derecho en una casilla de tecla para enviar un botón de mando: elige un rol de botón de Control Mapper de SimHub y Control Mapper lo pulsará en su mando virtual (vJoy o un mando Arduino de SimHub).</value></data>
 </root>

@@ -722,7 +722,7 @@ namespace MozaPlugin
                 // Truck-sim stalk keyboard emulation: subscribe before Start() so no
                 // button edges are missed. Only acts when the Stalks mode is TruckSim
                 // and an ETS2/ATS game is foreground (gated inside the controller).
-                _stalksController = new StalksTruckSimController();
+                _stalksController = new StalksTruckSimController(() => _pluginManager?.GetControlMapperInterface());
                 _stalksController.ApplySettings(_settings.StalksMode, _settings.StalksTruckSim);
                 _hidReader.StalksButtonChanged += _stalksController.OnStalkButton;
                 _hidReader.Start();

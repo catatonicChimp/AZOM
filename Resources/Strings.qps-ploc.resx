@@ -927,4 +927,8 @@
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Yip!</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Bork!</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Ruff!</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Woof!</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Arf arf!</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Yip yip!</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Wan Snarf Wroof Rrrf Awoo Yap!</value></data>
 </root>

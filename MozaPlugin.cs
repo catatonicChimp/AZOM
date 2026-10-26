@@ -600,6 +600,10 @@ namespace MozaPlugin
         /// "Re-sync wipers" action). Null until Init runs.</summary>
         internal StalksTruckSimController StalksController => _stalksController;
 
+        /// <summary>SimHub's plugin manager (null before SimHub assigns it), for UI
+        /// code that needs a host API such as the Control Mapper role list.</summary>
+        internal PluginManager? PluginManagerInstance => _pluginManager;
+
         /// <summary>True if the wheel's internal Display sub-device responded to probe.
         /// Accepts any populated identity field — some wheels (e.g. W17) return an
         /// empty model-name string but populate HW/SW/MCU UID.</summary>

@@ -37,7 +37,6 @@ namespace MozaPlugin.UI
         // Stored key string kept verbatim (legacy friendly name or sc: literal);
         // only a real capture rewrites it.
         private string _keyStored;
-        private int _keyCode;
 
         public StalkRow(int buttonIndex, StalkAction? action, IReadOnlyList<StalkOptionItem> options, Action<StalkRow> onChanged)
         {
@@ -45,7 +44,6 @@ namespace MozaPlugin.UI
             Options = options;
             _onChanged = onChanged;
             _keyStored = action?.Key ?? "";
-            _keyCode = KeyCodes.Parse(_keyStored);
             _selected = OptionForAction(action, options);
         }
 
@@ -70,16 +68,17 @@ namespace MozaPlugin.UI
             }
         }
 
-        /// <summary>Captured scan code for key-bearing kinds (0 = not set).</summary>
-        public int KeyCode
+        /// <summary>Binding for key-bearing kinds: a key string or a "role:" Control
+        /// Mapper role ("" = not set). Kept verbatim; only a real edit rewrites it.</summary>
+        public string StoredKey
         {
-            get => _keyCode;
+            get => _keyStored;
             set
             {
-                if (_keyCode == value) return;
-                _keyCode = value;
-                _keyStored = KeyCodes.Encode((ushort)value);
-                OnPropertyChanged(nameof(KeyCode));
+                value ??= "";
+                if (_keyStored == value) return;
+                _keyStored = value;
+                OnPropertyChanged(nameof(StoredKey));
                 try { _onChanged?.Invoke(this); } catch { }
             }
         }

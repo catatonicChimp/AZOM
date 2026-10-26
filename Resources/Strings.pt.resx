@@ -936,4 +936,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>A tecla ativa o cruzeiro</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Pronto</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Interruptor: alternar (pressionar)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Limpar</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Nenhum papel de botão do Control Mapper encontrado</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Botão de controle (papel do Control Mapper)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Clique com o botão direito numa caixa de tecla para enviar um botão de controle: escolha um papel de botão do Control Mapper do SimHub e ele será pressionado na saída de controle virtual (vJoy ou controle Arduino do SimHub).</value></data>
 </root>

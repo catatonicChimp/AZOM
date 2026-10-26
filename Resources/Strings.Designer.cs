@@ -995,5 +995,9 @@ namespace MozaPlugin.Resources
         public static string Label_CruiseMainEngages => Get("Label_CruiseMainEngages");
         public static string StalksView_CruiseReady => Get("StalksView_CruiseReady");
         public static string StalkKind_ToggleFlip => Get("StalkKind_ToggleFlip");
+        public static string KeyCapture_Clear => Get("KeyCapture_Clear");
+        public static string KeyCapture_NoRoles => Get("KeyCapture_NoRoles");
+        public static string KeyCapture_RolesHeader => Get("KeyCapture_RolesHeader");
+        public static string Hint_StalksControllerOutput => Get("Hint_StalksControllerOutput");
     }
 }

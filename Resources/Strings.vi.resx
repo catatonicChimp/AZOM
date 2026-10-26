@@ -937,4 +937,8 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Phím bật/tắt kích hoạt ga tự động</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Sẵn sàng</value></data>
   <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Công tắc: bật/tắt (nhấn)</value></data>
+  <data name="KeyCapture_Clear" xml:space="preserve"><value>Xóa</value></data>
+  <data name="KeyCapture_NoRoles" xml:space="preserve"><value>Không tìm thấy vai trò nút Control Mapper</value></data>
+  <data name="KeyCapture_RolesHeader" xml:space="preserve"><value>Nút tay cầm (vai trò Control Mapper)</value></data>
+  <data name="Hint_StalksControllerOutput" xml:space="preserve"><value>Nhấp chuột phải vào ô phím để gửi nút tay cầm thay thế: chọn vai trò nút Control Mapper của SimHub, Control Mapper sẽ nhấn nút đó trên tay cầm ảo (vJoy hoặc tay cầm Arduino của SimHub).</value></data>
 </root>
