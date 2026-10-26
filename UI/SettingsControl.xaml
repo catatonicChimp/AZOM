@@ -3655,7 +3655,13 @@
                                             <RowDefinition/>
                                             <RowDefinition/>
                                             <RowDefinition/>
+                                            <RowDefinition/>
                                         </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static res:Strings.Label_CruiseMainKey}" Style="{StaticResource SliderLabel}" Margin="0,4"/>
+                                        <ctrl:KeyCaptureBox Grid.Row="4" Grid.Column="1" x:Name="StalksCruiseMainKeyBox" Width="140" Margin="0,4" HorizontalAlignment="Left" KeyChanged="StalksGameKey_Changed"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="3" Text="{x:Static res:Strings.Label_CruiseMainEngages}" Style="{StaticResource SliderLabel}" Margin="0,4"/>
+                                        <ctrl:OffOnToggle Grid.Row="4" Grid.Column="4" x:Name="StalksCruiseMainEngagesToggle" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                          Checked="StalksCruiseMainEngagesToggle_Changed" Unchecked="StalksCruiseMainEngagesToggle_Changed"/>
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static res:Strings.Label_CruiseResumeKey}" Style="{StaticResource SliderLabel}" Margin="0,4"/>
                                         <ctrl:KeyCaptureBox Grid.Row="0" Grid.Column="1" x:Name="StalksCruiseResumeKeyBox" Width="140" Margin="0,4" HorizontalAlignment="Left" KeyChanged="StalksGameKey_Changed"/>
                                         <TextBlock Grid.Row="0" Grid.Column="3" Text="{x:Static res:Strings.Label_CruiseSetKey}" Style="{StaticResource SliderLabel}" Margin="0,4"/>

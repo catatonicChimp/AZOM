@@ -153,6 +153,7 @@ namespace MozaPlugin.Integration
             _plugin.AttachDelegate("AZOM.Stalks.WiperLever", () => StalkState().WiperLever);
             _plugin.AttachDelegate("AZOM.Stalks.WiperIntervalStage", () => StalkState().WiperIntervalStage);
             _plugin.AttachDelegate("AZOM.Stalks.CruiseActive", () => StalkState().CruiseActive);
+            _plugin.AttachDelegate("AZOM.Stalks.CruiseMain", () => StalkState().CruiseMain);
 
             // MOZA Motion Controller (HMA150): lane phase, controller mode, last fault.
             _plugin.AttachDelegate("AZOM.MotionConnected", () => _plugin.MotionController?.IsConnected ?? false);

@@ -932,4 +932,8 @@ Id: {2}</value></data>
   <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Khoảng gạt chậm hơn</value></data>
   <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Số mức khoảng gạt</value></data>
   <data name="StalksView_Interval" xml:space="preserve"><value>Khoảng</value></data>
+  <data name="StalkKind_CruiseMainToggle" xml:space="preserve"><value>Ga tự động: bật/tắt</value></data>
+  <data name="Label_CruiseMainKey" xml:space="preserve"><value>Bật/tắt</value></data>
+  <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Phím bật/tắt kích hoạt ga tự động</value></data>
+  <data name="StalksView_CruiseReady" xml:space="preserve"><value>Sẵn sàng</value></data>
 </root>

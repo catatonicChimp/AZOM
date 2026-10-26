@@ -937,4 +937,8 @@ Id: {2}</value></data>
   <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Intervalo más lento</value></data>
   <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Etapas de intervalo</value></data>
   <data name="StalksView_Interval" xml:space="preserve"><value>Intervalo</value></data>
+  <data name="StalkKind_CruiseMainToggle" xml:space="preserve"><value>Crucero: encender/apagar</value></data>
+  <data name="Label_CruiseMainKey" xml:space="preserve"><value>Encender/apagar</value></data>
+  <data name="Label_CruiseMainEngages" xml:space="preserve"><value>La tecla activa el crucero</value></data>
+  <data name="StalksView_CruiseReady" xml:space="preserve"><value>Listo</value></data>
 </root>

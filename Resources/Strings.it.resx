@@ -935,4 +935,8 @@ Id: {2}</value></data>
   <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Intervallo più lento</value></data>
   <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Livelli di intervallo</value></data>
   <data name="StalksView_Interval" xml:space="preserve"><value>Intervallo</value></data>
+  <data name="StalkKind_CruiseMainToggle" xml:space="preserve"><value>Cruise: on/off</value></data>
+  <data name="Label_CruiseMainKey" xml:space="preserve"><value>On/off</value></data>
+  <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Il tasto attiva il cruise</value></data>
+  <data name="StalksView_CruiseReady" xml:space="preserve"><value>Pronto</value></data>
 </root>

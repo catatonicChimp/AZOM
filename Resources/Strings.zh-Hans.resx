@@ -932,4 +932,8 @@ Id: {2}</value></data>
   <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>雨刷间歇减慢</value></data>
   <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>间歇档位</value></data>
   <data name="StalksView_Interval" xml:space="preserve"><value>间歇</value></data>
+  <data name="StalkKind_CruiseMainToggle" xml:space="preserve"><value>定速巡航：开/关</value></data>
+  <data name="Label_CruiseMainKey" xml:space="preserve"><value>开/关</value></data>
+  <data name="Label_CruiseMainEngages" xml:space="preserve"><value>开/关键直接启用巡航</value></data>
+  <data name="StalksView_CruiseReady" xml:space="preserve"><value>就绪</value></data>
 </root>

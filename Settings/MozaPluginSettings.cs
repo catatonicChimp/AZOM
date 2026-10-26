@@ -848,6 +848,11 @@ namespace MozaPlugin.Settings
         /// <summary>Sent while the lever is held down; empty = repeat <see cref="CruiseDownKey"/>.</summary>
         public string CruiseDownBigKey { get; set; } = "";
         public string CruiseCancelKey { get; set; } = "";
+        /// <summary>Cruise main on/off key (ETS2/ATS: C).</summary>
+        public string CruiseMainKey { get; set; } = "C";
+        /// <summary>The main key engages cruise at the current speed (ETS2/ATS) rather
+        /// than only arming it; also lets cancel fall back to the main key.</summary>
+        public bool CruiseMainEngages { get; set; } = true;
 
         /// <summary>How long the cruise lever must be held before it counts as a hold (ms).</summary>
         public int CruiseHoldMs { get; set; } = 500;
@@ -894,6 +899,8 @@ namespace MozaPlugin.Settings
                 CruiseUpBigKey = CruiseUpBigKey,
                 CruiseDownBigKey = CruiseDownBigKey,
                 CruiseCancelKey = CruiseCancelKey,
+                CruiseMainKey = CruiseMainKey,
+                CruiseMainEngages = CruiseMainEngages,
                 WiperIntervalStageCount = WiperIntervalStageCount,
                 WiperIntervalFasterKey = WiperIntervalFasterKey,
                 WiperIntervalSlowerKey = WiperIntervalSlowerKey,
@@ -915,7 +922,7 @@ namespace MozaPlugin.Settings
 
         /// <summary>Populate the ETS2/ATS default button map (0-based button indices,
         /// i.e. HID button number − 1): light knob 1–3, high beam 4/5/6, turn signals
-        /// 8/9/10, wipers single-swipe 20 and stages 21–24.</summary>
+        /// 8/9/10, wipers single-swipe 20 and stages 21–24, cruise control 25–28.</summary>
         public void ApplyEts2Defaults()
         {
             WiperForwardKey = "P";
@@ -928,6 +935,8 @@ namespace MozaPlugin.Settings
             HighBeamKey = "K";
             HighBeamFlashKey = "J";
             GameProcesses = DefaultGameProcesses;
+            CruiseMainKey = "C";
+            CruiseMainEngages = true;
             WiperStageCount = 4;
             WiperForwardWraps = false;
             LightStageCount = 3;
@@ -948,6 +957,10 @@ namespace MozaPlugin.Settings
                 { 21, new StalkAction { Kind = StalkActionKind.WiperStage, Stage = 1 } },// btn22 intermittent
                 { 22, new StalkAction { Kind = StalkActionKind.WiperStage, Stage = 2 } },// btn23 low
                 { 23, new StalkAction { Kind = StalkActionKind.WiperStage, Stage = 3 } },// btn24 hi
+                { 24, new StalkAction { Kind = StalkActionKind.CruiseMainToggle } },     // btn25 cruise on/off
+                { 25, new StalkAction { Kind = StalkActionKind.CruiseDown } },           // btn26 set / -
+                { 26, new StalkAction { Kind = StalkActionKind.CruiseUp } },             // btn27 res / +
+                { 27, new StalkAction { Kind = StalkActionKind.CruiseCancel } },         // btn28 cancel
             };
         }
     }

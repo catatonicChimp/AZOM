@@ -65,6 +65,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
         /// <summary>Cruise control tracked as engaged in the game.</summary>
         public bool CruiseActive { get; internal set; }
+        /// <summary>Cruise main switch tracked as on (armed or engaged).</summary>
+        public bool CruiseMain { get; internal set; }
         /// <summary>Cruise lever: +1 held up, -1 held down, 0 at rest.</summary>
         public int CruiseLever { get; internal set; }
 
@@ -119,6 +121,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
         private int _intervalStage;
         private readonly Dictionary<string, bool> _toggleGame = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private bool _cruiseActive;
+        private bool _cruiseMain;
 
         // Cruise lever hold tracking: which way it is held (+1/-1, 0 = rest), when the
         // next hold step is due, and whether the hold already fired (so the release
@@ -281,11 +284,27 @@ namespace MozaPlugin.Devices.StalksTruckSim
                     break;
                 case StalkActionKind.CruiseCancel:
                     _cruiseHeld = 0;
-                    if (deliver && !string.IsNullOrEmpty(cfg.CruiseCancelKey))
+                    if (!deliver) break;
+                    if (!string.IsNullOrEmpty(cfg.CruiseCancelKey))
                     {
                         Tap(cfg.CruiseCancelKey, output);
                         _cruiseActive = false;
                     }
+                    else if (cfg.CruiseMainEngages && _cruiseActive && !string.IsNullOrEmpty(cfg.CruiseMainKey))
+                    {
+                        // ETS2-style single key: the main key toggles cruise off.
+                        Tap(cfg.CruiseMainKey, output);
+                        _cruiseActive = false;
+                        _cruiseMain = false;
+                    }
+                    break;
+                case StalkActionKind.CruiseMainToggle:
+                    _cruiseHeld = 0;
+                    if (!deliver || string.IsNullOrEmpty(cfg.CruiseMainKey)) break;
+                    Tap(cfg.CruiseMainKey, output);
+                    // A main key that engages also disengages: follow the cruise state.
+                    _cruiseMain = cfg.CruiseMainEngages ? !_cruiseActive : !_cruiseMain;
+                    _cruiseActive = cfg.CruiseMainEngages && _cruiseMain;
                     break;
             }
         }
@@ -353,6 +372,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
                 if (string.IsNullOrEmpty(engage)) return;
                 Tap(engage, output);
                 _cruiseActive = true;
+                _cruiseMain = true;
                 return;
             }
             string bigKey = dir > 0 ? cfg.CruiseUpBigKey : cfg.CruiseDownBigKey;
@@ -404,6 +424,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
             // A latched lever still wants high beam; a sprung toggle starts over off.
             if (_hbWant.HasValue) _hbWant = _hbLever == HighBeamLever.On;
             _cruiseActive = false;
+            _cruiseMain = false;
             _toggleGame.Clear();
         }
 
@@ -414,6 +435,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
             _pendingCancel = IndicatorSide.None;
             _indLit = IndicatorSide.None;
             _cruiseActive = false;
+            _cruiseMain = false;
             _cruiseHeld = 0;
         }
 
@@ -447,6 +469,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
                 HighBeamOn = _highBeam,
                 FlashHeld = !string.IsNullOrEmpty(_cfg.HighBeamFlashKey) && _down.Contains(_cfg.HighBeamFlashKey),
                 CruiseActive = _cruiseActive,
+                CruiseMain = _cruiseMain,
                 CruiseLever = _cruiseHeld,
                 TogglesOn = on,
             };

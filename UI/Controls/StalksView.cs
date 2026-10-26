@@ -33,6 +33,7 @@ namespace MozaControls
         public string CruiseLabel { get; set; } = "Cruise";
         public string OnLabel { get; set; } = "On";
         public string OffLabel { get; set; } = "Off";
+        public string ReadyLabel { get; set; } = "Ready";
 
         // Typical car blinker rate, ~1.5 Hz.
         private const int BlinkHalfPeriodMs = 330;
@@ -256,7 +257,8 @@ namespace MozaControls
             // Lever up / down arrows, lit while held.
             DrawChevron(dc, new Point(cx, cy - u * 0.9), u * 0.7, up: true, lit: s.CruiseLever > 0);
             DrawChevron(dc, new Point(cx, cy + u * 0.9), u * 0.7, up: false, lit: s.CruiseLever < 0);
-            var ft = Label((s.CruiseActive ? OnLabel : OffLabel).ToUpperInvariant(), u * 0.85, s.CruiseActive ? _green : _muted);
+            var ft = Label((s.CruiseActive ? OnLabel : s.CruiseMain ? ReadyLabel : OffLabel).ToUpperInvariant(), u * 0.85,
+                s.CruiseActive ? _green : s.CruiseMain ? _amber : _muted);
             dc.DrawText(ft, new Point(cx - ft.Width / 2, r.Top + r.Height * 0.80 - ft.Height / 2));
         }
 

@@ -114,6 +114,11 @@ namespace MozaPlugin.Devices.StalksTruckSim
         /// the game's interval to <see cref="StalkAction.Stage"/> with the interval
         /// faster/slower keys.</summary>
         WiperIntervalStage = 21,
+
+        /// <summary>Cruise-control main switch (on/off button): taps the main key and
+        /// flips the tracked main state. Switching main off disengages cruise; switching
+        /// it on engages it when the game's main key does that (ETS2/ATS).</summary>
+        CruiseMainToggle = 22,
     }
 
     /// <summary>

@@ -932,4 +932,8 @@ Id: {2}</value></data>
   <data name="Label_WiperIntervalSlowerKey" xml:space="preserve"><value>Интервал медленнее</value></data>
   <data name="SliderLabel_WiperIntervalStageCount" xml:space="preserve"><value>Ступени интервала</value></data>
   <data name="StalksView_Interval" xml:space="preserve"><value>Интервал</value></data>
+  <data name="StalkKind_CruiseMainToggle" xml:space="preserve"><value>Круиз: вкл./выкл.</value></data>
+  <data name="Label_CruiseMainKey" xml:space="preserve"><value>Вкл./выкл.</value></data>
+  <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Клавиша включает круиз</value></data>
+  <data name="StalksView_CruiseReady" xml:space="preserve"><value>Готов</value></data>
 </root>

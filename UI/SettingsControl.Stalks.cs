@@ -77,6 +77,7 @@ namespace MozaPlugin.UI
             v.CruiseLabel = Strings.StalksView_Cruise;
             v.OnLabel = Strings.Option_On;
             v.OffLabel = Strings.Option_Off;
+            v.ReadyLabel = Strings.StalksView_CruiseReady;
             v.Poll = () => _plugin?.StalksController?.Snapshot;
             v.RawPoll = () => _data?.StalksButtonStates;
         }
@@ -138,6 +139,8 @@ namespace MozaPlugin.UI
                 StalksCruiseUpBigKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseUpBigKey);
                 StalksCruiseDownBigKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseDownBigKey);
                 StalksCruiseCancelKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseCancelKey);
+                StalksCruiseMainKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseMainKey);
+                StalksCruiseMainEngagesToggle.IsChecked = cfg.CruiseMainEngages;
                 StalksCruiseHoldSlider.Value = cfg.CruiseHoldMs;
                 StalksCruiseHoldValue.Text = cfg.CruiseHoldMs.ToString();
                 StalksCruiseRepeatSlider.Value = cfg.CruiseRepeatMs;
@@ -167,6 +170,7 @@ namespace MozaPlugin.UI
             else if (ReferenceEquals(box, StalksCruiseUpBigKeyBox)) cfg.CruiseUpBigKey = key;
             else if (ReferenceEquals(box, StalksCruiseDownBigKeyBox)) cfg.CruiseDownBigKey = key;
             else if (ReferenceEquals(box, StalksCruiseCancelKeyBox)) cfg.CruiseCancelKey = key;
+            else if (ReferenceEquals(box, StalksCruiseMainKeyBox)) cfg.CruiseMainKey = key;
             _plugin.SaveSettings();
             _plugin.ApplyStalksSettings();
         }
@@ -195,6 +199,14 @@ namespace MozaPlugin.UI
             var style = StalksIndStyleCombo.SelectedIndex == 1 ? IndicatorStyle.Hold : IndicatorStyle.Toggle;
             _plugin.Settings.StalksTruckSim.IndicatorStyle = style;
             StalksIndMinBlinkRow.Visibility = style == IndicatorStyle.Hold ? Visibility.Collapsed : Visibility.Visible;
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksCruiseMainEngagesToggle_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_suppressEvents) return;
+            _plugin.Settings.StalksTruckSim.CruiseMainEngages = StalksCruiseMainEngagesToggle.IsChecked == true;
             _plugin.SaveSettings();
             _plugin.ApplyStalksSettings();
         }

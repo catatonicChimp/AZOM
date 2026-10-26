@@ -130,6 +130,7 @@ namespace MozaPlugin.UI
             list.Add(new StalkOptionItem(StalkActionKind.HighBeamOn, 0, Strings.StalkKind_HighBeamOn));
             list.Add(new StalkOptionItem(StalkActionKind.HighBeamNeutral, 0, Strings.StalkKind_HighBeamNeutral));
             list.Add(new StalkOptionItem(StalkActionKind.HighBeamFlash, 0, Strings.StalkKind_HighBeamFlash));
+            list.Add(new StalkOptionItem(StalkActionKind.CruiseMainToggle, 0, Strings.StalkKind_CruiseMainToggle));
             list.Add(new StalkOptionItem(StalkActionKind.CruiseUp, 0, Strings.StalkKind_CruiseUp));
             list.Add(new StalkOptionItem(StalkActionKind.CruiseDown, 0, Strings.StalkKind_CruiseDown));
             list.Add(new StalkOptionItem(StalkActionKind.CruiseCancel, 0, Strings.StalkKind_CruiseCancel));
