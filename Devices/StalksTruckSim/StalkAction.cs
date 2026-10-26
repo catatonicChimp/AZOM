@@ -46,8 +46,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
         /// key is active to cancel it (games where the indicator key toggles).</summary>
         IndicatorCancel = 6,
 
-        /// <summary>Wiper "single swipe" position: pulses the wipers on then off
-        /// (forward + back cycle tap) without changing the tracked stage.</summary>
+        /// <summary>Wiper "single swipe" (spring-loaded): one forward step while held,
+        /// back to the lever's stage on release.</summary>
         WiperSingleSwipe = 7,
 
         /// <summary>Hold a key down while the button is pressed and release it when the
@@ -119,6 +119,11 @@ namespace MozaPlugin.Devices.StalksTruckSim
         /// flips the tracked main state. Switching main off disengages cruise; switching
         /// it on engages it when the game's main key does that (ETS2/ATS).</summary>
         CruiseMainToggle = 22,
+
+        /// <summary>Spring-loaded push for a game toggle (e.g. MOZA fog-light button):
+        /// each press flips the tracked state of <see cref="StalkAction.Key"/> and taps
+        /// it, so the live view, properties and alt-tab catch-up follow it.</summary>
+        ToggleFlip = 23,
     }
 
     /// <summary>

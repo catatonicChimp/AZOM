@@ -102,6 +102,7 @@ namespace MozaPlugin.Devices.StalksTruckSim
         private IndicatorSide _indLever;
         private int _wiperLever = -1;
         private bool _wiperSwipe;
+        private int _swipeReturn;
         private int _lightLever = -1;
         private HighBeamLever _hbLever;
         // Wanted high-beam state: set by a latched lever position or a sprung toggle
@@ -205,15 +206,15 @@ namespace MozaPlugin.Devices.StalksTruckSim
                     if (deliver) ConvergeWiper(_wiperLever, output);
                     break;
                 case StalkActionKind.WiperSingleSwipe:
+                    // Spring-loaded: one forward step (wipers on) while held; the release
+                    // (or the off position firing as the stalk returns) steps back.
+                    if (_wiperSwipe) break;
                     _wiperSwipe = true;
+                    _swipeReturn = _wiperLever >= 0 ? _wiperLever : _wiperStage;
                     if (deliver)
                     {
-                        // One forward step (wipers on). The spring-loaded stalk returning
-                        // to the "off" position fires that button's WiperStage 0 action,
-                        // which converges back down and sends the back key.
                         Tap(cfg.WiperForwardKey, output);
                         _wiperStage = WrapStage(_wiperStage + 1, cfg.WiperStageCount);
-                        _wiperLever = _wiperStage;
                     }
                     break;
                 case StalkActionKind.WiperIntervalStage:
@@ -266,6 +267,11 @@ namespace MozaPlugin.Devices.StalksTruckSim
                     }
                     break;
 
+                case StalkActionKind.ToggleFlip:
+                    if (string.IsNullOrEmpty(action.Key)) break;
+                    _toggleLever[action.Key] = !(_toggleLever.TryGetValue(action.Key, out bool cur) ? cur : GameToggle(action.Key));
+                    if (deliver) ConvergeToggle(action.Key, output);
+                    break;
                 case StalkActionKind.ToggleOn:
                 case StalkActionKind.ToggleOff:
                 case StalkActionKind.ToggleHold:
@@ -318,6 +324,21 @@ namespace MozaPlugin.Devices.StalksTruckSim
             if (action.Kind == StalkActionKind.HeldKey)
             {
                 Up(action.Key, output);
+                return;
+            }
+            if (action.Kind == StalkActionKind.HighBeamFlash)
+            {
+                // Sprung flash lever let go: drop the flash now rather than waiting
+                // for the neutral position to report.
+                Up(_cfg.HighBeamFlashKey, output);
+                return;
+            }
+            if (action.Kind == StalkActionKind.WiperSingleSwipe)
+            {
+                if (!_wiperSwipe) return;
+                _wiperSwipe = false;
+                if (_wiperLever < 0) _wiperLever = _swipeReturn;
+                if (deliver) ConvergeWiper(_wiperLever, output);
                 return;
             }
             if (action.Kind == StalkActionKind.ToggleHold)

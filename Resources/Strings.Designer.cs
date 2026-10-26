@@ -994,5 +994,6 @@ namespace MozaPlugin.Resources
         public static string Label_CruiseMainKey => Get("Label_CruiseMainKey");
         public static string Label_CruiseMainEngages => Get("Label_CruiseMainEngages");
         public static string StalksView_CruiseReady => Get("StalksView_CruiseReady");
+        public static string StalkKind_ToggleFlip => Get("StalkKind_ToggleFlip");
     }
 }

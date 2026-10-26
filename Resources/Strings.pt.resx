@@ -935,4 +935,5 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainKey" xml:space="preserve"><value>Ligar/desligar</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>A tecla ativa o cruzeiro</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Pronto</value></data>
+  <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Interruptor: alternar (pressionar)</value></data>
 </root>

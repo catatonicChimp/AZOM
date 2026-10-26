@@ -936,4 +936,5 @@ Id : {2}</value></data>
   <data name="Label_CruiseMainKey" xml:space="preserve"><value>Marche/arrêt</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>La touche active le régulateur</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Prêt</value></data>
+  <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Interrupteur : bascule (appui)</value></data>
 </root>

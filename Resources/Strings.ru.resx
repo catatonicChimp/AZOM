@@ -936,4 +936,5 @@ Id: {2}</value></data>
   <data name="Label_CruiseMainKey" xml:space="preserve"><value>Вкл./выкл.</value></data>
   <data name="Label_CruiseMainEngages" xml:space="preserve"><value>Клавиша включает круиз</value></data>
   <data name="StalksView_CruiseReady" xml:space="preserve"><value>Готов</value></data>
+  <data name="StalkKind_ToggleFlip" xml:space="preserve"><value>Переключатель: переключить (нажатие)</value></data>
 </root>
