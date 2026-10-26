@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Standalone check of Devices/StalksTruckSim/StalkStateMachine.cs (no SimHub,
-       no hardware). Run: dotnet run --project tools/stalk-state-machine-check
+       no hardware). Run from the repo root: dotnet run (project) tools/stalk-state-machine-check
        gen.py copies StalkTruckSimSettings out of Settings/MozaPluginSettings.cs
        first (that file drags in the rest of the plugin otherwise). -->
   <PropertyGroup>
