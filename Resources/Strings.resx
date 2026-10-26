@@ -650,8 +650,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Stalks</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Stalk Mode</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Button box</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Truck sim (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>In truck-sim mode the plugin turns stalk presses into keyboard keys for Euro/American Truck Simulator. In button-box mode the stalks act as plain buttons.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Keyboard sync</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>In keyboard-sync mode the plugin turns stalk positions into the game's keys, keeping indicators, lights, wipers and cruise control in step with the stalks (ETS2/ATS defaults). In button-box mode the stalks act as plain buttons.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Button Mapping</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Press a stalk control to highlight its button, then assign a key or wiper/light stage.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Wipers &amp; Lights</value></data>
@@ -660,7 +660,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Wiper key wraps around</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Light stages</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Re-sync wipers</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Drives the game wipers back to off to re-align with the plugin's tracked stage.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Drives the game wipers back to off and resets the tracked stages; the game is then brought back in line with the stalks.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Last pressed: button {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Load ETS2/ATS defaults</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Re-sync wipers &amp; lights</value></data>
@@ -897,4 +897,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Engine vibration</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Tactile feedback</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Button debounce (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>High beam: on</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>High beam: neutral</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>High beam: flash</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Switch on (toggle key)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Switch off (toggle key)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Cruise: up / resume</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Cruise: down / set</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Cruise: cancel</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>High beam toggle</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>High beam flash</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Game programs</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Keys are only sent while one of these programs has the focus: process names, comma separated, without .exe (e.g. eurotrucks2, amtrucks, BeamNG.drive.x64). Empty sends nothing.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Game indicator keys</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Press on, press off</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Hold while on</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Cruise control</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Short press: resume (up) or set (down) when cruise is off, one speed step when on. Hold: big step, repeated while held — or the small step if no big-step key is set.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Resume</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Set</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Speed up</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Speed down</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Big step up</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Big step down</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Cancel</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Hold time (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Hold repeat (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Live view</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Filled = what the game is showing · outlined = where the lever is. A mismatch is caught up when the game has focus.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Indicators</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Lights</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Wipers</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>High beam</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Single swipe</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>On: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
 </root>

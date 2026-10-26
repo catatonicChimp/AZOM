@@ -824,6 +824,36 @@ namespace MozaPlugin.Settings
         /// so a quick flick of the lever still signals. 0 = cancel immediately.</summary>
         public int IndicatorMinBlinkSeconds { get; set; } = 3;
 
+        /// <summary>Whether the game's turn-signal keys toggle or must be held.</summary>
+        public IndicatorStyle IndicatorStyle { get; set; } = IndicatorStyle.Toggle;
+
+        // High-beam lever keys (ETS2 defaults): K toggles high beam, J flashes.
+        public string HighBeamKey { get; set; } = "K";
+        public string HighBeamFlashKey { get; set; } = "J";
+
+        /// <summary>Process names (comma separated, no ".exe") that must own the
+        /// foreground window for keys to be sent. Empty = any game SimHub reports as
+        /// running.</summary>
+        public string GameProcesses { get; set; } = DefaultGameProcesses;
+
+        public const string DefaultGameProcesses = "eurotrucks2, amtrucks";
+
+        // Cruise-control keys. Unset by default — bind them to your game's controls.
+        public string CruiseResumeKey { get; set; } = "";
+        public string CruiseSetKey { get; set; } = "";
+        public string CruiseUpKey { get; set; } = "";
+        public string CruiseDownKey { get; set; } = "";
+        /// <summary>Sent while the lever is held up; empty = repeat <see cref="CruiseUpKey"/>.</summary>
+        public string CruiseUpBigKey { get; set; } = "";
+        /// <summary>Sent while the lever is held down; empty = repeat <see cref="CruiseDownKey"/>.</summary>
+        public string CruiseDownBigKey { get; set; } = "";
+        public string CruiseCancelKey { get; set; } = "";
+
+        /// <summary>How long the cruise lever must be held before it counts as a hold (ms).</summary>
+        public int CruiseHoldMs { get; set; } = 500;
+        /// <summary>Repeat interval of the held step while the lever stays held (ms).</summary>
+        public int CruiseRepeatMs { get; set; } = 400;
+
         // Stage models.
         public int WiperStageCount { get; set; } = 4;
         public bool WiperForwardWraps { get; set; } = false;   // ETS2 wiper key does not wrap
@@ -847,6 +877,19 @@ namespace MozaPlugin.Settings
                 IndicatorLeftKey = IndicatorLeftKey,
                 IndicatorRightKey = IndicatorRightKey,
                 IndicatorMinBlinkSeconds = IndicatorMinBlinkSeconds,
+                IndicatorStyle = IndicatorStyle,
+                HighBeamKey = HighBeamKey,
+                HighBeamFlashKey = HighBeamFlashKey,
+                GameProcesses = GameProcesses,
+                CruiseResumeKey = CruiseResumeKey,
+                CruiseSetKey = CruiseSetKey,
+                CruiseUpKey = CruiseUpKey,
+                CruiseDownKey = CruiseDownKey,
+                CruiseUpBigKey = CruiseUpBigKey,
+                CruiseDownBigKey = CruiseDownBigKey,
+                CruiseCancelKey = CruiseCancelKey,
+                CruiseHoldMs = CruiseHoldMs,
+                CruiseRepeatMs = CruiseRepeatMs,
                 WiperStageCount = WiperStageCount,
                 WiperForwardWraps = WiperForwardWraps,
                 LightStageCount = LightStageCount,
@@ -862,7 +905,7 @@ namespace MozaPlugin.Settings
         }
 
         /// <summary>Populate the ETS2/ATS default button map (0-based button indices,
-        /// i.e. HID button number − 1): light knob 1–3, high beam 4/5, turn signals
+        /// i.e. HID button number − 1): light knob 1–3, high beam 4/5/6, turn signals
         /// 8/9/10, wipers single-swipe 20 and stages 21–24.</summary>
         public void ApplyEts2Defaults()
         {
@@ -872,6 +915,10 @@ namespace MozaPlugin.Settings
             IndicatorLeftKey = "[";
             IndicatorRightKey = "]";
             IndicatorMinBlinkSeconds = 3;
+            IndicatorStyle = IndicatorStyle.Toggle;
+            HighBeamKey = "K";
+            HighBeamFlashKey = "J";
+            GameProcesses = DefaultGameProcesses;
             WiperStageCount = 4;
             WiperForwardWraps = false;
             LightStageCount = 3;
@@ -881,9 +928,9 @@ namespace MozaPlugin.Settings
                 { 0, new StalkAction { Kind = StalkActionKind.LightStage, Stage = 0 } }, // btn1 lights off
                 { 1, new StalkAction { Kind = StalkActionKind.LightStage, Stage = 1 } }, // btn2 accessory
                 { 2, new StalkAction { Kind = StalkActionKind.LightStage, Stage = 2 } }, // btn3 headlights
-                { 3, new StalkAction { Kind = StalkActionKind.Momentary, Key = "K" } },  // btn4 high beam toggle
-                { 4, new StalkAction { Kind = StalkActionKind.ReleaseHeld } },           // btn5 neutral: releases the flash
-                { 5, new StalkAction { Kind = StalkActionKind.LatchKey, Key = "J" } },   // btn6 flash: latch J until neutral (btn5)
+                { 3, new StalkAction { Kind = StalkActionKind.HighBeamOn } },            // btn4 high beam (latched)
+                { 4, new StalkAction { Kind = StalkActionKind.HighBeamNeutral } },       // btn5 neutral: high beam off, flash released
+                { 5, new StalkAction { Kind = StalkActionKind.HighBeamFlash } },         // btn6 flash: hold J until neutral (btn5)
                 { 7, new StalkAction { Kind = StalkActionKind.IndicatorRight } },        // btn8 right
                 { 8, new StalkAction { Kind = StalkActionKind.IndicatorCancel } },       // btn9 neutral/cancel
                 { 9, new StalkAction { Kind = StalkActionKind.IndicatorLeft } },         // btn10 left

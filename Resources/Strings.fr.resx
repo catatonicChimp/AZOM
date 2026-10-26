@@ -621,8 +621,8 @@ Id : {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Commodos</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Mode commodo</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Boîte à boutons</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Simu camion (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>En mode simu camion, le plugin convertit les actions des commodos en touches clavier pour Euro/American Truck Simulator. En mode boîte à boutons, les commodos agissent comme de simples boutons.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Synchro clavier</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>En mode synchro clavier, le plugin transforme les positions des commodos en touches du jeu et garde clignotants, feux, essuie-glaces et régulateur alignés sur les commodos (réglages ETS2/ATS par défaut). En mode button box, les commodos agissent comme de simples boutons.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Affectation des boutons</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Actionnez un commodo pour surligner son bouton, puis affectez une touche ou une position d'essuie-glaces/feux.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Essuie-glaces et feux</value></data>
@@ -631,7 +631,7 @@ Id : {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>La touche d'essuie-glaces boucle</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Niveaux de feux</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Resynchroniser les essuie-glaces</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Ramène les essuie-glaces du jeu à l'arrêt pour les réaligner sur le niveau suivi par le plugin.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Ramène les essuie-glaces du jeu à l'arrêt et réinitialise les positions suivies ; le jeu est ensuite réaligné sur les commodos.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Dernier appui : bouton {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Charger les valeurs par défaut ETS2/ATS</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Resynchroniser essuie-glaces et feux</value></data>
@@ -890,4 +890,39 @@ Id : {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibration moteur</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Retour tactile</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Anti-rebond des boutons (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Feux de route : allumés</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Feux de route : neutre</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Feux de route : appel de phares</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Allumer (touche bascule)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Éteindre (touche bascule)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Régulateur : plus / reprise</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Régulateur : moins / définir</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Régulateur : annuler</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Bascule feux de route</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Appel de phares</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Programmes du jeu</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Les touches ne sont envoyées que lorsqu'un de ces programmes a le focus : noms de processus séparés par des virgules, sans .exe (ex. eurotrucks2, amtrucks, BeamNG.drive.x64). Vide n'envoie rien.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Touches de clignotant du jeu</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Appui allume, appui éteint</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Maintenir tant qu'allumé</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Régulateur de vitesse</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Appui court : reprise (haut) ou définir (bas) si le régulateur est coupé, un pas de vitesse s'il est actif. Maintien : grand pas, répété tant que maintenu — ou le petit pas si aucune touche de grand pas n'est définie.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Reprise</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Définir</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Plus vite</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Moins vite</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Grand pas plus</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Grand pas moins</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Annuler</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Durée d'appui (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Répétition (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Vue en direct</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Plein = ce que montre le jeu · contour = position du levier. Un écart est rattrapé dès que le jeu a le focus.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Clignotants</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Feux</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Essuie-glaces</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Feux de route</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Balayage unique</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Actif : {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Régulateur</value></data>
 </root>

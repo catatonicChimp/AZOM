@@ -641,8 +641,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Alavancas</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Modo das alavancas</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Caixa de botões</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Sim de caminhão (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>No modo simulador de caminhão, o plugin converte os acionamentos das alavancas em teclas para o Euro/American Truck Simulator. No modo caixa de botões, as alavancas funcionam como botões comuns.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Sincronizar teclado</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>No modo sincronizar teclado o plugin converte as posições das alavancas em teclas do jogo, mantendo piscas, luzes, limpadores e cruzeiro alinhados com as alavancas (padrões ETS2/ATS). No modo button box as alavancas funcionam como botões comuns.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Mapeamento de botões</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Acione um controle da alavanca para destacar seu botão, depois atribua uma tecla ou estágio de limpador/farol.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Limpadores e faróis</value></data>
@@ -651,7 +651,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Tecla do limpador dá a volta</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Estágios dos faróis</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Ressincronizar limpadores</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Leva os limpadores do jogo de volta a desligado para realinhar com o estágio rastreado pelo plugin.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Leva os limpadores do jogo para desligado e reinicia os estágios rastreados; depois o jogo é realinhado com as alavancas.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Último acionado: botão {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Carregar padrões ETS2/ATS</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Ressincronizar limpadores e faróis</value></data>
@@ -889,4 +889,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibração do motor</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Feedback tátil</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Debounce dos botões (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Farol alto: ligado</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Farol alto: neutro</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Farol alto: lampejo</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Ligar (tecla de alternância)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Desligar (tecla de alternância)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Cruzeiro: subir / retomar</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Cruzeiro: descer / definir</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Cruzeiro: cancelar</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Alternar farol alto</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Lampejo de farol</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Programas do jogo</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>As teclas só são enviadas enquanto um destes programas tem o foco: nomes de processo separados por vírgulas, sem .exe (ex.: eurotrucks2, amtrucks, BeamNG.drive.x64). Vazio não envia nada.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Teclas de pisca do jogo</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Pressionar liga, pressionar desliga</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Manter enquanto ligado</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Controle de cruzeiro</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Toque curto: retomar (cima) ou definir (baixo) com o cruzeiro desligado, um passo de velocidade com ele ligado. Manter: passo grande, repetido enquanto mantido — ou o passo pequeno se não houver tecla de passo grande.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Retomar</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Definir</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Aumentar velocidade</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Diminuir velocidade</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Passo grande acima</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Passo grande abaixo</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Tempo de pressão (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Repetição (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Visualização ao vivo</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Preenchido = o que o jogo mostra · contorno = posição da alavanca. Diferenças são corrigidas quando o jogo tem o foco.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Piscas</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Luzes</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Limpadores</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Farol alto</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Passada única</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Ligado: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Cruzeiro</value></data>
 </root>

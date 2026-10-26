@@ -880,4 +880,39 @@
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Grr Brrr</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Boop Woof</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Yip!</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Woof!</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Arf!</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Yip!</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Ruff!</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Bork!</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Awoo!</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Wuf!</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Grr!</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Woof woof!</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Yap!</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Snarf!</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Wan Snarf Wroof Rrrf Awoo Yap!</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Boof!</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Arf!</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Yip!</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Ruff!</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Wan Snarf Wroof Rrrf Awoo Yap!</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Woof!</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Arf!</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Yip!</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Grr!</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Bork!</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Boof!</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Ruff!</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Awoo!</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Yap!</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Woof!</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Wan Snarf Wroof Rrrf Awoo Yap!</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Boof!</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Arf!</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Yip!</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Ruff!</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Bork!</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Woof: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Awoo!</value></data>
 </root>

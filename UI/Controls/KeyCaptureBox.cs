@@ -9,8 +9,9 @@ namespace MozaControls
     /// <summary>
     /// Click-to-arm key binder. Shows the layout-aware name of the bound key
     /// (<see cref="KeyCode"/>, 0 = not set); while armed, the next physical key
-    /// press is captured. Escape or focus loss cancels. <see cref="KeyChanged"/>
-    /// fires only on a real capture, never on programmatic KeyCode changes.
+    /// press is captured. Escape or focus loss cancels; right-click clears the
+    /// binding. <see cref="KeyChanged"/> fires only on a user capture or clear,
+    /// never on programmatic KeyCode changes.
     /// </summary>
     public class KeyCaptureBox : Control
     {
@@ -54,7 +55,7 @@ namespace MozaControls
             EventManager.RegisterRoutedEvent(nameof(KeyChanged), RoutingStrategy.Bubble,
                 typeof(RoutedEventHandler), typeof(KeyCaptureBox));
 
-        /// <summary>Raised when the user captures a different key.</summary>
+        /// <summary>Raised when the user captures a different key or clears it.</summary>
         public event RoutedEventHandler KeyChanged
         {
             add => AddHandler(KeyChangedEvent, value);
@@ -73,6 +74,16 @@ namespace MozaControls
             Focus();
             SetValue(IsCapturingKey, true);
             e.Handled = true;
+        }
+
+        protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
+        {
+            base.OnMouseRightButtonUp(e);
+            SetValue(IsCapturingKey, false);
+            e.Handled = true;
+            if (KeyCode == 0) return;
+            SetCurrentValue(KeyCodeProperty, 0);
+            RaiseEvent(new RoutedEventArgs(KeyChangedEvent));
         }
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)

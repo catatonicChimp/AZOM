@@ -626,8 +626,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Palancas</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Modo de palanca</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Caja de botones</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Simulador de camión (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>En modo truck sim, el complemento convierte las pulsaciones de las palancas en teclas para Euro/American Truck Simulator. En modo caja de botones, las palancas funcionan como botones normales.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Sincronizar teclado</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>En modo sincronizar teclado el plugin convierte las posiciones de las palancas en teclas del juego, manteniendo intermitentes, luces, limpiaparabrisas y crucero al compás de las palancas (valores de ETS2/ATS). En modo button box las palancas actúan como botones normales.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Asignación de botones</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Pulsa un control de la palanca para resaltar su botón y luego asigna una tecla o una posición de limpiaparabrisas/luces.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Limpiaparabrisas y luces</value></data>
@@ -636,7 +636,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>La tecla de limpiaparabrisas da la vuelta</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Etapas de luces</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Resincronizar limpiaparabrisas</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Lleva los limpiaparabrisas del juego a apagado para realinearlos con la etapa que sigue el complemento.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Lleva los limpiaparabrisas del juego a apagado y reinicia las etapas registradas; después el juego se vuelve a alinear con las palancas.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Último pulsado: botón {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Cargar valores por defecto ETS2/ATS</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Resincronizar limpiaparabrisas y luces</value></data>
@@ -895,4 +895,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibración del motor</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Respuesta táctil</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Antirrebote de botones (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Luz larga: encendida</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Luz larga: neutral</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Luz larga: ráfaga</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Encender (tecla de alternar)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Apagar (tecla de alternar)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Crucero: subir / reanudar</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Crucero: bajar / fijar</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Crucero: cancelar</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Alternar luz larga</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Ráfaga de luces</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Programas del juego</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Las teclas solo se envían mientras uno de estos programas tiene el foco: nombres de proceso separados por comas, sin .exe (p. ej. eurotrucks2, amtrucks, BeamNG.drive.x64). Vacío no envía nada.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Teclas de intermitente del juego</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Pulsar enciende, pulsar apaga</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Mantener mientras está encendido</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Control de crucero</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Pulsación corta: reanudar (arriba) o fijar (abajo) con el crucero apagado, un paso de velocidad con él encendido. Mantener: paso grande, repetido mientras se mantiene — o el paso pequeño si no hay tecla de paso grande.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Reanudar</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Fijar</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Subir velocidad</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Bajar velocidad</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Paso grande arriba</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Paso grande abajo</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Tiempo de pulsación (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Repetición (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Vista en vivo</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Relleno = lo que muestra el juego · contorno = posición de la palanca. Las diferencias se corrigen cuando el juego tiene el foco.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Intermitentes</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Luces</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Limpiaparabrisas</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Luz larga</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Barrido único</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Encendido: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Crucero</value></data>
 </root>

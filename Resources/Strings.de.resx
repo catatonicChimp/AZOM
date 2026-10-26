@@ -621,8 +621,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Hebel</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Hebelmodus</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Button-Box</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Truck-Sim (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>Im Truck-Sim-Modus wandelt das Plugin Hebelbetätigungen in Tastatureingaben für Euro/American Truck Simulator um. Im Button-Box-Modus wirken die Hebel als einfache Tasten.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Tastatur-Sync</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>Im Tastatur-Sync-Modus wandelt das Plugin Hebelstellungen in die Tasten des Spiels um und hält Blinker, Licht, Scheibenwischer und Tempomat im Einklang mit den Hebeln (Vorgaben für ETS2/ATS). Im Button-Box-Modus wirken die Hebel als einfache Tasten.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Tastenzuordnung</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Betätige einen Hebel, um seine Taste hervorzuheben, und weise dann eine Taste oder Wischer-/Lichtstufe zu.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Scheibenwischer &amp; Licht</value></data>
@@ -631,7 +631,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Wischertaste läuft um</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Lichtstufen</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Wischer neu abgleichen</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Schaltet die Spielwischer auf Aus, um sie mit der vom Plugin verfolgten Stufe abzugleichen.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Stellt die Scheibenwischer im Spiel auf Aus und setzt die verfolgten Stufen zurück; danach wird das Spiel wieder an die Hebel angeglichen.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Zuletzt gedrückt: Taste {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>ETS2/ATS-Standard laden</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Wischer &amp; Licht neu abgleichen</value></data>
@@ -890,4 +890,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Motorvibration</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Taktiles Feedback</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Tasten-Entprellung (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Fernlicht: an</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Fernlicht: neutral</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Fernlicht: Lichthupe</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Einschalten (Umschalttaste)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Ausschalten (Umschalttaste)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Tempomat: hoch / fortsetzen</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Tempomat: runter / setzen</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Tempomat: abbrechen</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Fernlicht umschalten</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Lichthupe</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Spielprogramme</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Tasten werden nur gesendet, solange eines dieser Programme den Fokus hat: Prozessnamen, durch Kommas getrennt, ohne .exe (z. B. eurotrucks2, amtrucks, BeamNG.drive.x64). Leer sendet nichts.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Blinkertasten im Spiel</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Drücken an, drücken aus</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Halten solange an</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Tempomat</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Kurz drücken: fortsetzen (hoch) oder setzen (runter), wenn der Tempomat aus ist, sonst ein Geschwindigkeitsschritt. Halten: großer Schritt, wiederholt solange gehalten — ohne Taste für große Schritte der kleine Schritt.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Fortsetzen</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Setzen</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Schneller</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Langsamer</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Großer Schritt hoch</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Großer Schritt runter</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Haltezeit (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Wiederholung (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Live-Ansicht</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Gefüllt = was das Spiel zeigt · umrandet = Hebelstellung. Abweichungen werden nachgeholt, sobald das Spiel den Fokus hat.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Blinker</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Licht</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Scheibenwischer</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Fernlicht</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Einzelwischen</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>An: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Tempomat</value></data>
 </root>

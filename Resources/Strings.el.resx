@@ -620,8 +620,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Διακόπτες</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Λειτουργία διακόπτη</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Κουτί κουμπιών</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Προσομοιωτής φορτηγού (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>Στη λειτουργία truck sim το πρόσθετο μετατρέπει τα πατήματα των διακοπτών σε πλήκτρα πληκτρολογίου για το Euro/American Truck Simulator. Στη λειτουργία κουτιού κουμπιών οι διακόπτες λειτουργούν ως απλά κουμπιά.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Συγχρονισμός πληκτρολογίου</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>Στη λειτουργία συγχρονισμού πληκτρολογίου το πρόσθετο μετατρέπει τις θέσεις των μοχλών σε πλήκτρα του παιχνιδιού, κρατώντας φλας, φώτα, υαλοκαθαριστήρες και cruise control σε συμφωνία με τους μοχλούς (προεπιλογές ETS2/ATS). Στη λειτουργία button box οι μοχλοί λειτουργούν ως απλά κουμπιά.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Αντιστοίχιση κουμπιών</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Πάτησε έναν διακόπτη για να επισημανθεί το κουμπί του και μετά αντιστοίχισε ένα πλήκτρο ή στάδιο υαλοκαθαριστήρων/φώτων.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Υαλοκαθαριστήρες &amp; Φώτα</value></data>
@@ -630,7 +630,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Το πλήκτρο υαλοκαθαριστήρων κυκλώνει</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Στάδια φώτων</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Επανασυγχρονισμός υαλοκαθαριστήρων</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Επαναφέρει τους υαλοκαθαριστήρες του παιχνιδιού στο κλειστό για ευθυγράμμιση με το στάδιο που παρακολουθεί το πρόσθετο.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Επαναφέρει τους υαλοκαθαριστήρες του παιχνιδιού στο κλειστό και μηδενίζει τα παρακολουθούμενα στάδια· στη συνέχεια το παιχνίδι ευθυγραμμίζεται ξανά με τους μοχλούς.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Τελευταίο πάτημα: κουμπί {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Φόρτωση προεπιλογών ETS2/ATS</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Επανασυγχρονισμός υαλοκαθαριστήρων &amp; φώτων</value></data>
@@ -889,4 +889,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Δόνηση κινητήρα</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Απτική ανάδραση</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Debounce κουμπιών (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Μεγάλη σκάλα: ενεργή</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Μεγάλη σκάλα: ουδέτερο</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Μεγάλη σκάλα: φλας</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Ενεργοποίηση (πλήκτρο εναλλαγής)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Απενεργοποίηση (πλήκτρο εναλλαγής)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Cruise: πάνω / επαναφορά</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Cruise: κάτω / ορισμός</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Cruise: ακύρωση</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Εναλλαγή μεγάλης σκάλας</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Φλας μεγάλης σκάλας</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Προγράμματα παιχνιδιών</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Τα πλήκτρα στέλνονται μόνο όταν ένα από αυτά τα προγράμματα είναι εστιασμένο: ονόματα διεργασιών, χωρισμένα με κόμμα, χωρίς .exe (π.χ. eurotrucks2, amtrucks, BeamNG.drive.x64). Κενό = τίποτα.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Πλήκτρα φλας παιχνιδιού</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Πάτημα ανοιχτό, πάτημα κλειστό</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Κράτημα όσο είναι ανοιχτό</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Cruise control</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Σύντομο πάτημα: επαναφορά (πάνω) ή ορισμός (κάτω) όταν είναι ανενεργό, ένα βήμα ταχύτητας όταν είναι ενεργό. Κράτημα: μεγάλο βήμα, επαναλαμβανόμενο — ή το μικρό βήμα αν δεν έχει οριστεί πλήκτρο μεγάλου βήματος.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Επαναφορά</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Ορισμός</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Αύξηση ταχύτητας</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Μείωση ταχύτητας</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Μεγάλο βήμα πάνω</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Μεγάλο βήμα κάτω</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Ακύρωση</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Χρόνος κρατήματος (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Επανάληψη κρατήματος (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Ζωντανή προβολή</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Γεμάτο = τι δείχνει το παιχνίδι · περίγραμμα = θέση μοχλού. Οι αποκλίσεις διορθώνονται όταν το παιχνίδι είναι εστιασμένο.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Φλας</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Φώτα</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Υαλοκαθαριστήρες</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Μεγάλη σκάλα</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Μονό σκούπισμα</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Ενεργά: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
 </root>

@@ -621,8 +621,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>拨杆</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>拨杆模式</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>按键盒</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>卡车模拟 (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>在卡车模拟模式下，插件会将拨杆操作转换为 Euro/American Truck Simulator 的键盘按键。在按键盒模式下，拨杆作为普通按键使用。</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>键盘同步</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>键盘同步模式下，插件将拨杆位置转换为游戏按键，使转向灯、灯光、雨刷和定速巡航与拨杆保持一致（默认适用于 ETS2/ATS）。按键盒模式下，拨杆作为普通按键使用。</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>按键映射</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>按下某个拨杆控制以高亮其按键，然后分配按键或雨刮/灯光挡位。</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>雨刮与灯光</value></data>
@@ -631,7 +631,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>雨刮键循环</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>灯光挡位数</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>重新同步雨刮</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>将游戏雨刮调回关闭，以与插件跟踪的挡位重新对齐。</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>将游戏雨刷归位到关闭并重置跟踪档位；随后游戏会重新与拨杆保持一致。</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>上次按下：按键 {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>加载 ETS2/ATS 默认值</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>重新同步雨刮与灯光</value></data>
@@ -890,4 +890,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>引擎振动</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>触觉反馈</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>按键去抖 (毫秒)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>远光灯：开</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>远光灯：空档</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>远光灯：闪灯</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>开启（切换键）</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>关闭（切换键）</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>定速巡航：加 / 恢复</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>定速巡航：减 / 设定</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>定速巡航：取消</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>远光灯切换</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>闪灯</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>游戏程序</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>仅当以下程序之一处于焦点时才发送按键：进程名，以逗号分隔，不含 .exe（例如 eurotrucks2, amtrucks, BeamNG.drive.x64）。留空则不发送。</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>游戏转向灯按键</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>按下开，再按关</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>按住时开启</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>定速巡航</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>短按：巡航关闭时恢复（上）或设定（下），开启时调整一档速度。按住：大步长，按住期间重复——未设大步长键时重复小步长。</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>恢复</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>设定</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>加速</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>减速</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>大步加速</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>大步减速</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>取消</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>按住时间 (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>重复间隔 (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>实时视图</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>实心 = 游戏当前状态 · 空心 = 拨杆位置。游戏获得焦点时会自动补齐差异。</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>转向灯</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>灯光</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>雨刷</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>远光灯</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>单次刮刷</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>开启：{0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>巡航</value></data>
 </root>

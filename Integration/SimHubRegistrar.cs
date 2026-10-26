@@ -140,6 +140,19 @@ namespace MozaPlugin.Integration
             _plugin.AttachDelegate("AZOM.Ab9Connected", () => (_plugin.Ab9Manager?.IsConnected ?? false) || _plugin.IsAb9Detected);
             _plugin.AttachDelegate("AZOM.Ab9Layout", () => Ab9LayoutLabel(CurrentAb9Layout()));
 
+            // MOZA Stalks: what the plugin tracks the game as showing (Stage values
+            // are 0-based, Lever values -1 until that lever has reported a position).
+            // Tracked in both stalk modes; game state only moves in keyboard sync.
+            _plugin.AttachDelegate("AZOM.Stalks.IndicatorLeft", () => StalkState().IndicatorLit == Devices.StalksTruckSim.IndicatorSide.Left);
+            _plugin.AttachDelegate("AZOM.Stalks.IndicatorRight", () => StalkState().IndicatorLit == Devices.StalksTruckSim.IndicatorSide.Right);
+            _plugin.AttachDelegate("AZOM.Stalks.HighBeam", () => StalkState().HighBeamOn);
+            _plugin.AttachDelegate("AZOM.Stalks.Flash", () => StalkState().FlashHeld);
+            _plugin.AttachDelegate("AZOM.Stalks.LightStage", () => StalkState().LightStage);
+            _plugin.AttachDelegate("AZOM.Stalks.LightLever", () => StalkState().LightLever);
+            _plugin.AttachDelegate("AZOM.Stalks.WiperStage", () => StalkState().WiperStage);
+            _plugin.AttachDelegate("AZOM.Stalks.WiperLever", () => StalkState().WiperLever);
+            _plugin.AttachDelegate("AZOM.Stalks.CruiseActive", () => StalkState().CruiseActive);
+
             // MOZA Motion Controller (HMA150): lane phase, controller mode, last fault.
             _plugin.AttachDelegate("AZOM.MotionConnected", () => _plugin.MotionController?.IsConnected ?? false);
             _plugin.AttachDelegate("AZOM.MotionPhase", () => (_plugin.MotionController?.Phase ?? Devices.Motion.MotionLanePhase.Disconnected).ToString());
@@ -609,6 +622,10 @@ namespace MozaPlugin.Integration
             (Ab9Mode.RPlusEight,    "R8",         "R+8 Layout"),
             (Ab9Mode.Sequential,    "Sequential", "Sequential"),
         };
+
+        // The controller is built after RegisterProperties runs and gone after End.
+        private Devices.StalksTruckSim.StalkStateSnapshot StalkState()
+            => _plugin.StalksController?.Snapshot ?? Devices.StalksTruckSim.StalkStateSnapshot.Empty;
 
         private static string Ab9LayoutLabel(Ab9Mode mode)
         {

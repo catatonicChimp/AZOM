@@ -621,8 +621,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Подрулевые</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Режим подрулевых</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Кнопочная панель</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Симулятор грузовика (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>В режиме симулятора грузовика плагин преобразует нажатия подрулевых в клавиши клавиатуры для Euro/American Truck Simulator. В режиме кнопочной панели подрулевые работают как обычные кнопки.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Синхр. клавиатуры</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>В режиме синхронизации клавиатуры плагин превращает положения рычагов в клавиши игры, поддерживая поворотники, свет, дворники и круиз-контроль в соответствии с рычагами (настройки ETS2/ATS по умолчанию). В режиме button box рычаги работают как обычные кнопки.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Назначение кнопок</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Нажмите орган управления, чтобы подсветить его кнопку, затем назначьте клавишу или ступень стеклоочистителей/света.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Стеклоочистители и свет</value></data>
@@ -631,7 +631,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Клавиша стеклоочистителей зациклена</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Ступени света</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Пересинхронизировать стеклоочистители</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Возвращает стеклоочистители в игре в выключенное состояние для выравнивания со ступенью, отслеживаемой плагином.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Возвращает дворники в игре в выкл. и сбрасывает отслеживаемые положения; затем игра снова приводится в соответствие с рычагами.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Последнее нажатие: кнопка {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Загрузить настройки ETS2/ATS по умолчанию</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Пересинхронизировать стеклоочистители и свет</value></data>
@@ -890,4 +890,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Вибрация двигателя</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Тактильная отдача</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Антидребезг кнопок (мс)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Дальний свет: вкл.</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Дальний свет: нейтраль</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Дальний свет: мигание</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Включить (клавиша-переключатель)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Выключить (клавиша-переключатель)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Круиз: вверх / возобновить</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Круиз: вниз / установить</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Круиз: отмена</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Переключение дальнего света</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Мигание дальним</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Программы игр</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Клавиши отправляются, только пока одна из этих программ в фокусе: имена процессов через запятую, без .exe (например eurotrucks2, amtrucks, BeamNG.drive.x64). Пусто — ничего не отправляется.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Клавиши поворотников в игре</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Нажать — вкл., нажать — выкл.</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Удерживать, пока включено</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Круиз-контроль</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Короткое нажатие: возобновить (вверх) или установить (вниз), если круиз выключен, иначе шаг скорости. Удержание: большой шаг с повтором — или малый шаг, если клавиша большого шага не задана.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Возобновить</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Установить</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Быстрее</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Медленнее</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Большой шаг вверх</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Большой шаг вниз</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Отмена</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Время удержания (мс)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Повтор (мс)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Живой вид</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Заливка — что показывает игра · контур — положение рычага. Расхождение исправляется, когда игра в фокусе.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Поворотники</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Свет</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Дворники</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Дальний свет</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Одиночный взмах</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Вкл.: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Круиз</value></data>
 </root>

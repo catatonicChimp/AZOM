@@ -624,8 +624,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Leve</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Modalità leva</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Pulsantiera</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Simulatore di camion (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>In modalità truck sim il plugin trasforma le pressioni delle leve in tasti della tastiera per Euro/American Truck Simulator. In modalità button box le leve funzionano come semplici pulsanti.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Sincronizza tastiera</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>In modalità sincronizza tastiera il plugin trasforma le posizioni delle leve nei tasti del gioco, mantenendo frecce, luci, tergicristalli e cruise allineati alle leve (predefiniti ETS2/ATS). In modalità button box le leve agiscono come semplici pulsanti.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Assegnazione pulsanti</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Premi un comando della leva per evidenziarne il pulsante, poi assegna un tasto o uno stadio tergicristalli/luci.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Tergicristalli e luci</value></data>
@@ -634,7 +634,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Il tasto tergicristalli va a ciclo</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Stadi luci</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Risincronizza tergicristalli</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Riporta i tergicristalli del gioco su spento per riallinearli allo stadio tracciato dal plugin.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Riporta i tergicristalli del gioco su spento e azzera gli stadi tracciati; poi il gioco viene riallineato alle leve.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Ultimo premuto: pulsante {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Carica impostazioni predefinite ETS2/ATS</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Risincronizza tergicristalli e luci</value></data>
@@ -893,4 +893,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Vibrazione motore</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Feedback tattile</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Debounce pulsanti (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Abbaglianti: accesi</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Abbaglianti: neutro</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Abbaglianti: lampeggio</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Accendi (tasto alternato)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Spegni (tasto alternato)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Cruise: su / riprendi</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Cruise: giù / imposta</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Cruise: annulla</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Alterna abbaglianti</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Lampeggio abbaglianti</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Programmi del gioco</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>I tasti vengono inviati solo quando uno di questi programmi ha il focus: nomi di processo separati da virgole, senza .exe (es. eurotrucks2, amtrucks, BeamNG.drive.x64). Vuoto non invia nulla.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Tasti frecce del gioco</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Premi accendi, premi spegni</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Tieni premuto finché acceso</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Cruise control</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Pressione breve: riprendi (su) o imposta (giù) con il cruise spento, un passo di velocità se attivo. Tenendo premuto: passo grande, ripetuto — o il passo piccolo se non c'è un tasto per il passo grande.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Riprendi</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Imposta</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Aumenta velocità</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Riduci velocità</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Passo grande su</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Passo grande giù</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Annulla</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Tempo di pressione (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Ripetizione (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Vista dal vivo</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Pieno = ciò che mostra il gioco · contorno = posizione della leva. Le differenze vengono recuperate quando il gioco ha il focus.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Frecce</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Luci</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Tergicristalli</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Abbaglianti</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Passata singola</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Attivi: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
 </root>

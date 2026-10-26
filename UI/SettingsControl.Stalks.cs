@@ -12,8 +12,9 @@ using MozaPlugin.Settings;
 namespace MozaPlugin.UI
 {
     /// <summary>
-    /// Stalks settings tab: mode selector (Button box / Truck sim), the interactive
-    /// 28-button key-map editor, and the wiper/light stage-sync config.
+    /// Stalks settings tab: mode selector (Button box / Keyboard sync), the live
+    /// stalk view, the interactive 28-button key-map editor, and the game-key,
+    /// stage-sync, indicator and cruise-control config.
     /// </summary>
     public partial class SettingsControl
     {
@@ -59,7 +60,23 @@ namespace MozaPlugin.UI
             if (_stalksReader != null)
                 _stalksReader.StalksButtonChanged += OnStalksButtonChangedUi;
 
+            WireStalksLiveView();
             SeedStalksControls();
+        }
+
+        private void WireStalksLiveView()
+        {
+            var v = StalksLiveView;
+            v.IndicatorsLabel = Strings.StalksView_Indicators;
+            v.LightsLabel = Strings.StalksView_Lights;
+            v.WipersLabel = Strings.StalksView_Wipers;
+            v.HighBeamLabel = Strings.StalksView_HighBeam;
+            v.SwipeLabel = Strings.StalksView_Swipe;
+            v.TogglesLabel = Strings.StalksView_TogglesOn;
+            v.CruiseLabel = Strings.StalksView_Cruise;
+            v.OnLabel = Strings.Option_On;
+            v.OffLabel = Strings.Option_Off;
+            v.Poll = () => _plugin?.StalksController?.Snapshot;
         }
 
         private void BuildStalkRows()
@@ -100,6 +117,25 @@ namespace MozaPlugin.UI
                 StalksLightCycleKeyBox.KeyCode = KeyCodes.Parse(cfg.LightCycleKey);
                 StalksIndLeftKeyBox.KeyCode = KeyCodes.Parse(cfg.IndicatorLeftKey);
                 StalksIndRightKeyBox.KeyCode = KeyCodes.Parse(cfg.IndicatorRightKey);
+                StalksHighBeamKeyBox.KeyCode = KeyCodes.Parse(cfg.HighBeamKey);
+                StalksFlashKeyBox.KeyCode = KeyCodes.Parse(cfg.HighBeamFlashKey);
+                StalksGameProcessesBox.Text = cfg.GameProcesses ?? "";
+
+                StalksIndStyleCombo.SelectedIndex = cfg.IndicatorStyle == IndicatorStyle.Hold ? 1 : 0;
+                StalksIndMinBlinkRow.Visibility = cfg.IndicatorStyle == IndicatorStyle.Hold
+                    ? Visibility.Collapsed : Visibility.Visible;
+
+                StalksCruiseResumeKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseResumeKey);
+                StalksCruiseSetKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseSetKey);
+                StalksCruiseUpKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseUpKey);
+                StalksCruiseDownKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseDownKey);
+                StalksCruiseUpBigKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseUpBigKey);
+                StalksCruiseDownBigKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseDownBigKey);
+                StalksCruiseCancelKeyBox.KeyCode = KeyCodes.Parse(cfg.CruiseCancelKey);
+                StalksCruiseHoldSlider.Value = cfg.CruiseHoldMs;
+                StalksCruiseHoldValue.Text = cfg.CruiseHoldMs.ToString();
+                StalksCruiseRepeatSlider.Value = cfg.CruiseRepeatMs;
+                StalksCruiseRepeatValue.Text = cfg.CruiseRepeatMs.ToString();
             }
         }
 
@@ -114,6 +150,63 @@ namespace MozaPlugin.UI
             else if (ReferenceEquals(box, StalksLightCycleKeyBox)) cfg.LightCycleKey = key;
             else if (ReferenceEquals(box, StalksIndLeftKeyBox)) cfg.IndicatorLeftKey = key;
             else if (ReferenceEquals(box, StalksIndRightKeyBox)) cfg.IndicatorRightKey = key;
+            else if (ReferenceEquals(box, StalksHighBeamKeyBox)) cfg.HighBeamKey = key;
+            else if (ReferenceEquals(box, StalksFlashKeyBox)) cfg.HighBeamFlashKey = key;
+            else if (ReferenceEquals(box, StalksCruiseResumeKeyBox)) cfg.CruiseResumeKey = key;
+            else if (ReferenceEquals(box, StalksCruiseSetKeyBox)) cfg.CruiseSetKey = key;
+            else if (ReferenceEquals(box, StalksCruiseUpKeyBox)) cfg.CruiseUpKey = key;
+            else if (ReferenceEquals(box, StalksCruiseDownKeyBox)) cfg.CruiseDownKey = key;
+            else if (ReferenceEquals(box, StalksCruiseUpBigKeyBox)) cfg.CruiseUpBigKey = key;
+            else if (ReferenceEquals(box, StalksCruiseDownBigKeyBox)) cfg.CruiseDownBigKey = key;
+            else if (ReferenceEquals(box, StalksCruiseCancelKeyBox)) cfg.CruiseCancelKey = key;
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksGameProcessesBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter) CommitStalksGameProcesses();
+        }
+
+        private void StalksGameProcessesBox_LostFocus(object sender, RoutedEventArgs e) => CommitStalksGameProcesses();
+
+        private void CommitStalksGameProcesses()
+        {
+            if (_suppressEvents) return;
+            var cfg = _plugin.Settings.StalksTruckSim;
+            string text = (StalksGameProcessesBox.Text ?? "").Trim();
+            if (text == (cfg.GameProcesses ?? "")) return;
+            cfg.GameProcesses = text;
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksIndStyleCombo_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_suppressEvents) return;
+            var style = StalksIndStyleCombo.SelectedIndex == 1 ? IndicatorStyle.Hold : IndicatorStyle.Toggle;
+            _plugin.Settings.StalksTruckSim.IndicatorStyle = style;
+            StalksIndMinBlinkRow.Visibility = style == IndicatorStyle.Hold ? Visibility.Collapsed : Visibility.Visible;
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksCruiseHoldSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_suppressEvents) return;
+            int n = (int)Math.Round(e.NewValue);
+            StalksCruiseHoldValue.Text = n.ToString();
+            _plugin.Settings.StalksTruckSim.CruiseHoldMs = n;
+            _plugin.SaveSettings();
+            _plugin.ApplyStalksSettings();
+        }
+
+        private void StalksCruiseRepeatSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_suppressEvents) return;
+            int n = (int)Math.Round(e.NewValue);
+            StalksCruiseRepeatValue.Text = n.ToString();
+            _plugin.Settings.StalksTruckSim.CruiseRepeatMs = n;
             _plugin.SaveSettings();
             _plugin.ApplyStalksSettings();
         }

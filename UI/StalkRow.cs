@@ -87,7 +87,9 @@ namespace MozaPlugin.UI
         public bool ShowsKeyCapture =>
             _selected.Kind == StalkActionKind.Momentary ||
             _selected.Kind == StalkActionKind.HeldKey ||
-            _selected.Kind == StalkActionKind.LatchKey;
+            _selected.Kind == StalkActionKind.LatchKey ||
+            _selected.Kind == StalkActionKind.ToggleOn ||
+            _selected.Kind == StalkActionKind.ToggleOff;
 
         private bool _isPressed;
         public bool IsPressed
@@ -121,6 +123,14 @@ namespace MozaPlugin.UI
                 list.Add(new StalkOptionItem(StalkActionKind.WiperStage, i, string.Format(Strings.StalkKind_WiperStage, i)));
             for (int i = 0; i < Math.Max(1, lightStageCount); i++)
                 list.Add(new StalkOptionItem(StalkActionKind.LightStage, i, string.Format(Strings.StalkKind_LightStage, i)));
+            list.Add(new StalkOptionItem(StalkActionKind.HighBeamOn, 0, Strings.StalkKind_HighBeamOn));
+            list.Add(new StalkOptionItem(StalkActionKind.HighBeamNeutral, 0, Strings.StalkKind_HighBeamNeutral));
+            list.Add(new StalkOptionItem(StalkActionKind.HighBeamFlash, 0, Strings.StalkKind_HighBeamFlash));
+            list.Add(new StalkOptionItem(StalkActionKind.CruiseUp, 0, Strings.StalkKind_CruiseUp));
+            list.Add(new StalkOptionItem(StalkActionKind.CruiseDown, 0, Strings.StalkKind_CruiseDown));
+            list.Add(new StalkOptionItem(StalkActionKind.CruiseCancel, 0, Strings.StalkKind_CruiseCancel));
+            list.Add(new StalkOptionItem(StalkActionKind.ToggleOn, 0, Strings.StalkKind_ToggleOn));
+            list.Add(new StalkOptionItem(StalkActionKind.ToggleOff, 0, Strings.StalkKind_ToggleOff));
             list.Add(new StalkOptionItem(StalkActionKind.ReleaseHeld, 0, Strings.StalkKind_ReleaseHeld));
             return list;
         }

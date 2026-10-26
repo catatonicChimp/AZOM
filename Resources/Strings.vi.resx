@@ -621,8 +621,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Cần gạt</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Chế độ cần gạt</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Hộp nút</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Mô phỏng xe tải (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>Ở chế độ mô phỏng xe tải, plugin chuyển thao tác cần gạt thành phím bàn phím cho Euro/American Truck Simulator. Ở chế độ hộp nút, cần gạt hoạt động như các nút thường.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Đồng bộ bàn phím</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>Ở chế độ đồng bộ bàn phím, plugin chuyển vị trí cần gạt thành phím của game, giữ xi-nhan, đèn, gạt mưa và ga tự động khớp với cần gạt (mặc định cho ETS2/ATS). Ở chế độ button box, cần gạt hoạt động như nút bấm thông thường.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Gán nút</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Nhấn một điều khiển cần gạt để làm nổi bật nút của nó, rồi gán một phím hoặc cấp gạt mưa/đèn.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Gạt mưa &amp; đèn</value></data>
@@ -631,7 +631,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Phím gạt mưa xoay vòng</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Cấp đèn</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Đồng bộ lại gạt mưa</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Đưa gạt mưa trong trò chơi về tắt để khớp lại với cấp mà plugin đang theo dõi.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Đưa gạt mưa trong game về tắt và đặt lại các mức đang theo dõi; sau đó game được đồng bộ lại với cần gạt.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Lần nhấn cuối: nút {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Tải mặc định ETS2/ATS</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Đồng bộ lại gạt mưa và đèn</value></data>
@@ -890,4 +890,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Rung động cơ</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Phản hồi xúc giác</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Chống dội nút (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Đèn pha: bật</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Đèn pha: trung tính</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Đèn pha: nháy</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Bật (phím bật/tắt)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Tắt (phím bật/tắt)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Ga tự động: tăng / tiếp tục</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Ga tự động: giảm / đặt</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Ga tự động: hủy</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Bật/tắt đèn pha</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Nháy đèn pha</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Chương trình trò chơi</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Phím chỉ được gửi khi một trong các chương trình này đang được chọn: tên tiến trình, cách nhau bằng dấu phẩy, không có .exe (vd. eurotrucks2, amtrucks, BeamNG.drive.x64). Để trống thì không gửi gì.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Phím xi-nhan trong game</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Nhấn bật, nhấn tắt</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Giữ khi bật</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Ga tự động</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Nhấn nhanh: tiếp tục (lên) hoặc đặt (xuống) khi ga tự động tắt, một bước tốc độ khi đang bật. Giữ: bước lớn, lặp lại khi giữ — hoặc bước nhỏ nếu chưa đặt phím bước lớn.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Tiếp tục</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Đặt</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Tăng tốc</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Giảm tốc</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Bước lớn lên</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Bước lớn xuống</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Hủy</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Thời gian giữ (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Lặp lại khi giữ (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Xem trực tiếp</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Tô đầy = trạng thái trong game · viền = vị trí cần gạt. Sai lệch sẽ được đồng bộ khi game được chọn.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Xi-nhan</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Đèn</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Gạt mưa</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Đèn pha</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Gạt một lần</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>Bật: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Ga tự động</value></data>
 </root>

@@ -626,8 +626,8 @@ Id: {2}</value></data>
   <data name="TabHeader_Stalks" xml:space="preserve"><value>Spaker</value></data>
   <data name="Section_StalkMode" xml:space="preserve"><value>Spakmodus</value></data>
   <data name="Option_StalkButtonBox" xml:space="preserve"><value>Knappeboks</value></data>
-  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Trucksimulator (ETS2/ATS)</value></data>
-  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>I truck sim-modus gjør programtillegget spakbevegelser om til tastaturtaster for Euro/American Truck Simulator. I knappeboks-modus fungerer spakene som vanlige knapper.</value></data>
+  <data name="Option_StalkTruckSim" xml:space="preserve"><value>Tastatursynk</value></data>
+  <data name="Hint_StalksTruckSim" xml:space="preserve"><value>I tastatursynk-modus gjør utvidelsen spakposisjoner om til spillets taster og holder blinklys, lys, vindusviskere og cruisekontroll i takt med spakene (standard for ETS2/ATS). I button box-modus fungerer spakene som vanlige knapper.</value></data>
   <data name="Section_StalksKeyMapping" xml:space="preserve"><value>Knappetilordning</value></data>
   <data name="Subtitle_StalksInteractiveMap" xml:space="preserve"><value>Trykk på en spakkontroll for å utheve knappen, og tildel deretter en tast eller vindusvisker-/lystrinn.</value></data>
   <data name="Section_StalksWiperSync" xml:space="preserve"><value>Vindusviskere og lys</value></data>
@@ -636,7 +636,7 @@ Id: {2}</value></data>
   <data name="Label_WiperForwardWraps" xml:space="preserve"><value>Viskertast går rundt</value></data>
   <data name="SliderLabel_LightStageCount" xml:space="preserve"><value>Lystrinn</value></data>
   <data name="Button_ResyncWipers" xml:space="preserve"><value>Synkroniser viskere på nytt</value></data>
-  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Setter spillets viskere til av for å samstemme med trinnet programtillegget sporer.</value></data>
+  <data name="Hint_ResyncWipers" xml:space="preserve"><value>Setter spillets vindusviskere tilbake til av og nullstiller sporede trinn; deretter bringes spillet i takt med spakene igjen.</value></data>
   <data name="Label_StalksLastPressed" xml:space="preserve"><value>Sist trykket: knapp {0}</value></data>
   <data name="Button_LoadEts2Defaults" xml:space="preserve"><value>Last inn ETS2/ATS-standard</value></data>
   <data name="Button_ResyncStages" xml:space="preserve"><value>Synkroniser viskere og lys på nytt</value></data>
@@ -895,4 +895,39 @@ Id: {2}</value></data>
   <data name="Motion_Effect_EngineVibration" xml:space="preserve"><value>Motorvibrasjon</value></data>
   <data name="Motion_Effect_TactileFeedback" xml:space="preserve"><value>Taktil tilbakemelding</value></data>
   <data name="SliderLabel_StalkDebounce" xml:space="preserve"><value>Knapp-debounce (ms)</value></data>
+  <data name="StalkKind_HighBeamOn" xml:space="preserve"><value>Fjernlys: på</value></data>
+  <data name="StalkKind_HighBeamNeutral" xml:space="preserve"><value>Fjernlys: nøytral</value></data>
+  <data name="StalkKind_HighBeamFlash" xml:space="preserve"><value>Fjernlys: blink</value></data>
+  <data name="StalkKind_ToggleOn" xml:space="preserve"><value>Slå på (vekslingstast)</value></data>
+  <data name="StalkKind_ToggleOff" xml:space="preserve"><value>Slå av (vekslingstast)</value></data>
+  <data name="StalkKind_CruiseUp" xml:space="preserve"><value>Cruise: opp / gjenoppta</value></data>
+  <data name="StalkKind_CruiseDown" xml:space="preserve"><value>Cruise: ned / sett</value></data>
+  <data name="StalkKind_CruiseCancel" xml:space="preserve"><value>Cruise: avbryt</value></data>
+  <data name="Label_HighBeamKey" xml:space="preserve"><value>Veksle fjernlys</value></data>
+  <data name="Label_HighBeamFlashKey" xml:space="preserve"><value>Lysblink</value></data>
+  <data name="Label_StalksGameProcesses" xml:space="preserve"><value>Spillprogrammer</value></data>
+  <data name="Hint_StalksGameProcesses" xml:space="preserve"><value>Taster sendes bare mens ett av disse programmene har fokus: prosessnavn, kommaseparert, uten .exe (f.eks. eurotrucks2, amtrucks, BeamNG.drive.x64). Tomt sender ingenting.</value></data>
+  <data name="Label_IndicatorStyle" xml:space="preserve"><value>Blinklystaster i spillet</value></data>
+  <data name="Option_IndicatorToggle" xml:space="preserve"><value>Trykk på, trykk av</value></data>
+  <data name="Option_IndicatorHold" xml:space="preserve"><value>Hold inne mens på</value></data>
+  <data name="Section_StalksCruise" xml:space="preserve"><value>Cruisekontroll</value></data>
+  <data name="Subtitle_StalksCruise" xml:space="preserve"><value>Kort trykk: gjenoppta (opp) eller sett (ned) når cruise er av, ett fartstrinn når den er på. Hold: stort trinn, gjentatt mens du holder — eller lite trinn om ingen tast for stort trinn er satt.</value></data>
+  <data name="Label_CruiseResumeKey" xml:space="preserve"><value>Gjenoppta</value></data>
+  <data name="Label_CruiseSetKey" xml:space="preserve"><value>Sett</value></data>
+  <data name="Label_CruiseUpKey" xml:space="preserve"><value>Øk fart</value></data>
+  <data name="Label_CruiseDownKey" xml:space="preserve"><value>Senk fart</value></data>
+  <data name="Label_CruiseUpBigKey" xml:space="preserve"><value>Stort trinn opp</value></data>
+  <data name="Label_CruiseDownBigKey" xml:space="preserve"><value>Stort trinn ned</value></data>
+  <data name="Label_CruiseCancelKey" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="SliderLabel_CruiseHold" xml:space="preserve"><value>Holdetid (ms)</value></data>
+  <data name="SliderLabel_CruiseRepeat" xml:space="preserve"><value>Repetisjon (ms)</value></data>
+  <data name="Section_StalksLiveView" xml:space="preserve"><value>Direktevisning</value></data>
+  <data name="Subtitle_StalksLiveView" xml:space="preserve"><value>Fylt = det spillet viser · omriss = spakens posisjon. Avvik tas igjen når spillet har fokus.</value></data>
+  <data name="StalksView_Indicators" xml:space="preserve"><value>Blinklys</value></data>
+  <data name="StalksView_Lights" xml:space="preserve"><value>Lys</value></data>
+  <data name="StalksView_Wipers" xml:space="preserve"><value>Vindusviskere</value></data>
+  <data name="StalksView_HighBeam" xml:space="preserve"><value>Fjernlys</value></data>
+  <data name="StalksView_Swipe" xml:space="preserve"><value>Enkeltsveip</value></data>
+  <data name="StalksView_TogglesOn" xml:space="preserve"><value>På: {0}</value></data>
+  <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
 </root>

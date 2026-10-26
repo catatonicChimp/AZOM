@@ -63,6 +63,56 @@ namespace MozaPlugin.Devices.StalksTruckSim
         /// <summary>Release every currently-held/latched key. Map to the neutral stalk
         /// position so returning there drops the flash.</summary>
         ReleaseHeld = 10,
+
+        /// <summary>High-beam lever pushed to its latched ON position. The game's
+        /// high-beam key is a toggle, so it is tapped only when the tracked game state
+        /// is off — the lever position, not the press count, decides the outcome.</summary>
+        HighBeamOn = 11,
+
+        /// <summary>High-beam lever at neutral: switches a tracked-on high beam off
+        /// (one toggle tap) and releases a held flash.</summary>
+        HighBeamNeutral = 12,
+
+        /// <summary>High-beam lever pulled to flash: holds the flash key down until the
+        /// lever returns to <see cref="HighBeamNeutral"/>.</summary>
+        HighBeamFlash = 13,
+
+        /// <summary>Generic "switch on" position for a game control bound to a single
+        /// toggle key (<see cref="StalkAction.Key"/>): taps the key only if the tracked
+        /// state for that key is off. Pair with <see cref="ToggleOff"/> on the same key
+        /// to drive a press-on/press-again-off game control from two stalk positions.</summary>
+        ToggleOn = 14,
+
+        /// <summary>Generic "switch off" position: taps <see cref="StalkAction.Key"/>
+        /// only if the tracked state for that key is on.</summary>
+        ToggleOff = 15,
+
+        /// <summary>Cruise-control lever up. A short press resumes when cruise is
+        /// tracked as off, otherwise steps the set speed up; holding it past the
+        /// hold time sends the big-step key (or repeats the small step) until let go.</summary>
+        CruiseUp = 16,
+
+        /// <summary>Cruise-control lever down: like <see cref="CruiseUp"/>, with "set"
+        /// in place of "resume" and steps going down.</summary>
+        CruiseDown = 17,
+
+        /// <summary>Cruise-control cancel: taps the cancel key and tracks cruise as off.</summary>
+        CruiseCancel = 18,
+    }
+
+    /// <summary>
+    /// How the game's turn-signal keys behave, which decides what the indicator
+    /// lever positions send.
+    /// </summary>
+    public enum IndicatorStyle
+    {
+        /// <summary>Tap to switch on, tap again to switch off (ETS2/ATS and most
+        /// games). Neutral re-taps the lit side once the minimum blink time is up.</summary>
+        Toggle = 0,
+
+        /// <summary>The blinker is on only while its key is held: the side key is
+        /// held down for as long as the lever sits in that position.</summary>
+        Hold = 1,
     }
 
     /// <summary>
