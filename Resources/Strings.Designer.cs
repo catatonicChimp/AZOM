@@ -983,5 +983,6 @@ namespace MozaPlugin.Resources
         public static string StalksView_Swipe => Get("StalksView_Swipe");
         public static string StalksView_TogglesOn => Get("StalksView_TogglesOn");
         public static string StalksView_Cruise => Get("StalksView_Cruise");
+        public static string StalkKind_ToggleHold => Get("StalkKind_ToggleHold");
     }
 }

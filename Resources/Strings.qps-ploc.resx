@@ -915,4 +915,5 @@
   <data name="StalksView_Swipe" xml:space="preserve"><value>Bork!</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Woof: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Awoo!</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Wuf Wuf!</value></data>
 </root>

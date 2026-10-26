@@ -928,4 +928,5 @@ Id: {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Passata singola</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Attivi: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Interruttore: acceso finché premuto (tasto alternato)</value></data>
 </root>

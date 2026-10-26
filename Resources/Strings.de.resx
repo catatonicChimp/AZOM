@@ -925,4 +925,5 @@ Id: {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Einzelwischen</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>An: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Tempomat</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Schalter: an solange gedrückt (Umschalttaste)</value></data>
 </root>

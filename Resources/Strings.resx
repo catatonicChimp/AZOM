@@ -932,4 +932,5 @@ Id: {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Single swipe</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>On: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Switch: on while held (toggle key)</value></data>
 </root>

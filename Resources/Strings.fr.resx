@@ -925,4 +925,5 @@ Id : {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Balayage unique</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Actif : {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Régulateur</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Interrupteur : allumé tant que maintenu (touche bascule)</value></data>
 </root>

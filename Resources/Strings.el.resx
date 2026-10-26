@@ -924,4 +924,5 @@ Id: {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Μονό σκούπισμα</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Ενεργά: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Διακόπτης: ενεργός όσο πατιέται (πλήκτρο εναλλαγής)</value></data>
 </root>

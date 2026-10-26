@@ -930,4 +930,5 @@ Id: {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Enkeltsveip</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>På: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Cruise</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Bryter: på mens den holdes (vekslingstast)</value></data>
 </root>

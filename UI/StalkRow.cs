@@ -89,7 +89,8 @@ namespace MozaPlugin.UI
             _selected.Kind == StalkActionKind.HeldKey ||
             _selected.Kind == StalkActionKind.LatchKey ||
             _selected.Kind == StalkActionKind.ToggleOn ||
-            _selected.Kind == StalkActionKind.ToggleOff;
+            _selected.Kind == StalkActionKind.ToggleOff ||
+            _selected.Kind == StalkActionKind.ToggleHold;
 
         private bool _isPressed;
         public bool IsPressed
@@ -131,6 +132,7 @@ namespace MozaPlugin.UI
             list.Add(new StalkOptionItem(StalkActionKind.CruiseCancel, 0, Strings.StalkKind_CruiseCancel));
             list.Add(new StalkOptionItem(StalkActionKind.ToggleOn, 0, Strings.StalkKind_ToggleOn));
             list.Add(new StalkOptionItem(StalkActionKind.ToggleOff, 0, Strings.StalkKind_ToggleOff));
+            list.Add(new StalkOptionItem(StalkActionKind.ToggleHold, 0, Strings.StalkKind_ToggleHold));
             list.Add(new StalkOptionItem(StalkActionKind.ReleaseHeld, 0, Strings.StalkKind_ReleaseHeld));
             return list;
         }

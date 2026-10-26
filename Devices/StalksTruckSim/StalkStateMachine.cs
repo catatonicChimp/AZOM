@@ -239,8 +239,9 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
                 case StalkActionKind.ToggleOn:
                 case StalkActionKind.ToggleOff:
+                case StalkActionKind.ToggleHold:
                     if (string.IsNullOrEmpty(action.Key)) break;
-                    _toggleLever[action.Key] = action.Kind == StalkActionKind.ToggleOn;
+                    _toggleLever[action.Key] = action.Kind != StalkActionKind.ToggleOff;
                     if (deliver) ConvergeToggle(action.Key, output);
                     break;
 
@@ -263,8 +264,8 @@ namespace MozaPlugin.Devices.StalksTruckSim
             }
         }
 
-        /// <summary>Handle a release. Held keys are let go; a cruise lever released
-        /// before its hold time fires its short-press action.</summary>
+        /// <summary>Handle a release. Held keys are let go, a held switch goes off, and
+        /// a cruise lever released before its hold time fires its short-press action.</summary>
         public void OnRelease(int index, long nowMs, bool deliver, List<StalkKeyCommand> output)
         {
             var action = ActionFor(index);
@@ -272,6 +273,13 @@ namespace MozaPlugin.Devices.StalksTruckSim
             if (action.Kind == StalkActionKind.HeldKey)
             {
                 Up(action.Key, output);
+                return;
+            }
+            if (action.Kind == StalkActionKind.ToggleHold)
+            {
+                if (string.IsNullOrEmpty(action.Key)) return;
+                _toggleLever[action.Key] = false;
+                if (deliver) ConvergeToggle(action.Key, output);
                 return;
             }
             if (action.Kind != StalkActionKind.CruiseUp && action.Kind != StalkActionKind.CruiseDown) return;

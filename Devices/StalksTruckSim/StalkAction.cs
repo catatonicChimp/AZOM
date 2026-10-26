@@ -98,6 +98,11 @@ namespace MozaPlugin.Devices.StalksTruckSim
 
         /// <summary>Cruise-control cancel: taps the cancel key and tracks cruise as off.</summary>
         CruiseCancel = 18,
+
+        /// <summary>A latched switch reported as one button held while on (e.g. fog
+        /// lights): pressing switches the game's toggle key <see cref="StalkAction.Key"/>
+        /// on, releasing switches it off — both only when the tracked state differs.</summary>
+        ToggleHold = 19,
     }
 
     /// <summary>

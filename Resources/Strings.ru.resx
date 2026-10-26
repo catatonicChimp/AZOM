@@ -925,4 +925,5 @@ Id: {2}</value></data>
   <data name="StalksView_Swipe" xml:space="preserve"><value>Одиночный взмах</value></data>
   <data name="StalksView_TogglesOn" xml:space="preserve"><value>Вкл.: {0}</value></data>
   <data name="StalksView_Cruise" xml:space="preserve"><value>Круиз</value></data>
+  <data name="StalkKind_ToggleHold" xml:space="preserve"><value>Переключатель: вкл., пока нажат (клавиша-переключатель)</value></data>
 </root>
